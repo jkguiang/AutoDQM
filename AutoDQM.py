@@ -5,7 +5,7 @@ import sys
 # Parsing Functions -------
 
 # Scan 1D Hist, plot Pull hist and compute Chi^2
-def scan_1D(f_hist, r_hist, hist, f_num):
+def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
     c = ROOT.TCanvas('c', 'Pull')
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
@@ -69,7 +69,7 @@ def scan_1D(f_hist, r_hist, hist, f_num):
         text.Draw()
 
         is_outlier = True
-        c.SaveAs("plots/{0}_{1}.pdf".format(hist, f_num))
+        c.SaveAs("{0}/{1}_{2}.pdf".format(targ_dir, hist, f_num))
 
     # DEBUG
     # print("Chi2: {0}".format(chi2))
@@ -77,7 +77,7 @@ def scan_1D(f_hist, r_hist, hist, f_num):
     return chi2, max_pull, is_outlier
 
 # Scan 2D Hist, plot Pull hist and compute Chi^2
-def scan_2D(f_hist, r_hist, hist, f_num):
+def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
     c = ROOT.TCanvas('c', 'Pull')
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
@@ -150,18 +150,17 @@ def scan_2D(f_hist, r_hist, hist, f_num):
         # Text box
         text = ROOT.TLatex(.79,.91,"#scale[0.6]{Run: "+f_num+"}");  
         text.SetNDC(ROOT.kTRUE);
-
         text.Draw()
-        is_outlier = True
-        c.SaveAs("plots/{0}_{1}.pdf".format(hist, f_num))
 
-    # DEBUG
-    # print("X Bins: {0}".format(r_hist.GetNbinsX()))
-    # print("Y Bins: {0}".format(r_hist.GetNbinsY()))
-    # print("Total bins: {0}".format(nBins))
-    # print("Skipped: {0}".format(skip))
-    # print("Capped data: {0}".format(overflow))
-    # print("Chi2: {0}".format(chi2))
+        is_outlier = True
+        c.SaveAs("{0}/{1}_{2}.pdf".format(targ_dir, hist, f_num))
+
+        # Write text file
+        new_txt = open("{0}/{1}_{2}.txt".format(targ_dir.split("pdfs")[0]+"txts" , hist, f_num), "w")
+        new_txt.writelines(["Run: {0}\n".format(f_num), 
+                            "Max Pull Value: {0}\n".format(max_pull),
+                            "Chi^2: {0}\n".format(chi2)])
+        new_txt.close()
 
     return is_good, chi2, max_pull, is_outlier
 
@@ -180,12 +179,19 @@ def pull(bin1, binerr1, bin2, binerr2):
 
     return pull
 
-# End Analysis Functions
+# End Analysis Functions ------
 
 # AutoDQM
 def auto_dqm():
 
-    # Ensure no graphs are drawn to screen
+    targ_dir = "/home/users/jguiang/public_html/dqm/pdfs"
+
+    # Check to make sure output directory exists
+    if not os.path.isdir(targ_dir):
+        print("Target directory path does not exist or is not a directory.")
+        return
+
+    # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
     # Set up canvas for chi2 plot
@@ -194,6 +200,7 @@ def auto_dqm():
     # Location of root files
     tfiles_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/SingleMuon/"
     tfiles = os.listdir(tfiles_dir)
+    total_tfiles = (len(os.listdir(tfiles_dir)) - 1)
     # tfiles_dir = "/home/users/jguiang/projects/AutoDQM/test_files/"
     # tfiles = os.listdir(tfiles_dir)
 
@@ -238,13 +245,13 @@ def auto_dqm():
         r_hist = new_ref.Get(r_path)
 
         if type(f_hist) == ROOT.TH1F:
-            is_good, chi2, max_pull, is_outlier = scan_1D(f_hist, r_hist, hist, f_num)
+            is_good, chi2, max_pull, is_outlier = scan_1D(f_hist, r_hist, hist, f_num, targ_dir)
             if is_good:
                 chi2_1D.Fill(chi2)
             if is_outlier:
                 outliers += 1
         elif type(f_hist) == ROOT.TH2F:
-            is_good, chi2, max_pull, is_outlier = scan_2D(f_hist, r_hist, hist, f_num)
+            is_good, chi2, max_pull, is_outlier = scan_2D(f_hist, r_hist, hist, f_num, targ_dir)
             if is_good:
                 chi2_2D.Fill(chi2)
             if is_outlier:
@@ -254,7 +261,7 @@ def auto_dqm():
 
         # Update Terminal
         sys.stdout.write("\r")
-        sys.stdout.write("Files: {0}    Outliers: {1}".format(files, outliers)) 
+        sys.stdout.write("Files: {0}/{1}    Outliers: {2}".format(files, total_tfiles, outliers)) 
         sys.stdout.flush()
 
     # PARSE ALL HISTOGRAMS ------------
@@ -306,11 +313,11 @@ def auto_dqm():
     chi2_2D.GetYaxis().SetTitle("Entries")
     chi2_1D.Draw("hist")
 
-    C.SaveAs("plots/chi2_1D.pdf")
+    C.SaveAs("{0}/chi2_1D.pdf".format(targ_dir))
     chi2_2D.Draw("hist")
-    C.SaveAs("plots/chi2_2D.pdf")
+    C.SaveAs("{0}/chi2_2D.pdf".format(targ_dir))
 
-    print("\rFiles: {0}    Outliers: {1}\n".format(files, outliers))
+    print("\rFiles: {0}/{1}    Outliers: {2}\n".format(files, total_tfiles, outliers))
 
 if __name__ == "__main__":
     auto_dqm()
