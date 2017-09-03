@@ -46,7 +46,7 @@ def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
         chi2 += new_pull**2
 
         # Check for max pull
-        if new_pull > max_pull:
+        if abs(new_pull) > abs(max_pull):
             max_pull = new_pull
 
         # Fill Pull Histogram
@@ -124,7 +124,7 @@ def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
             chi2 += new_pull**2
 
             # Check if max_pull
-            if new_pull > max_pull:
+            if abs(new_pull) > abs(max_pull):
                 max_pull = new_pull
 
             # Fill Pull Histogram
@@ -213,9 +213,13 @@ def auto_dqm():
     # Remove reference file from tfiles
     tfiles.remove(r_num+".root")
 
-    # Chi2 Plot
-    chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2} for 1D Histograms", 20, 0, 100)
-    chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2} for 2D Histograms", 20, 0, 100)
+    # General Analysis Plots
+    chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2} for 1D Histograms", 60, 0, 300)
+    maxPull_1D = ROOT.TH1F("maxPull_1D", "Max Pull for 1D Histograms", 32, 0, 160)
+    chi2pull_comp1D = ROOT.TH2F("chi2pull_comp1D", "#Chi^{2} vs. Absolute Max Pull for 1D Hists", 60, 0, 300, 32, 0, 160)
+    chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2} for 2D Histograms", 60, 0, 300)
+    maxPull_2D = ROOT.TH1F("maxPull_2D", "Max Pull for 2D Histograms", 32, 0, 160)
+    chi2pull_comp2D = ROOT.TH2F("chi2pull_comp2D", "#Chi^{2} vs. Absolute Max Pull for 2D Hists", 60, 0, 300, 32, 0, 160)
 
     # PARSE SPECIFIC HISTOGRAM ------------
     hist = "hORecHits"
@@ -248,12 +252,16 @@ def auto_dqm():
             is_good, chi2, max_pull, is_outlier = scan_1D(f_hist, r_hist, hist, f_num, targ_dir)
             if is_good:
                 chi2_1D.Fill(chi2)
+                maxPull_1D.Fill(abs(max_pull))
+                chi2pull_comp1D.Fill(int(chi2/100), int(abs(max_pull)/160), 1.0)
             if is_outlier:
                 outliers += 1
         elif type(f_hist) == ROOT.TH2F:
             is_good, chi2, max_pull, is_outlier = scan_2D(f_hist, r_hist, hist, f_num, targ_dir)
             if is_good:
                 chi2_2D.Fill(chi2)
+                maxPull_2D.Fill(abs(max_pull))
+                chi2pull_comp2D.Fill(int(chi2), int(abs(max_pull)), 1.0)
             if is_outlier:
                 outliers += 1
         else:
@@ -309,13 +317,25 @@ def auto_dqm():
 
     chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_1D.GetYaxis().SetTitle("Entries")
+    maxPull_1D.GetXaxis().SetTitle("Absolute Max Pull Value")
+    maxPull_1D.GetYaxis().SetTitle("Entries")
     chi2_2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_2D.GetYaxis().SetTitle("Entries")
-    chi2_1D.Draw("hist")
+    maxPull_2D.GetXaxis().SetTitle("Absolute Max Pull Value")
+    maxPull_2D.GetYaxis().SetTitle("Entries")
+    chi2pull_comp2D.GetXaxis().SetTitle("#Chi^{2}")
+    chi2pull_comp2D.GetYaxis().SetTitle("Max Pull")
 
-    C.SaveAs("{0}/chi2_1D.pdf".format(targ_dir))
+    # chi2_1D.Draw("hist")
+    # C.SaveAs("{0}/chi2_1D.pdf".format(targ_dir))
     chi2_2D.Draw("hist")
     C.SaveAs("{0}/chi2_2D.pdf".format(targ_dir))
+    maxPull_1D.Draw("hist")
+    C.SaveAs("{0}/maxPull_1D.pdf".format(targ_dir))
+    maxPull_2D.Draw("hist")
+    C.SaveAs("{0}/maxPull_2D.pdf".format(targ_dir))
+    chi2pull_comp2D.Draw("colz")
+    C.SaveAs("{0}/chi2pull_comp2D.pdf".format(targ_dir))
 
     print("\rFiles: {0}/{1}    Outliers: {2}\n".format(files, total_tfiles, outliers))
 

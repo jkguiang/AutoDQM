@@ -127,13 +127,17 @@
                 fill_sections(data);
                 $('[id^=img_]').mouseenter(
                     function() {
-                        // Dynamic Well Background
-                        $("#well").css("background","#000 url('"+$(this).attr("src")+"') no-repeat center top");
+                        // Dynamic Well Preview
+                        $("#preview").attr("src", $(this).attr("src"));
 
                         // Dynamic Well Tooltip
                         new_txt = data[Number($(this).attr('id').split("_")[1])]["txt_path"];
                         if (new_txt != "None"){
+                            $("#tooltip").show();
                             $("#tooltip").load(new_txt);
+                        }
+                        else {
+                            $("#tooltip").hide();
                         }
                     } 
                 );
@@ -306,7 +310,6 @@
                 <div class="col-md-3">
                     <div class="sidebar-nav-fixed sidebar-nav-fixed affix">
                         <div class="well well-image">
-                            <div id="well" class="bg"></div>
                             <h4>AutoPlotter</h4>
                             <div class="text-center">
                                 <form>
@@ -318,6 +321,11 @@
                                     </div>
                                 </form>
                                 <a style="z-index: auto; position: relative;" class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoPlotter" role="button">Github &raquo;</a>
+                            </div>
+                        </div>
+                        <div class="well">
+                            <div class="text-center">
+                                <img id="preview" class="img-thumbnail" src="" alt="Hover over a thumbnail to get preview here" width=200 height=300>
                             </div>
                         </div>
                         <div class="well">
