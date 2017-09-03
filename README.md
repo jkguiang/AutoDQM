@@ -6,10 +6,10 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 
 ## Features
 
-# AutoDQM.py
+###### AutoDQM.py
 - [x] Outputs histograms that clearly highlight outliers
 - [x] Creates a .txt file along with each .pdf with relevant information on it
 - [ ] Allows user to easily change input
 
-# index.php
+###### index.php
 - [x] Dynamically displays text files below AutoPlotter toolbar
