@@ -64,7 +64,7 @@ def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
         pull_hist.Draw("hist")
 
         # Text box
-        text = ROOT.TLatex(0,.9,"#scale[0.6]{Run: "+f_num+"}");  
+        text = ROOT.TLatex(0,.9,"#scale[0.6]{Run: "+f_num+"}") 
         text.SetNDC(ROOT.kTRUE);
         text.Draw()
 
@@ -78,23 +78,24 @@ def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
 
 # Scan 2D Hist, plot Pull hist and compute Chi^2
 def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
+    # Set up canvas
     c = ROOT.TCanvas('c', 'Pull')
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
     ROOT.gStyle.SetNumberContours(255)
 
+    # Variable declarations
     is_good = True
     chi2 = 0
     is_outlier = False
     max_pull = 0
     nBins = 0
+    
+    # Get empty clone of reference histogram for pull hist
     pull_hist = r_hist.Clone("pull_hist")
     pull_hist.Reset()
 
-    # DEBUG
-    skip = 0
-    overflow = 0
-
+    # Reject empty histograms
     if f_hist.GetEntries() == 0:
         is_good = False
         return is_good, chi2, max_pull, is_outlier
@@ -113,11 +114,14 @@ def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
             bin2 = r_hist.GetBinContent(x, y)
             bin2err = r_hist.GetBinError(x, y)
 
+            # Count bins for chi2 calculation
             nBins += 1
+
+            # Ensure that divide-by-zero error is not thrown when calculating pull
             if bin1err == 0 and bin2err == 0:
-                skip += 1
                 continue
 
+            # Calculate pull
             new_pull = pull(bin1, bin1err, bin2, bin2err)
 
             # Sum pulls
@@ -127,20 +131,22 @@ def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
             if abs(new_pull) > abs(max_pull):
                 max_pull = new_pull
 
-            # Fill Pull Histogram
+            # Cap pull values displayed on histogram (max pull calculated before this)
             if new_pull > 50:
-                overflow += 1
                 new_pull = 50
             if new_pull < -50:
-                overflow += 1
                 new_pull = -50
 
+            # Fill Pull Histogram
             pull_hist.SetBinContent(x, y, new_pull)
 
     # Compute chi2
     chi2 = (chi2/nBins)
 
+    # Chi2 Cut
     if chi2 > 50:
+        # Used in outliers count
+        is_outlier = True
 
         # Plot pull hist
         pull_hist.GetZaxis().SetRangeUser(-50, 50)
@@ -148,11 +154,10 @@ def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
         pull_hist.Draw("colz")
 
         # Text box
-        text = ROOT.TLatex(.79,.91,"#scale[0.6]{Run: "+f_num+"}");  
+        text = ROOT.TLatex(.79,.91,"#scale[0.6]{Run: "+f_num+"}") 
         text.SetNDC(ROOT.kTRUE);
         text.Draw()
 
-        is_outlier = True
         c.SaveAs("{0}/{1}_{2}.pdf".format(targ_dir, hist, f_num))
 
         # Write text file
@@ -228,7 +233,7 @@ def auto_dqm():
     files = 0
     outliers = 0
     for tfile in tfiles:
-        # print "File: {0}".format(tfile)
+
         files += 1
 
         f_num = tfile.split(".")[0]
@@ -242,7 +247,6 @@ def auto_dqm():
         # Open recHits
         f_path = "{0}{1}{2}".format(main_dir.format(f_num), sub_dir, hist)
         r_path = "{0}{1}{2}".format(main_dir.format(r_num), sub_dir, hist)
-        # print("New File: "+f_path)
         f_hist = new_file.Get(f_path)
 
         # print("Reference: "+r_path)
@@ -315,6 +319,7 @@ def auto_dqm():
     #             else:
     #                 print(histograms[hist])
 
+    # General Analysis axis settings
     chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_1D.GetYaxis().SetTitle("Entries")
     maxPull_1D.GetXaxis().SetTitle("Absolute Max Pull Value")
@@ -326,6 +331,7 @@ def auto_dqm():
     chi2pull_comp2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2pull_comp2D.GetYaxis().SetTitle("Max Pull")
 
+    # chi2 1D histogram is not being drawn because 136 item limit exceeded **FIX THIS**
     # chi2_1D.Draw("hist")
     # C.SaveAs("{0}/chi2_1D.pdf".format(targ_dir))
     chi2_2D.Draw("hist")
