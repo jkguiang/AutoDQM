@@ -19,7 +19,7 @@ def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
     pull_hist = r_hist.Clone("pull_hist")
     pull_hist.Reset()
 
-    if f_hist.GetEntries() == 0:
+    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
         is_good = False
         return is_good, chi2, max_pull, is_outlier
 
@@ -96,7 +96,7 @@ def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
     pull_hist.Reset()
 
     # Reject empty histograms
-    if f_hist.GetEntries() == 0:
+    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
         is_good = False
         return is_good, chi2, max_pull, is_outlier
 
@@ -164,7 +164,8 @@ def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
         new_txt = open("{0}/{1}_{2}.txt".format(targ_dir.split("pdfs")[0]+"txts" , hist, f_num), "w")
         new_txt.writelines(["Run: {0}\n".format(f_num), 
                             "Max Pull Value: {0}\n".format(max_pull),
-                            "Chi^2: {0}\n".format(chi2)])
+                            "Chi^2: {0}\n".format(chi2),
+                            "Entries: {0}\n".format(int(f_hist.GetEntries()))])
         new_txt.close()
 
     return is_good, chi2, max_pull, is_outlier
@@ -187,9 +188,7 @@ def pull(bin1, binerr1, bin2, binerr2):
 # End Analysis Functions ------
 
 # AutoDQM
-def auto_dqm():
-
-    targ_dir = "/home/users/jguiang/public_html/dqm/pdfs"
+def auto_dqm(targ_dir, tfiles_dir, r_num):
 
     # Check to make sure output directory exists
     if not os.path.isdir(targ_dir):
@@ -203,7 +202,6 @@ def auto_dqm():
     C = ROOT.TCanvas('C', 'Chi2')
 
     # Location of root files
-    tfiles_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/SingleMuon/"
     tfiles = os.listdir(tfiles_dir)
     total_tfiles = (len(os.listdir(tfiles_dir)) - 1)
     # tfiles_dir = "/home/users/jguiang/projects/AutoDQM/test_files/"
@@ -211,9 +209,6 @@ def auto_dqm():
 
     # Main dir = location of plots
     main_dir = "DQMData/Run {0}/CSC/Run summary/CSCOfflineMonitor/"
-
-    # Reference file run number
-    r_num = "301531"
 
     # Remove reference file from tfiles
     tfiles.remove(r_num+".root")
@@ -346,4 +341,28 @@ def auto_dqm():
     print("\rFiles: {0}/{1}    Outliers: {2}\n".format(files, total_tfiles, outliers))
 
 if __name__ == "__main__":
-    auto_dqm()
+
+    # targ_dir = "/home/users/jguiang/public_html/dqm/pdfs"
+
+    # # Location of root files
+    # tfiles_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/SingleMuon/"
+    # tfiles = os.listdir(tfiles_dir)
+    # total_tfiles = (len(os.listdir(tfiles_dir)) - 1)
+    # # tfiles_dir = "/home/users/jguiang/projects/AutoDQM/test_files/"
+    # # tfiles = os.listdir(tfiles_dir)
+
+    # # Main dir = location of plots
+    # main_dir = "DQMData/Run {0}/CSC/Run summary/CSCOfflineMonitor/"
+
+    # # Reference file run number
+    # r_num = "301531"
+
+    targ_dir = "/home/users/jguiang/public_html/dqm_test/pdfs"
+
+    # Location of root files
+    tfiles_dir = "root_files/"
+
+    # Reference file run number
+    r_num = "301531"
+
+    auto_dqm(targ_dir, tfiles_dir, r_num)

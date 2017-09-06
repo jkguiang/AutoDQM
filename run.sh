@@ -90,7 +90,7 @@ clean(){
 }
 
 # Default
-main_dir=/home/users/${USER}/public_html/dqm
+main_dir=/home/users/${USER}/public_html/dqm_test
 png_qual=50
 
 if [ "$1" == "setup" ] ; then
