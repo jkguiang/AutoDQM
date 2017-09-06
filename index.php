@@ -152,6 +152,8 @@
                 $("#slider").on("slide", function(slideEvt) {
                     $("img").attr("width", indexMap["thumbnails"]["width"]*(slideEvt.value/100));
                     $("img").attr("height", indexMap["thumbnails"]["height"]*(slideEvt.value/100));
+                    $("#preview").attr("height", indexMap["thumbnails"]["height"]);
+                    $("#preview").attr("width", indexMap["thumbnails"]["width"]);
                 });
 
                 // Ensure that images are drawn with slideEvt value when page is loaded (so if page is refreshed by search funct, maintain size)
@@ -236,14 +238,13 @@
 
                 container.html("");
 
-                for (var i = 0; i < data.length; i+=3) {
+                for (var i = 0; i < (data.length + data.length % 3); i+=3) {
                     var toappend = "";
 
                     //Draw thumbnails
                     toappend += "<div class='row'>";
                     toappend += "   <div class='text-center'>"
                     for (var j = 0; j < 3; j++){
-                        if (counter > data.length) return;
                         toappend +=     ("<div id=grid_" + (i + j) + " class='col-lg-4'></div>");
                         counter++;
                     }
@@ -266,7 +267,7 @@
                     }
 
                     var new_split = "";
-                    var new_name = "";
+                    var html_name = "";
 
                     if (indexMap["search"] != "") {
                         new_search = indexMap["search"];
@@ -275,20 +276,20 @@
 
                         for (var j = 0; j < new_split.length; j++) {
                             new_name += new_split[j];
-
-                            if (data[i]["name"].indexOf(new_name + new_search) != -1){
-                                new_name += "<font class='bg-success'>"+new_search+"</font>";
+                            html_name += new_split[j];
+                            if (data[i]["name"].indexOf(new_name + new_search) != -1) {
+                                new_name += new_search;
+                                html_name += "<font class='bg-success'>"+new_search+"</font>";
                             }
                         }
                     }
 
                     else {
-                        new_name = data[i]["name"];
+                        html_name = data[i]["name"];
                     }
 
 
-                    $("#grid_" + counter).append("<a href="+data[i]["pdf_path"]+"><h4>"+new_name+"</h4></a><a href="+data[i]["pdf_path"]+"><img id=img_"+true_count+" src="+data[i]["png_path"]+
-                        " width="+data[i]["width"]+" height="+data[i]["height"]+"></a>");
+                    $("#grid_" + counter).append("<a href="+data[i]["pdf_path"]+"><h4>"+html_name+"</h4></a><a href="+data[i]["pdf_path"]+"><img id=img_"+true_count+" src="+data[i]["png_path"]+" width="+data[i]["width"]+" height="+data[i]["height"]+"></a>");
                     true_count++;
                     counter++;
                 }
