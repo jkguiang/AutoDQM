@@ -45,8 +45,12 @@ def get_hists(fdir, rdir):
     f_hists = compile_hists(fdir)
     r_hists = compile_hists(rdir)
 
+    subprocess.call("make_html.sh setup")
+
     # AutoDQM takes dicts of data and ref hists, 'ID' of sample (i.e. PU200, noPU, etc.) <- For now, and target directory (currently using cwd)
     AutoDQM.autodqm(f_hists, r_hists, "TEST", "")
+
+    subprocess.call("make_html.sh updt")
 
 def get_files(path, opt):
 
