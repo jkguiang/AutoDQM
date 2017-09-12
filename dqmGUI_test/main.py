@@ -52,6 +52,8 @@ def get_hists(fdir, rdir):
 
     subprocess.call("make_html.sh updt")
 
+    return
+
 def get_files(path, opt):
 
     response = dis_client.query(q=path, typ="files", detail=True)
@@ -69,14 +71,13 @@ def get_files(path, opt):
 def process_query(args):
 
     # Generate root files via bash subprocess
-    get_files(args[0], "data")
-    get_files(args[1], "ref")
+    get_files(args[1], "data")
+    get_files(args[2], "ref")
 
     # Root files should now be in data and ref directories
-    get_hists("/data")
-    get_hists("/ref")
+    get_hists("/data", "/ref")
 
-    
+    return get_response(False, args, timestamp, None, "TEST")
 
 if __name__ == "__main__":
-    print(main(sys.argv))
+    print(process_query(sys.argv))

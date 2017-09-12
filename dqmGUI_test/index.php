@@ -97,7 +97,7 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="#">AutoDQM</a></li>
                 <li role="presentation"><a href="#">Search</a></li>
-                <li role="presentation"><a href="#">Plots</a></li>
+                <li role="presentation"><a href="plots.php">Plots</a></li>
             </ul>
 
 
@@ -116,13 +116,13 @@
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-8">
-                                        <label for="patch">Patch</label>
+                                        <label for="patch">CMSSW Version</label>
                                         <input type="text" class="form-control" id="patch" onkeyup="updt_data()" name="patch" placeholder="e.g. 9_1_1_patch1-91X">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-8">
-                                        <label for="vers">Version</label>
+                                        <label for="vers">Processing Version</label>
                                         <input type="text" class="form-control" id="vers" onkeyup="updt_data()" name="vers" placeholder="e.g. v1_D17-v1">
                                     </div>
                                 </div>
@@ -135,7 +135,7 @@
                             <div class="col-md-10">
                                 <form id="full" action="/" method="post" role="form">
                                     <div class="form-group row">
-                                        <label for="path">Full Path</label>
+                                        <label for="path">Dataset Name</label>
                                         <input type="text" class="form-control" id="path" onkeyup="data_full()" name="path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
                                     </div>
                                 </form>
@@ -157,13 +157,13 @@
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-8">
-                                        <label for="ref_patch">Patch</label>
+                                        <label for="ref_patch">CMSSW Version</label>
                                         <input type="text" class="form-control" id="ref_patch" onkeyup="updt_ref()" name="ref_patch" placeholder="e.g. 9_1_1_patch1-91X">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-8">
-                                        <label for="ref_vers">Version</label>
+                                        <label for="ref_vers">Processing Version</label>
                                         <input type="text" class="form-control" id="ref_vers" onkeyup="updt_ref()" name="ref_vers" placeholder="e.g. v1_D17-v1">
                                     </div>
                                 </div>
@@ -176,7 +176,7 @@
                             <div class="col-md-10">
                                 <form id="ref_full" action="/" method="post" role="form">
                                     <div class="form-group row">
-                                        <label for="ref_path">Full Path</label>
+                                        <label for="ref_path">Dataset Name</label>
                                         <input type="text" class="form-control" id="ref_path" onkeyup="ref_full()" name="ref_path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
                                     </div>
                                 </form>
