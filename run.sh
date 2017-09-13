@@ -32,6 +32,11 @@ setup(){
     txt_dir=${main_dir}/txts
     png_qual=$2
 
+    # Set up root file directory
+    if ! [[ -e root_files ]] ; then
+        mkdir root_files
+    fi
+
     # Check if directories already exist
     if ! [[ -e ${pdf_dir} || -e ${png_dir} ]] ; then
         mkdir ${main_dir}
@@ -70,6 +75,12 @@ scan(){
         python AutoDQM.py
 
         echo 'Updating web interface...'
+        
+        if ! [ "$(ls -A ${pdf_dir})" ] ; then
+            echo 'Error: Target directory is empty.'
+            exit 1
+        fi
+
         pdf_to_png ${pdf_dir} ${png_dir} ${png_qual} 
         chmod -R 755 ${pdf_dir}
         chmod -R 755 ${png_dir}
@@ -79,9 +90,51 @@ scan(){
         exit 0
 
     else
-        echo 'Please run setup command first.'
+        echo 'Error: Please run setup command first.'
         exit 0
     fi
+}
+
+updt(){
+
+    main_dir=$1
+    pdf_dir=${main_dir}/pdfs
+    png_dir=${main_dir}/pngs
+    txt_dir=${main_dir}/txts
+    png_qual=$2
+
+    if [[ -e ${main_dir} ]] ; then
+        rm -rf ${pdf_dir}/*
+        rm -rf ${png_dir}/*
+        rm -rf ${txt_dir}/*
+        rm -rf root_files/*
+
+        echo 'Fetching new root files...'
+        python fetch.py
+
+        echo 'Scanning data...'
+        python AutoDQM.py
+
+        echo 'Updating web interface...'
+        
+        if ! [ "$(ls -A ${pdf_dir})" ] ; then
+            echo 'Error: Target directory is empty.'
+            exit 1
+        fi
+
+        pdf_to_png ${pdf_dir} ${png_dir} ${png_qual} 
+        chmod -R 755 ${pdf_dir}
+        chmod -R 755 ${png_dir}
+        chmod -R 755 ${txt_dir}
+        chmod -R 755 ${main_dir}
+        echo 'Finished.'
+        exit 0
+
+    else
+        echo 'Error: Please run setup command first.'
+        exit 0
+    fi
+
 }
 
 # Delete all relevant files
@@ -100,6 +153,10 @@ if [ "$1" == "setup" ] ; then
 elif [ "$1" == "scan" ] ; then
     shift
     scan ${main_dir} ${png_qual}
+    exit 0
+elif ["$1" == "updt"] ; then
+    shift
+    updt ${main_dir} ${png_qual}
     exit 0
 elif [ "$1" == "clean" ] ; then
     shift

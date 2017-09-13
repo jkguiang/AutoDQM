@@ -6,19 +6,24 @@ import sys
 
 # Scan 1D Hist, plot Pull hist and compute Chi^2
 def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
+    # Set up canvas
     c = ROOT.TCanvas('c', 'Pull')
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
     ROOT.gStyle.SetNumberContours(255)
 
+    # Variable declarations
     is_good = True
     chi2 = 0
     is_outlier = False
     max_pull = 0
     nBins = 0
+    
+    # Get empty clone of reference histogram for pull hist
     pull_hist = r_hist.Clone("pull_hist")
     pull_hist.Reset()
 
+    # Reject empty histograms
     if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
         is_good = False
         return is_good, chi2, max_pull, is_outlier
@@ -36,18 +41,28 @@ def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
         bin2 = r_hist.GetBinContent(x)
         bin2err = r_hist.GetBinError(x)
 
+        # Count bins for chi2 calculation
         nBins += 1
+
+        # Ensure that divide-by-zero error is not thrown when calculating pull
         if bin1err == 0 and bin2err == 0:
             continue
 
+        # Calculate pull
         new_pull = pull(bin1, bin1err, bin2, bin2err)
 
         # Sum pulls
         chi2 += new_pull**2
 
-        # Check for max pull
+        # Check if max_pull
         if abs(new_pull) > abs(max_pull):
             max_pull = new_pull
+
+        # Cap pull values displayed on histogram (max pull calculated before this)
+        if new_pull > 100:
+            new_pull = 100
+        if new_pull < -100:
+            new_pull = -100
 
         # Fill Pull Histogram
         pull_hist.SetBinContent(x, new_pull)
@@ -55,26 +70,32 @@ def scan_1D(f_hist, r_hist, hist, f_num, targ_dir):
     # Compute chi2
     chi2 = (chi2/nBins)
 
-    if chi2 > 80:
+    # Chi2 Cut
+    if chi2 > 50:
+        # Used in outliers count
+        is_outlier = True
 
         # Plot pull hist
-        pull_hist.SetFillColor(ROOT.kGreen)
-        pull_hist.SetLineColor(ROOT.kBlack)
+        pull_hist.GetZaxis().SetRangeUser(-50, 50)
         pull_hist.SetTitle(pull_hist.GetTitle()+" Pull Values")
-        pull_hist.Draw("hist")
+        pull_hist.Draw("colz")
 
         # Text box
-        text = ROOT.TLatex(0,.9,"#scale[0.6]{Run: "+f_num+"}") 
+        text = ROOT.TLatex(.79,.91,"#scale[0.6]{Run: "+f_num+"}") 
         text.SetNDC(ROOT.kTRUE);
         text.Draw()
 
-        is_outlier = True
         c.SaveAs("{0}/{1}_{2}.pdf".format(targ_dir, hist, f_num))
 
-    # DEBUG
-    # print("Chi2: {0}".format(chi2))
+        # Write text file
+        new_txt = open("{0}/{1}_{2}.txt".format(targ_dir.split("pdfs")[0]+"txts" , hist, f_num), "w")
+        new_txt.writelines(["Run: {0}\n".format(f_num), 
+                            "Max Pull Value: {0}\n".format(max_pull),
+                            "Chi^2: {0}\n".format(chi2),
+                            "Entries: {0}\n".format(int(f_hist.GetEntries()))])
+        new_txt.close()
 
-    return chi2, max_pull, is_outlier
+    return is_good, chi2, max_pull, is_outlier
 
 # Scan 2D Hist, plot Pull hist and compute Chi^2
 def scan_2D(f_hist, r_hist, hist, f_num, targ_dir):
@@ -211,7 +232,11 @@ def auto_dqm(targ_dir, tfiles_dir, r_num):
     main_dir = "DQMData/Run {0}/CSC/Run summary/CSCOfflineMonitor/"
 
     # Remove reference file from tfiles
-    tfiles.remove(r_num+".root")
+    try:
+        tfiles.remove(r_num+".root")
+    except ValueError:
+        print("Reference file does not exist.")
+        return
 
     # General Analysis Plots
     chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2} for 1D Histograms", 60, 0, 300)
@@ -325,10 +350,11 @@ def auto_dqm(targ_dir, tfiles_dir, r_num):
     maxPull_2D.GetYaxis().SetTitle("Entries")
     chi2pull_comp2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2pull_comp2D.GetYaxis().SetTitle("Max Pull")
+    chi2pull_comp1D.GetXaxis().SetTitle("#Chi^{2}")
+    chi2pull_comp1D.GetYaxis().SetTitle("Max Pull")
 
-    # chi2 1D histogram is not being drawn because 136 item limit exceeded **FIX THIS**
-    # chi2_1D.Draw("hist")
-    # C.SaveAs("{0}/chi2_1D.pdf".format(targ_dir))
+    chi2_1D.Draw("hist")
+    C.SaveAs("{0}/chi2_1D.pdf".format(targ_dir))
     chi2_2D.Draw("hist")
     C.SaveAs("{0}/chi2_2D.pdf".format(targ_dir))
     maxPull_1D.Draw("hist")
@@ -337,6 +363,8 @@ def auto_dqm(targ_dir, tfiles_dir, r_num):
     C.SaveAs("{0}/maxPull_2D.pdf".format(targ_dir))
     chi2pull_comp2D.Draw("colz")
     C.SaveAs("{0}/chi2pull_comp2D.pdf".format(targ_dir))
+    chi2pull_comp1D.Draw("colz")
+    C.SaveAs("{0}/chi2pull_comp1D.pdf".format(targ_dir))
 
     print("\rFiles: {0}/{1}    Outliers: {2}\n".format(files, total_tfiles, outliers))
 

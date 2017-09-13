@@ -81,7 +81,7 @@
                     function handle_response(response) {
                         console.log(response); 
                         console.log(response["response"]["payload"]);
-                        $("#submit").show();
+                        $("#finished").show();
                         $("#load").hide();
                     }
 
@@ -97,6 +97,7 @@
 
                     $(function(){
                         $("#load").hide();
+                        $("#finished").hide();
                         $("#submit").click(function(){
                             var query = {
                                 "data_query": $("#preview").text(),
@@ -231,6 +232,7 @@
                         </div> <!-- end ref_preview row -->
                         <div class="text-center">
                             <button id="submit" type="submit" class="btn btn-lg btn-success">Submit</button>
+                            <div class="alert alert-success" id="finished">Success! Please navigate to the 'Plots' page to view the results.</span></div>
                         </div>
                         <div class="loader" id="load"></div>
                     </div> <!-- end secondary row middle col -->

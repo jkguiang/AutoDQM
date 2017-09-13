@@ -34,7 +34,7 @@ class HTMLParserRuns(HTMLParser):
     def get_run_links(self):
         new_links = []
         for link in self.links:
-            if "/000" not in link: continue
+            # if "/000" not in link: continue
             new_links.append(self.BASE_URL + link)
         return new_links
 
@@ -126,13 +126,13 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def fetch():
-    print("Fetching DQM files...")
+def fetch(sample, patch, version):
     # content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/SingleMuon/0003019xx/")
     # old_content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/SingleMuon/0003022xx/")
-    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/SingleMuon/")
-    # print get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/StreamExpress/")
-    # print get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/StreamExpress/0003019xx/")
+    # content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/SingleMuon/")
+    # content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/StreamExpress/")
+    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/relval/data/browse/ROOT/RelVal/")
+    # content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/StreamExpress/0003019xx/")
 
     parser = HTMLParserRuns()
     parser.feed(content)
@@ -148,8 +148,8 @@ def fetch():
             toParse.append(link[0])
 
     # Parse new runs for new root files
+    counter = 0
     for url in toParse:
-        print(url)
         new_content = get_url_with_cert(url)
         new_parser = HTMLParserRuns()
         new_parser.clear()
@@ -157,17 +157,19 @@ def fetch():
         parsedLst = new_parser.get_run_linktimestamps()
 
         for new_link in parsedLst:
-            fname = new_link[0].split("DQM")[1].split("_")[2].split("R000")[1]
             linkdate = new_link[1]
 
             if linkdate.month == curdate.month and linkdate.day == curdate.day:
-                fname = new_link[0].split("DQM")[1].split("_")[2].split("R000")[1]
-                print("\nNew file found: {0}\nFile date: {1}        Current date: {2}\n".format(fname, linkdate, curdate))
-                print("url: {0}".format(new_link[0]))
-                get_file_with_cert(new_link[0], "root_files/{0}.root".format(fname))
+                if sample in new_link[0] and patch in new_link[0] and version in new_link[0]:
+                    fname = sample+patch+version
+                    # fname = new_link[0].split("DQM")[1].split("_")[2].split("R000")[1]
+                    print(fname)
+                    get_file_with_cert(new_link[0], "root_files/{0}.root".format(fname))
+                    counter += 1
 
-    print("\n")
+    # print("\n")
+    print("\n{0} new files found.".format(counter))
 
 
 if __name__=='__main__':
-    fetch()
+    fetch("RelValZMM", "9_3_0_pre1-92X", "v2-v1")
