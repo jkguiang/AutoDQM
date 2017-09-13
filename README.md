@@ -13,4 +13,8 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [ ] Seeks and accurately finds outliers
 
 ###### index.php
+- [x] Previews input in a readable way
+- [x] Gives a clear indication on the status of a user's query 
+
+###### plots.php
 - [x] Dynamically displays text files below AutoPlotter toolbar
