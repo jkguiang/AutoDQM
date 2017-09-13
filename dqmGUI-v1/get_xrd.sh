@@ -14,5 +14,6 @@ fi
 for var in "$@" ; do
 
     xrdcp -s root://xrootd.unl.edu//$var ${targ_dir}
+    # xrdcp root://xrootd.unl.edu//$var ${targ_dir}
 
 done

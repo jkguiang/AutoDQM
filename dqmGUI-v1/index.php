@@ -38,8 +38,13 @@
 
                 <!-- JQuery -->
                 <script>
+                    // Global variables
+                    var full_inp = true;
+                    var t0 = 0;
+
                     // Form functions: mostly for updating 'preview' wells
                     function updt_data() {
+                        full_inp = false;
                         $("#full")[0].reset();
                         var sample = document.getElementById("sample").value;
                         var patch = document.getElementById("patch").value;
@@ -48,6 +53,7 @@
                         $('#preview').text("/"+sample+"/"+"CMSSW_"+patch+"_realistic_"+vers+"/DQMIO");
                     }
                     function data_full() {
+                        full_inp = true;
                         $("#modular")[0].reset();
 
                         var path = document.getElementById("path").value;
@@ -56,6 +62,7 @@
                         $('#preview').text(path);
                     }
                     function updt_ref() {
+                        full_inp = false;
                         $("#ref_full")[0].reset();
                         var ref_sample = document.getElementById("ref_sample").value;
                         var ref_patch = document.getElementById("ref_patch").value;
@@ -64,6 +71,7 @@
                         $('#ref_preview').text("/"+ref_sample+"/"+"CMSSW_"+ref_patch+"_realistic_"+ref_vers+"/DQMIO");
                     }
                     function ref_full() {
+                        full_inp = true;
                         $("#ref_modular")[0].reset();
 
                         var ref_path = document.getElementById("ref_path").value;
@@ -71,18 +79,49 @@
                         $('#ref_preview').text("");
                         $('#ref_preview').text(ref_path);
                     }
-                    
-                    function validate() {
-                    }
 
                     // End form functions
 
                     // Query handlers
                     function handle_response(response) {
                         console.log(response); 
-                        console.log(response["response"]["payload"]);
-                        $("#finished").show();
-                        $("#load").hide();
+                        console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
+                        try {
+                            // Handle output from main.py
+                            console.log(response["response"]["payload"]);
+                            var resp = response["response"];
+
+                            if (resp["status"] == "failed") {
+                                $("#internal_err").text(resp["fail_reason"]);
+                                $("#submit").show();
+                                $("#internal_err").show();
+                            }                            
+
+                            else {
+                                $("#finished").show();
+                            }
+                        }
+                        catch(TypeError) {
+                            // Handle crashes, system error, timeouts, etc.
+                            console.log(response["responseText"]);
+                            var resp = response["responseText"];
+                            var err_msg = "";
+                            
+                            if (resp.indexOf("504") !== 1) {
+                                err_msg = "Error: Gateway timed out. Could not reach server."
+                            }
+                            else {
+                                err_msg = "Error: An internal error occured."
+                            }
+
+                            $("#internal_err").text(err_msg);
+
+                            $("#submit").show();
+                            $("#internal_err").show();
+                        }
+                        finally {
+                            $("#load").hide();
+                        }
                     }
 
                     function submit(query) {
@@ -90,21 +129,56 @@
                         console.log(query);
                         $("#load").show();
                         $("#submit").hide();
+                        t0 = Math.floor(Date.now() / 1000);
+                        console.log(t0);
                         $.get("handler.py", query)
                             .done(function(response) {})
                             .always(handle_response);
                     }
 
+                    function check(query) {
+                        var fail = false;
+
+                        if (full_inp) {
+                            var path = document.getElementById("path").value;
+                            var ref_path = document.getElementById("ref_path").value;
+                            if (path == "" || ref_path == "")   {
+                                fail = true;
+                            }
+                        }
+                        else {
+                            var ref_sample = document.getElementById("ref_sample").value;
+                            var ref_patch = document.getElementById("ref_patch").value;
+                            var ref_vers = document.getElementById("ref_vers").value;
+                            if (ref_sample == "" || sample == "" || ref_patch == "" || patch == "" || ref_vers == "" || vers == "") {
+                                fail = true;
+                            }
+                        }
+
+                        if (fail) {
+                            $("#input_err").show();
+                        }
+
+                        else {
+                            $("#input_err").hide();
+                            console.log(query);
+                            submit(query);
+                        }
+                    }
+
                     $(function(){
                         $("#load").hide();
                         $("#finished").hide();
+                        $("#input_err").hide();
+                        $("#internal_err").hide();
                         $("#submit").click(function(){
                             var query = {
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
                             }
-                            console.log(query);
-                            submit(query);
+                            /* console.log(query); */
+                            /* submit(query); */
+                            check(query);
                         });
                     
                     });
@@ -116,8 +190,8 @@
 
         <body>
             <ul class="nav nav-tabs" id="navbar" role="tablist">
-                <li role="presentation" class="active"><a href="#">AutoDQM</a></li>
-                <li role="presentation"><a href="#">Search</a></li>
+                <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
+                <li role="presentation"><a href="./">Search</a></li>
                 <li role="presentation"><a href="plots.php">Plots</a></li>
             </ul>
 
@@ -232,7 +306,10 @@
                         </div> <!-- end ref_preview row -->
                         <div class="text-center">
                             <button id="submit" type="submit" class="btn btn-lg btn-success">Submit</button>
+                            <p><br /></p>
                             <div class="alert alert-success" id="finished">Success! Please navigate to the 'Plots' page to view the results.</span></div>
+                            <div class="alert alert-danger" id="input_err">Error: Incomplete input.</span></div>
+                            <div class="alert alert-danger" id="internal_err">Error: Internal error.</span></div>
                         </div>
                         <div class="loader" id="load"></div>
                     </div> <!-- end secondary row middle col -->

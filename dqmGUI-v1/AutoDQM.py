@@ -193,6 +193,92 @@ def scan_2D(f_hist, r_hist, name, f_id, targ_dir):
 
 # End Parsing Functions ------
 
+# Comparison Plots ------
+
+def draw_same(f_hist, r_hist, name, f_id, targ_dir):
+    # Set up canvas
+    c = ROOT.TCanvas('c', 'Pull')
+    ROOT.gStyle.SetOptStat(0)
+
+    # Variable declarations
+    is_good = True
+    chi2 = 0
+    is_outlier = False
+    max_pull = 0
+    nBins = 0
+    
+    # Reject empty histograms
+    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
+        is_good = False
+        return is_good, chi2, max_pull, is_outlier
+
+    # Normalize f_hist
+    f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
+
+    for x in range(1, r_hist.GetNbinsX()+1):
+
+        # Bin 1 data
+        bin1 = f_hist.GetBinContent(x)
+        bin1err = f_hist.GetBinError(x)
+
+        # Bin 2 data
+        bin2 = r_hist.GetBinContent(x)
+        bin2err = r_hist.GetBinError(x)
+
+        # Count bins for chi2 calculation
+        nBins += 1
+
+        # Ensure that divide-by-zero error is not thrown when calculating pull
+        if bin1err == 0 and bin2err == 0:
+            continue
+
+        # Calculate pull
+        new_pull = pull(bin1, bin1err, bin2, bin2err)
+
+        # Sum pulls
+        chi2 += new_pull**2
+
+        # Check if max_pull
+        if abs(new_pull) > abs(max_pull):
+            max_pull = new_pull
+
+        # Cap pull values displayed on histogram (max pull calculated before this)
+        if new_pull > 100:
+            new_pull = 100
+        if new_pull < -100:
+            new_pull = -100
+
+    # Compute chi2
+    chi2 = (chi2/nBins)
+
+    # Chi2 Cut
+    if chi2 > 50:
+        # Used in outliers count
+        is_outlier = True
+
+        # Plot hist
+        r_hist.Draw()
+        f_hist.Draw("same")
+
+        # Text box
+        text = ROOT.TLatex(.79,.91,"#scale[0.6]{Run: "+f_id+"}") 
+        text.SetNDC(ROOT.kTRUE);
+        text.Draw()
+
+        c.SaveAs("{0}/pdfs/{1}_{2}.pdf".format(targ_dir, name, f_id))
+
+        # Write text file
+        new_txt = open("{0}/txts/{1}_{2}.txt".format(targ_dir, name, f_id), "w")
+        new_txt.writelines(["Run: {0}\n".format(f_id), 
+                            "Max Pull Value: {0}\n".format(max_pull),
+                            "Chi^2: {0}\n".format(chi2),
+                            "Entries: {0}\n".format(int(f_hist.GetEntries()))])
+        new_txt.close()
+
+    return is_good, chi2, max_pull, is_outlier
+
+# End Comparison Plots
+
 # Analysis Functions ------
 def pull(bin1, binerr1, bin2, binerr2):
 
@@ -219,14 +305,10 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
 
     outliers = 0
 
-    # print("Running AutoDQM")
-    # skip = 0
-
     for name in f_hists:
         if not (name in r_hists): continue
         if type(f_hists[name]) != type(r_hists[name]): continue
 
-        # Currently passing "" as targ dir, so targ_dir calls to targ_dir + 'pdfs', targ_dir + 'txts', etc.
         if type(f_hists[name]) == ROOT.TH1F:
             scan_1D(f_hists[name], r_hists[name], name, f_id, targ_dir)
         elif type(f_hists[name]) == ROOT.TH2F:
@@ -245,11 +327,6 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
     chi2_plot.Draw("hist")
     C.SaveAs("{0}/pdfs/chi2.pdf".format(targ_dir))
 
-
-    # print("Chi2 Saved at: {0}/pdfs/chi2.pdf".format(targ_dir))
-    # print("Target PDF Directory: {0}/pdfs".format(targ_dir))
-    # print("Target PDF Directory: {0}/txts".format(targ_dir))
-    # print("Finished, skipped {0} hists".format(skip))
     return
 
 if __name__ == "__main__":

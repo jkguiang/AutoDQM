@@ -304,7 +304,7 @@
 
     <body>
         <ul class="nav nav-tabs" id="navbar" role="tablist">
-            <li role="presentation"><a href="index.php">AutoDQM</a></li>
+            <li role="presentation"><a href="./">AutoDQM</a></li>
             <li role="presentation"><a href="#">Search</a></li>
             <li role="presentation" class="active"><a href="plots.php">Plots</a></li>
         </ul>
