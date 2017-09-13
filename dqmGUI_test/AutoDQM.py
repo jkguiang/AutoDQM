@@ -85,10 +85,10 @@ def scan_1D(f_hist, r_hist, name, f_id, targ_dir):
         text.SetNDC(ROOT.kTRUE);
         text.Draw()
 
-        c.SaveAs("{0}/{1}_{2}.pdf".format(targ_dir, name, f_id))
+        c.SaveAs("{0}/pdfs/{1}_{2}.pdf".format(targ_dir, name, f_id))
 
         # Write text file
-        new_txt = open("{0}/{1}_{2}.txt".format(targ_dir.split("pdfs")[0]+"txts" , name, f_id), "w")
+        new_txt = open("{0}/txts/{1}_{2}.txt".format(targ_dir, name, f_id), "w")
         new_txt.writelines(["Run: {0}\n".format(f_id), 
                             "Max Pull Value: {0}\n".format(max_pull),
                             "Chi^2: {0}\n".format(chi2),
@@ -179,10 +179,10 @@ def scan_2D(f_hist, r_hist, name, f_id, targ_dir):
         text.SetNDC(ROOT.kTRUE);
         text.Draw()
 
-        c.SaveAs("{0}/{1}_{2}.pdf".format(targ_dir, name, f_id))
+        c.SaveAs("{0}/pdfs/{1}_{2}.pdf".format(targ_dir, name, f_id))
 
         # Write text file
-        new_txt = open("{0}/{1}_{2}.txt".format(targ_dir.split("pdfs")[0]+"txts" , name, f_id), "w")
+        new_txt = open("{0}/txts/{1}_{2}.txt".format(targ_dir, name, f_id), "w")
         new_txt.writelines(["Run: {0}\n".format(f_id), 
                             "Max Pull Value: {0}\n".format(max_pull),
                             "Chi^2: {0}\n".format(chi2),
@@ -210,6 +210,17 @@ def pull(bin1, binerr1, bin2, binerr2):
 
 # AutoDQM
 def autodqm(f_hists, r_hists, f_id, targ_dir):
+    # Ensure no graphs are drawn to screen and no root messages are sent to terminal
+    ROOT.gROOT.SetBatch(ROOT.kTRUE)
+    ROOT.gErrorIgnoreLevel = ROOT.kWarning
+
+    C = ROOT.TCanvas("C", "Chi2")
+    chi2_plot = ROOT.TH1F("chi2", "#Chi^{2}", 60, 0, 300)
+
+    outliers = 0
+
+    # print("Running AutoDQM")
+    # skip = 0
 
     for name in f_hists:
         if not (name in r_hists): continue
@@ -219,7 +230,27 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
         if type(f_hists[name]) == ROOT.TH1F:
             scan_1D(f_hists[name], r_hists[name], name, f_id, targ_dir)
         elif type(f_hists[name]) == ROOT.TH2F:
-            scan_2D(f_hists[name], r_hists[name], name, f_id, targ_dir)
+            is_good, chi2, max_pull, is_outlier = scan_2D(f_hists[name], r_hists[name], name, f_id, targ_dir)
+            if is_good:
+                chi2_plot.Fill(chi2)
+            if is_outlier:
+                outliers += 1
+
+        else:
+            skip += 1
+
+    chi2_plot.GetXaxis().SetTitle("#Chi^{2}")
+    chi2_plot.GetYaxis().SetTitle("Entries")
+
+    chi2_plot.Draw("hist")
+    C.SaveAs("{0}/pdfs/chi2.pdf".format(targ_dir))
+
+
+    # print("Chi2 Saved at: {0}/pdfs/chi2.pdf".format(targ_dir))
+    # print("Target PDF Directory: {0}/pdfs".format(targ_dir))
+    # print("Target PDF Directory: {0}/txts".format(targ_dir))
+    # print("Finished, skipped {0} hists".format(skip))
+    return
 
 if __name__ == "__main__":
 

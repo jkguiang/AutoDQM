@@ -29,7 +29,7 @@ def query(q, typ="basic", detail=False):
 
     data = {}
     # try all uafs
-    for num in map(str,[8,10,6,3,4,5]):
+    for num in map(str,[10,8,6,3,4,5]):
         try:
             url = url_pattern.replace("{NUM}",num)
             content =  urllib2.urlopen(url).read() 

@@ -20,6 +20,20 @@
                     .container-wide {
                         padding: 0 50px !important;
                     }
+                    .loader {
+                        text-align: center;
+                        margin: auto;
+                        border: 16px solid #f3f3f3; /* Light grey */
+                        border-top: 16px solid #3498db; /* Blue */
+                        border-radius: 50%;
+                        width: 120px;
+                        height: 120px;
+                        animation: spin 2s linear infinite;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
                 </style>
 
                 <!-- JQuery -->
@@ -67,16 +81,22 @@
                     function handle_response(response) {
                         console.log(response); 
                         console.log(response["response"]["payload"]);
+                        $("#submit").show();
+                        $("#load").hide();
                     }
 
                     function submit(query) {
-                        console.log("submitting query")
+                        console.log("submitting query");
+                        console.log(query);
+                        $("#load").show();
+                        $("#submit").hide();
                         $.get("handler.py", query)
                             .done(function(response) {})
                             .always(handle_response);
                     }
 
                     $(function(){
+                        $("#load").hide();
                         $("#submit").click(function(){
                             var query = {
                                 "data_query": $("#preview").text(),
@@ -204,7 +224,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <label for="ref_preview_well">Reference Preview</label>
-                                <div class="alert alert-success" id="ref_preview_well">
+                                <div class="alert alert-info" id="ref_preview_well">
                                     <p id="ref_preview">/RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO</p>
                                 </div>
                             </div>
@@ -212,6 +232,7 @@
                         <div class="text-center">
                             <button id="submit" type="submit" class="btn btn-lg btn-success">Submit</button>
                         </div>
+                        <div class="loader" id="load"></div>
                     </div> <!-- end secondary row middle col -->
                     <div class="col-lg-3">
                     </div> <!-- end secondary row right padding -->
