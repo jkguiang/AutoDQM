@@ -52,7 +52,7 @@
 
                         $('#preview').text("/"+sample+"/"+"CMSSW_"+patch+"_realistic_"+vers+"/DQMIO");
                     }
-                    function data_full() {
+                    function dataName_full() {
                         full_inp = true;
                         $("#modular")[0].reset();
 
@@ -70,7 +70,7 @@
 
                         $('#ref_preview').text("/"+ref_sample+"/"+"CMSSW_"+ref_patch+"_realistic_"+ref_vers+"/DQMIO");
                     }
-                    function ref_full() {
+                    function refName_full() {
                         full_inp = true;
                         $("#ref_modular")[0].reset();
 
@@ -167,24 +167,34 @@
                             submit(query);
                         }
                     }
+                    // End query handlers
 
-                    $(function(){
+                    // Main function
+                    $(function() {
+                        // Initital hides
                         $("#load").hide();
                         $("#finished").hide();
                         $("#input_err").hide();
                         $("#internal_err").hide();
+
+                        // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
+                        $(window).keydown(function(event) {
+                            if (event.keyCode == 13) {
+                                event.preventDefault();
+                                return false;
+                            }
+                        });
+
+                        // Main query handler
                         $("#submit").click(function(){
                             var query = {
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
                             }
-                            /* console.log(query); */
-                            /* submit(query); */
                             check(query);
                         });
                     
                     });
-                    // End query handlers
 
                 </script>
 
@@ -230,10 +240,10 @@
 
                         <div class="row">
                             <div class="col-md-10">
-                                <form id="full" action="/" method="post" role="form">
+                                <form id="full" action="./" method="post" role="form">
                                     <div class="form-group row">
                                         <label for="path">Dataset Name</label>
-                                        <input type="text" class="form-control" id="path" onkeyup="data_full()" name="path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
+                                        <input type="text" class="form-control" id="path" onkeyup="dataName_full()" name="path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
                                     </div>
                                 </form>
                             </div>
@@ -271,10 +281,10 @@
 
                         <div class="row">
                             <div class="col-md-10">
-                                <form id="ref_full" action="/" method="post" role="form">
+                                <form id="ref_full" action="./" method="post" role="form">
                                     <div class="form-group row">
                                         <label for="ref_path">Dataset Name</label>
-                                        <input type="text" class="form-control" id="ref_path" onkeyup="ref_full()" name="ref_path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
+                                        <input type="text" class="form-control" id="ref_path" onkeyup="refName_full()" name="ref_path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
                                     </div>
                                 </form>
                             </div>
@@ -309,9 +319,9 @@
                         <div class="text-center">
                             <button id="submit" type="submit" class="btn btn-lg btn-success">Submit</button>
                             <p><br /></p>
-                            <div class="alert alert-success" id="finished">Success! Please navigate to the 'Plots' page to view the results.</span></div>
-                            <div class="alert alert-danger" id="input_err">Error: Incomplete input.</span></div>
-                            <div class="alert alert-danger" id="internal_err">Error: Internal error.</span></div>
+                            <a href="plots.php"><div class="alert alert-success" id="finished">Success! Please navigate to the 'Plots' page to view the results.</div></a>
+                            <div class="alert alert-danger" id="input_err">Error: Incomplete input.</div>
+                            <div class="alert alert-danger" id="internal_err">Error: Internal error.</div>
                         </div>
                         <div class="loader" id="load"></div>
                     </div> <!-- end secondary row middle col -->
