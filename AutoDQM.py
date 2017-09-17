@@ -256,6 +256,10 @@ def draw_same(f_hist, r_hist, name, f_id, targ_dir):
         # Used in outliers count
         is_outlier = True
 
+        # Set hist style
+        r_hist.SetLineColor(ROOT.kBlue)
+        f_hist.SetLineColor(ROOT.kBlack)
+
         # Plot hist
         r_hist.Draw()
         f_hist.Draw("same")
@@ -300,6 +304,9 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
+    max_1D = 0
+    max_2D = 0
+
     C = ROOT.TCanvas("C", "Chi2")
     chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2}", 60, 0, 300)
     chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2}", 60, 0, 300)
@@ -314,12 +321,16 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
             is_good, chi2, max_pull, is_outlier = draw_same(f_hists[name], r_hists[name], name, f_id, targ_dir)
             if is_good:
                 chi2_1D.Fill(chi2)
+                if chi2 > max_1D:
+                    max_1D = chi2
             if is_outlier:
                 outliers += 1
         elif type(f_hists[name]) == ROOT.TH2F:
             is_good, chi2, max_pull, is_outlier = scan_2D(f_hists[name], r_hists[name], name, f_id, targ_dir)
             if is_good:
                 chi2_2D.Fill(chi2)
+                if chi2 > max_2D:
+                    max_2D = chi2
             if is_outlier:
                 outliers += 1
 
@@ -330,6 +341,11 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
     chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_2D.GetYaxis().SetTitle("Entries")
     chi2_2D.GetYaxis().SetTitle("Entries")
+
+    chi2_1D.GetXaxis().SetRangeUser(0, int(max_1D))
+    chi2_1D.GetXaxis().SetLimits(0, max_1D)
+    chi2_2D.GetXaxis().SetRangeUser(0, int(max_2D))
+    chi2_2D.GetXaxis().SetLimits(0, max_2D)
 
     chi2_1D.Draw("hist")
     C.SaveAs("{0}/pdfs/chi2_1D.pdf".format(targ_dir))
