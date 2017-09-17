@@ -301,7 +301,8 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     C = ROOT.TCanvas("C", "Chi2")
-    chi2_plot = ROOT.TH1F("chi2", "#Chi^{2}", 60, 0, 300)
+    chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2}", 60, 0, 300)
+    chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2}", 60, 0, 300)
 
     outliers = 0
 
@@ -310,22 +311,30 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
         if type(f_hists[name]) != type(r_hists[name]): continue
 
         if type(f_hists[name]) == ROOT.TH1F:
-            scan_1D(f_hists[name], r_hists[name], name, f_id, targ_dir)
+            is_good, chi2, max_pull, is_outlier = draw_same(f_hists[name], r_hists[name], name, f_id, targ_dir)
+            if is_good:
+                chi2_1D.Fill(chi2)
+            if is_outlier:
+                outliers += 1
         elif type(f_hists[name]) == ROOT.TH2F:
             is_good, chi2, max_pull, is_outlier = scan_2D(f_hists[name], r_hists[name], name, f_id, targ_dir)
             if is_good:
-                chi2_plot.Fill(chi2)
+                chi2_2D.Fill(chi2)
             if is_outlier:
                 outliers += 1
 
         else:
             skip += 1
 
-    chi2_plot.GetXaxis().SetTitle("#Chi^{2}")
-    chi2_plot.GetYaxis().SetTitle("Entries")
+    chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
+    chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
+    chi2_2D.GetYaxis().SetTitle("Entries")
+    chi2_2D.GetYaxis().SetTitle("Entries")
 
-    chi2_plot.Draw("hist")
-    C.SaveAs("{0}/pdfs/chi2.pdf".format(targ_dir))
+    chi2_1D.Draw("hist")
+    C.SaveAs("{0}/pdfs/chi2_1D.pdf".format(targ_dir))
+    chi2_2D.Draw("hist")
+    C.SaveAs("{0}/pdfs/chi2_2D.pdf".format(targ_dir))
 
     return
 

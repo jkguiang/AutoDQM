@@ -3,11 +3,11 @@
                 <title>AutoDQM</title>
 
                 <!-- Latest compiled and minified Boostrap CSS and Javascript -->
-                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
                 <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
                 <!-- Slider -->
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.1/css/bootstrap-slider.min.css">
@@ -131,6 +131,8 @@
                         $("#submit").hide();
                         t0 = Math.floor(Date.now() / 1000);
                         console.log(t0);
+
+                        $.ajaxSetup({timeout:300000}); // Set timeout to 5 minutes
                         $.get("handler.py", query)
                             .done(function(response) {})
                             .always(handle_response);
