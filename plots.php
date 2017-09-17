@@ -327,7 +327,7 @@
                                         <input id="slider" type="text" data-slider-ticks="[0, 100, 150]" data-slider-ticks-snap-bounds="5" data-slider-ticks-labels='["0%", "", "150%"]' data-slider-value="100"/>
                                     </div>
                                 </form>
-                                <a style="z-index: auto; position: relative;" class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoPlotter" role="button">Github &raquo;</a>
+                                <a style="z-index: auto; position: relative;" class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoDQM" role="button">Github &raquo;</a>
                             </div>
                         </div>
                         <div class="well">
