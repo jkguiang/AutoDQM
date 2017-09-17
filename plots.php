@@ -111,9 +111,27 @@
             var php_out = <?php echo json_encode($images); ?>;
             var indexMap = {"thumbnails":{"width": 0, "height": 0}, "search":""};
             var page_loads = 0;
+            response = {};
+
+            // Fetch object pased from index
+            function fetch_object() {
+                var url = document.location.href.split("#")[0],
+                    params = url.split('?')[1].split('&'), 
+                    tmp;
+                for (var i = 0, l = params.length; i < l; i++) {
+                    tmp = params[i].split('=');
+                    response[tmp[0]] = tmp[1];
+                }
+                response["query"] = response["query"].split("%2C");
+                for (var i = 1; i < 3; i++) {
+                    response["query"][i] = unescape(response["query"][i]);
+                }
+                console.log(response);
+            }
 
             $(function() {
                 page_loads++;
+                console.log(localStorage);
                 load_page(php_out);
             });
 
@@ -121,6 +139,16 @@
                 var data = make_json(php_out);
                 filter(data);
                 fill_sections(data);
+                if (page_loads == 1) {
+                    try {
+                        fetch_object();
+                        $("#data_title").text(response["query"][1]);
+                        $("#ref_title").text(response["query"][2]);
+                    }
+                    catch(TypeError) {
+                        $("#title_wells").hide();
+                    }
+                }
                 $('[id^=img_]').mouseenter(
                     function() {
                         // Dynamic Well Preview
@@ -342,6 +370,17 @@
                 </div>
 
                 <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                    <div class="row">
+                        <div class="col-sm-2"></div>
+                        <div class="col-sm-8" id="title_wells">
+                            <label for="data_well">Data</label>
+                            <div class="alert alert-success" id="data_well"><p id="data_title"></p></div>
+                            <label for="ref_well">Reference</label>
+                            <div class="alert alert-info" id="ref_well"><p id="ref_title" ></p></div>
+                            <hr>
+                        </div>
+                        <div class="col-sm-2"></div>
+                    </div>
                     <!-- Images -->
                     <div id="section_1" class="container">
                     </div><!-- /.container -->

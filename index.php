@@ -83,6 +83,11 @@
                     // End form functions
 
                     // Query handlers
+                    function pass_object(new_object) {
+                        url = (window.location.href + "plots.php?query=" + encodeURIComponent(new_object));
+                        document.location.href = url;
+                    }
+
                     function handle_response(response) {
                         console.log(response); 
                         console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
@@ -98,6 +103,9 @@
                             }                            
 
                             else {
+                                localStorage["data"] = response["query"][1]
+                                localStorage["ref"] = response["query"][2]
+                                pass_object(response["query"])
                                 $("#finished").show();
                             }
                         }
