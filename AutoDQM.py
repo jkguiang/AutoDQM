@@ -196,9 +196,11 @@ def scan_2D(f_hist, r_hist, name, f_id, targ_dir):
 # Comparison Plots ------
 
 def draw_same(f_hist, r_hist, name, f_id, targ_dir):
+    # Plots that should always be drawn
+    hists = ["hSnhits", "hSnSegments", "hWirenGroupsTotal", "hStripNFired", "hRHnrechits"]
+
     # Set up canvas
-    c = ROOT.TCanvas('c', 'Pull')
-    ROOT.gStyle.SetOptStat(0)
+    c = ROOT.TCanvas('c', 'c')
 
     # Variable declarations
     is_good = True
@@ -209,8 +211,9 @@ def draw_same(f_hist, r_hist, name, f_id, targ_dir):
     
     # Reject empty histograms
     if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
-        is_good = False
-        return is_good, chi2, max_pull, is_outlier
+        if name not in hists:
+            is_good = False
+            return is_good, chi2, max_pull, is_outlier
 
     # Normalize f_hist
     f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
@@ -252,12 +255,13 @@ def draw_same(f_hist, r_hist, name, f_id, targ_dir):
     chi2 = (chi2/nBins)
 
     # Chi2 Cut
-    if chi2 > 50:
+    if chi2 > 50 or name in hists:
         # Used in outliers count
         is_outlier = True
 
         # Set hist style
-        r_hist.SetLineColor(ROOT.kBlue)
+        r_hist.SetLineColor(28)
+        r_hist.SetFillColor(20)
         f_hist.SetLineColor(ROOT.kBlack)
 
         # Plot hist
@@ -265,7 +269,7 @@ def draw_same(f_hist, r_hist, name, f_id, targ_dir):
         f_hist.Draw("same")
 
         # Text box
-        text = ROOT.TLatex(.79,.91,"#scale[0.6]{Run: "+f_id+"}") 
+        text = ROOT.TLatex(.15,.91,"#scale[0.6]{Run: "+f_id+"}") 
         text.SetNDC(ROOT.kTRUE);
         text.Draw()
 
@@ -308,8 +312,8 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
     max_2D = 0
 
     C = ROOT.TCanvas("C", "Chi2")
-    chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2}", 60, 0, 300)
-    chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2}", 60, 0, 300)
+    chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2} for 1D Histograms", 60, 0, 300)
+    chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2} for 2D Histograms", 60, 0, 300)
 
     outliers = 0
 
@@ -338,17 +342,20 @@ def autodqm(f_hists, r_hists, f_id, targ_dir):
             skip += 1
 
     chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
-    chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
-    chi2_2D.GetYaxis().SetTitle("Entries")
-    chi2_2D.GetYaxis().SetTitle("Entries")
+    chi2_1D.GetYaxis().SetTitle("Entries")
 
     chi2_1D.GetXaxis().SetRangeUser(0, int(max_1D))
     chi2_1D.GetXaxis().SetLimits(0, max_1D)
-    chi2_2D.GetXaxis().SetRangeUser(0, int(max_2D))
-    chi2_2D.GetXaxis().SetLimits(0, max_2D)
 
     chi2_1D.Draw("hist")
     C.SaveAs("{0}/pdfs/chi2_1D.pdf".format(targ_dir))
+
+    chi2_2D.GetXaxis().SetTitle("#Chi^{2}")
+    chi2_2D.GetYaxis().SetTitle("Entries")
+
+    # chi2_2D.GetXaxis().SetRangeUser(0, int(max_2D))
+    # chi2_2D.GetXaxis().SetLimits(0, max_2D)
+
     chi2_2D.Draw("hist")
     C.SaveAs("{0}/pdfs/chi2_2D.pdf".format(targ_dir))
 
