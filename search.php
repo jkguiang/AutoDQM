@@ -43,18 +43,46 @@
                     var t0 = 0;
 
                     // Form functions: mostly for updating 'preview' wells
-                    function updt_test() {
-                        $("#preview").text("test");
+                    function check_search() {
+                        // Ensure form is filled
+                        if ( document.getElementById("search_txt").value == "" ) {
+                            // TODO Add some check for correct input here
+                            $("#search").attr('disabled', 'disabled');
+                        }
+                        else {
+                            $("#search").removeAttr('disabled');
+                        }
+                    }
+
+                    function check_selection() {
+                        is_good = true;
+                        if ($(cur_tag).text() == "No selection.") {
+                            is_good = false;
+                        }
+                        if (!$("data_check").is(":checked") || !$("ref_check").is(":checked")) {
+                            is_good = false;
+                        }
+                        if (is_good) {
+                            $("#select").removeAttr('disabled');
+                        }
+                    }
+
+                    function check_submission() {
+                        is_good = true;
+                        if ($("#data_select").text() == "No data selected.") {
+                            is_good = false;
+                        }
+                        if ($("#ref_select").text() == "No reference selected.") {
+                            is_good = false;
+                        }
+                        if (is_good) {
+                            $("#submit").removeAttr('disabled');
+                        }
                     }
 
                     // End form functions
 
                     // Query handlers
-                    function pass_object(new_object) {
-                        url = (window.location.href + "plots.php?query=" + encodeURIComponent(new_object));
-                        document.location.href = url;
-                    }
-
                     function handle_response(response) {
                         console.log(response); 
                         console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
@@ -72,7 +100,6 @@
                             else {
                                 localStorage["data"] = response["query"][1]
                                 localStorage["ref"] = response["query"][2]
-                                pass_object(response["query"])
                                 $("#finished").show();
                             }
                         }
@@ -108,7 +135,7 @@
                         console.log(t0);
 
                         $.ajaxSetup({timeout:300000}); // Set timeout to 5 minutes
-                        $.get("handler.py", query)
+                        $.get("search_handler.py", query)
                             .done(function(response) {})
                             .always(handle_response);
                     }
@@ -134,11 +161,15 @@
 
                     // Main function
                     $(function() {
-                        // Initital hides
+                        // Main hides
                         $("#load").hide();
                         $("#data_well").hide();
                         $("#ref_well").hide();
+
+                        // Error hides
+                        $("#internal_err").hide();
                         $("#input_err").hide();
+                        $("err_msg").hide();
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
                         $(window).keydown(function(event) {
@@ -156,6 +187,11 @@
                             check(query);
                         });
 
+                        $("#select").click(function() {
+                            $(cur_tag + "_preview").text($(cur_tag).text());
+                            check_submission();
+                        });
+
                         $("#submit").click(function() {
                             if ($("#data_select").text() == "No data selected." || $("#ref_select").text() == "No reference selected.") {
                                 $("#input_err").show();
@@ -165,7 +201,7 @@
                                 localStorage["ref"] = $("#ref_select").text();
                                 document.location.href="./";
                             }
-                        })
+                        });
 
                         $("#data_check").on("click", function(){
                             if ( $(this).is(":checked") ) {
@@ -175,6 +211,8 @@
                                 $("#data_well").show();
                                 $("#none_well").hide();
                                 $("#ref_well").hide();
+
+                                check_selection();
                             }
                             else {
                                 cur_tag = "#none";
@@ -185,6 +223,7 @@
                                 $("#ref_well").hide();
                             }
                         });
+
                         $("#ref_check").on("click", function(){
                             if ( $(this).is(":checked") ) {
                                 cur_tag = "#ref";
@@ -193,6 +232,8 @@
                                 $("#ref_well").show();
                                 $("#data_well").hide();
                                 $("#none_well").hide();
+
+                                check_selection();
                             }
                             else {
                                 cur_tag = "#none";
@@ -226,10 +267,10 @@
                         <form id="modular" action="/" method="post" role="form">
                             <div class="form-group row">
                                 <div class="col-sm-10">
-                                    <input type="text" class="form-control" id="search_txt" onkeyup="updt_test()" name="search_txt" placeholder="Dataset name">
+                                    <input type="text" class="form-control" id="search_txt" onkeyup="check_search()" name="search_txt" placeholder="Dataset name">
                                 </div>
                                 <div class="col-sm-1">
-                                    <button id="search" type="submit" class="btn btn-success">Search</button>
+                                    <button id="search" type="submit" class="btn btn-success" disabled>Search</button>
                                 </div>
                                 <div class="col-sm-1"><div class="loader" id="load"></div></div>
                             </div>
@@ -255,7 +296,7 @@
                             <div class="col-sm-3"></div>
                             <div class="col-sm-2"><div class="checkbox"><label><input id="data_check" type="checkbox" value="data">Data</label></div></div>
                             <div class="col-sm-2"><div class="checkbox"><label><input id="ref_check" type="checkbox" value="ref">Reference</label></div></div>
-                            <div class="col-sm-2"><button id="select" type="submit" class="btn btn-success">Select</button></div>
+                            <div class="col-sm-2"><button id="select" type="submit" class="btn btn-success" disabled>Select</button></div>
                             <div class="col-sm-3"></div>
                         </div>
                     </div> <!-- end slection preview -->
@@ -267,7 +308,7 @@
                         <div class="alert alert-info" id="ref_select" name="ref_select">No reference selected.</div>
                         <div class="row">
                             <div class="col-sm-5"></div>
-                            <div class="col-sm-2"><button id="submit" type="submit" class="btn btn-success">Submit</button></div>
+                            <div class="col-sm-2"><button id="submit" type="submit" class="btn btn-success" disabled>Submit</button></div>
                             <div class="col-sm-5"></div>
                         </div>
                     </div>
@@ -277,6 +318,8 @@
                     <hr>
                     <div class="col-lg-3"></div>
                     <div class="col-lg-6"><div class="alert alert-danger" id="input_err">Error: Incomplete input.</div></div>
+                    <div class="col-lg-6"><div class="alert alert-danger" id="internal_err">Error: Incomplete input.</div></div>
+                    <div class="col-lg-6"><div class="alert alert-danger" id="err_msg">Error: Incomplete input.</div></div>
                     <div class="col-lg-3"></div>
                 </div>
             </div> <!-- end container -->
