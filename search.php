@@ -169,7 +169,6 @@
                         // Error hides
                         $("#internal_err").hide();
                         $("#input_err").hide();
-                        $("err_msg").hide();
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
                         $(window).keydown(function(event) {
@@ -318,8 +317,7 @@
                     <hr>
                     <div class="col-lg-3"></div>
                     <div class="col-lg-6"><div class="alert alert-danger" id="input_err">Error: Incomplete input.</div></div>
-                    <div class="col-lg-6"><div class="alert alert-danger" id="internal_err">Error: Incomplete input.</div></div>
-                    <div class="col-lg-6"><div class="alert alert-danger" id="err_msg">Error: Incomplete input.</div></div>
+                    <div class="col-lg-6"><div class="alert alert-danger" id="internal_err">Error: Internal error.</div></div>
                     <div class="col-lg-3"></div>
                 </div>
             </div> <!-- end container -->
