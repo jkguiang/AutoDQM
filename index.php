@@ -39,45 +39,45 @@
                 <!-- JQuery -->
                 <script>
                     // Global variables
-                    var full_inp = true;
                     var t0 = 0;
 
                     // Form functions: mostly for updating 'preview' wells
-                    function updt_data() {
-                        full_inp = false;
-                        $("#full")[0].reset();
-                        var sample = document.getElementById("sample").value;
-                        var patch = document.getElementById("patch").value;
-                        var vers = document.getElementById("vers").value;
-
-                        $('#preview').text("/"+sample+"/"+"CMSSW_"+patch+"_realistic_"+vers+"/DQMIO");
-                    }
                     function dataName_full() {
-                        full_inp = true;
-                        $("#modular")[0].reset();
-
                         var path = document.getElementById("path").value;
 
                         $('#preview').text("");
                         $('#preview').text(path);
-                    }
-                    function updt_ref() {
-                        full_inp = false;
-                        $("#ref_full")[0].reset();
-                        var ref_sample = document.getElementById("ref_sample").value;
-                        var ref_patch = document.getElementById("ref_patch").value;
-                        var ref_vers = document.getElementById("ref_vers").value;
-
-                        $('#ref_preview').text("/"+ref_sample+"/"+"CMSSW_"+ref_patch+"_realistic_"+ref_vers+"/DQMIO");
+                        check_input();
                     }
                     function refName_full() {
-                        full_inp = true;
-                        $("#ref_modular")[0].reset();
-
                         var ref_path = document.getElementById("ref_path").value;
 
                         $('#ref_preview').text("");
                         $('#ref_preview').text(ref_path);
+                        check_input();
+                    }
+
+                    function check_input() {
+                        console.log("ran");
+                        data_inp = $("#preview").text();
+                        ref_inp = $("#ref_preview").text();
+                        data_split = data_inp.split("/");
+                        ref_split = ref_inp.split("/");
+                        if (data_inp == "" || ref_inp == ""){
+                            console.log("failed completeness check")
+                            $("#submit").attr('disabled', 'disabled');
+                        }
+                        else if ( (data_split.length - 1) != 3 || (ref_split.length - 1) != 3) {
+                            console.log("failed slashes check");
+                            $("#submit").attr('disabled', 'disabled');
+                        }
+                        else if (data_split[3] != "DQMIO" || data_split[3] != "DQMIO") {
+                            console.log("failed DQMIO check");
+                            $("#submit").attr('disabled', 'disabled');
+                        }
+                        else {
+                            $("#submit").removeAttr('disabled');
+                        }
                     }
 
                     // End form functions
@@ -146,25 +146,14 @@
                             .always(handle_response);
                     }
 
-                    function check(query) {
+                    function check_query(query) {
                         var fail = false;
 
-                        if (full_inp) {
-                            var path = document.getElementById("path").value;
-                            var ref_path = document.getElementById("ref_path").value;
-                            if (path == "" || ref_path == "")   {
-                                fail = true;
-                            }
+                        var path = document.getElementById("path").value;
+                        var ref_path = document.getElementById("ref_path").value;
+                        if (path == "" || ref_path == "")   {
+                            fail = true;
                         }
-                        else {
-                            var ref_sample = document.getElementById("ref_sample").value;
-                            var ref_patch = document.getElementById("ref_patch").value;
-                            var ref_vers = document.getElementById("ref_vers").value;
-                            if (ref_sample == "" || sample == "" || ref_patch == "" || patch == "" || ref_vers == "" || vers == "") {
-                                fail = true;
-                            }
-                        }
-
                         if (fail) {
                             $("#input_err").show();
                         }
@@ -184,12 +173,43 @@
                         $("#finished").hide();
                         $("#input_err").hide();
                         $("#internal_err").hide();
+                        $("#SingleMuon").hide();
+                        $("#RelVal").hide();
+
+                        // Initial Disables
+                        $("#path").attr('disabled', 'disabled');
+                        $("#ref_path").attr('disabled', 'disabled');
+                        $("#submit").attr('disabled', 'disabled');
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
                         $(window).keydown(function(event) {
                             if (event.keyCode == 13) {
                                 event.preventDefault();
                                 return false;
+                            }
+                        });
+
+                        // Select menu functions
+                        $("#sample_list").val("none")
+                        $("#sample_list").on('change', function() {
+                            if (this.value == "none") {
+                                console.log("bad")
+                                $("#path").attr('disabled', 'disabled');
+                                $("#ref_path").attr('disabled', 'disabled');
+                            }
+                            else {
+                                $("#path").removeAttr('disabled');
+                                $("#ref_path").removeAttr('disabled');
+                            }
+                            var opts = document.getElementById("sample_list").options;
+
+                            for ( var i = 0; i < opts.length; i++ ) {
+                                if (opts[i].value == this.value) {
+                                    $("#" + this.value).show();
+                                }
+                                else {
+                                    $("#" + opts[i].value).hide();
+                                }
                             }
                         });
 
@@ -211,39 +231,61 @@
         <body>
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
-                <li role="presentation"><a href="./">Search</a></li>
+                <li role="presentation"><a href="search.php">Search</a></li>
                 <li role="presentation"><a href="plots.php">Plots</a></li>
             </ul>
 
 
             <div class="container-wide">
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="row"><h2>Sample</h2><hr></div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="sample_list">Name</label>
+                                    <select class="form-control" id="sample_list">
+                                        <option value="none">Select Sample</option>
+                                        <option value="RelVal">RelVal</option>
+                                        <option value="SingleMuon">SingleMuon</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <!-- RelVal Sample Entry -->
+                                <div class="form-group row">
+                                    <form id="RelVal" action="/" method="post" role="form">
+                                        <div class="form-group">
+                                            <label for="sample">RelVal Sample</label>
+                                            <input type="text" class="form-control" id="sample" onkeyup="updt_data()" name="relval_sample" placeholder="e.g. ZMM_14">
+                                        </div>
+                                    </form>
+                                <!-- SingleMuon Run Entry -->
+                                    <form id="SingleMuon" action="/" method="post" role="form">
+                                        <div class="form-group">
+                                            <label for="sample">Run Number</label>
+                                            <input type="text" class="form-control" id="sample" name="singlemu_run" placeholder="e.g. 30016">
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- End top left column -->
+                    <div class="col-lg-6">
+                        <p><br /></p>
+                        <div class="list-group">
+                            <li class="list-group-item">Requirements</li>
+                            <li class="list-group-item list-group-item-danger">Sample form filled</li>
+                            <li class="list-group-item list-group-item-danger">Three slashes</li>
+                            <li class="list-group-item list-group-item-danger">Ends with DQMIO</li>
+                        </div>
+                    </div>
+                </div>
+                <hr>
                 <div class="row">
                     <div class="col-lg-6">
                         <h2>Data</h2>
-                        <hr>
-                        <div class="row">
-                            <form id="modular" action="/" method="post" role="form">
-                                <div class="form-group row">
-                                    <div class="col-sm-8">
-                                        <label for="sample">Sample</label>
-                                        <input type="text" class="form-control" id="sample" onkeyup="updt_data()" name="sample" placeholder="e.g. RelValZMM_14">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-8">
-                                        <label for="patch">CMSSW Version</label>
-                                        <input type="text" class="form-control" id="patch" onkeyup="updt_data()" name="patch" placeholder="e.g. 9_1_1_patch1-91X">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-8">
-                                        <label for="vers">Processing Version</label>
-                                        <input type="text" class="form-control" id="vers" onkeyup="updt_data()" name="vers" placeholder="e.g. v1_D17-v1">
-                                    </div>
-                                </div>
-                            </form>
-                        </div> <!-- end row 1 -->
-
                         <hr>
 
                         <div class="row">
@@ -262,30 +304,6 @@
                     <div class="col-lg-6">
                         <h2>Reference</h2>
                         <hr>
-                        <div class="row">
-                            <form id="ref_modular" action="/" method="post" role="form">
-                                <div class="form-group row">
-                                    <div class="col-sm-8">
-                                        <label for="ref_sample">Sample</label>
-                                        <input type="text" class="form-control" id="ref_sample" onkeyup="updt_ref()" name="ref_sample" placeholder="e.g. RelValZMM_14">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-8">
-                                        <label for="ref_patch">CMSSW Version</label>
-                                        <input type="text" class="form-control" id="ref_patch" onkeyup="updt_ref()" name="ref_patch" placeholder="e.g. 9_1_1_patch1-91X">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-8">
-                                        <label for="ref_vers">Processing Version</label>
-                                        <input type="text" class="form-control" id="ref_vers" onkeyup="updt_ref()" name="ref_vers" placeholder="e.g. v1_D17-v1">
-                                    </div>
-                                </div>
-                            </form>
-                        </div> <!-- end row 1 -->
-
-                        <hr>
 
                         <div class="row">
                             <div class="col-md-10">
@@ -302,8 +320,9 @@
 
                 </div> <!-- end main row -->
 
-                <p><br /><br /></p>
+                <p><br /></p>
 
+                <hr>
                 <div class="row">
                     <div class="col-lg-3">
                     </div> <!-- end secondary row left padding -->
@@ -312,7 +331,7 @@
                             <div class="col-md-12">
                                 <label for="preview_well">Data Preview</label>
                                 <div class="alert alert-success" id="preview_well">
-                                    <p id="preview">/RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO</p>
+                                    <p id="preview">Please enter a data set name.</p>
                                 </div>
                             </div>
                         </div> <!-- end preview row -->
@@ -320,7 +339,7 @@
                             <div class="col-md-12">
                                 <label for="ref_preview_well">Reference Preview</label>
                                 <div class="alert alert-info" id="ref_preview_well">
-                                    <p id="ref_preview">/RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO</p>
+                                    <p id="ref_preview">Please enter a reference data set name.</p>
                                 </div>
                             </div>
                         </div> <!-- end ref_preview row -->
