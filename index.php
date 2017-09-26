@@ -74,6 +74,8 @@
                             prefix = cur_sample;
                             sample_info = sample_input;
                         }
+                        updt_data();
+                        updt_ref();
                         check_input();
                     }
 
@@ -246,8 +248,11 @@
                             cur_sample = this.value;
                             prefix = this.value;
 
-                            // Reset input field
+                            // Reset fields
                             $("#" + cur_sample)[0].reset();
+                            updt_data();
+                            updt_ref();
+                            updt_sample();
 
                             // Disable data set name input if no sample selected
                             if (this.value == "none") {
@@ -292,6 +297,8 @@
                             var query = {
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
+                                "sample": cur_sample,
+                                "info": sample_info,
                             }
                             check(query);
                         });
