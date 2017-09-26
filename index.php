@@ -40,43 +40,90 @@
                 <script>
                     // Global variables
                     var t0 = 0;
+                    var cur_sample = "none"; // So script knows what sample is selected
+                    var sample_info = ""; // To be sent with query
+                    var prefix = ""; // Sample name that is placed in front of dataset name
 
                     // Form functions: mostly for updating 'preview' wells
-                    function dataName_full() {
+                    function updt_data() {
                         var path = document.getElementById("path").value;
 
                         $('#preview').text("");
-                        $('#preview').text(path);
+                        $('#preview').text("/" + prefix + "/" + path);
                         check_input();
                     }
-                    function refName_full() {
+
+                    function updt_ref() {
                         var ref_path = document.getElementById("ref_path").value;
 
                         $('#ref_preview').text("");
-                        $('#ref_preview').text(ref_path);
+                        $('#ref_preview').text("/" + prefix + "/" + ref_path);
+                        check_input();
+                    }
+
+                    function updt_sample() {
+                        var sample_input = document.getElementById(cur_sample + "_input").value;
+
+                        if (cur_sample == "RelVal") {
+                            prefix = cur_sample + sample_input;
+                            sample_info = sample_input;
+                            $("#data_sample").attr('placeholder', "/"+ prefix +"/");
+                            $("#ref_sample").attr('placeholder', "/"+ prefix +"/");
+                        }
+                        else if (cur_sample == "SingleMuon") {
+                            prefix = cur_sample;
+                            sample_info = sample_input;
+                        }
                         check_input();
                     }
 
                     function check_input() {
-                        console.log("ran");
-                        data_inp = $("#preview").text();
-                        ref_inp = $("#ref_preview").text();
+                        var passed = true;
+
+                        data_inp = document.getElementById("path").value;
+                        ref_inp = document.getElementById("ref_path").value;
                         data_split = data_inp.split("/");
                         ref_split = ref_inp.split("/");
-                        if (data_inp == "" || ref_inp == ""){
-                            console.log("failed completeness check")
-                            $("#submit").attr('disabled', 'disabled');
-                        }
-                        else if ( (data_split.length - 1) != 3 || (ref_split.length - 1) != 3) {
-                            console.log("failed slashes check");
-                            $("#submit").attr('disabled', 'disabled');
-                        }
-                        else if (data_split[3] != "DQMIO" || data_split[3] != "DQMIO") {
-                            console.log("failed DQMIO check");
-                            $("#submit").attr('disabled', 'disabled');
+
+                        // Sample form filled
+                        if  (document.getElementById(cur_sample + "_input").value != "") {
+                            $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
                         }
                         else {
+                            $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
+                            passed = false;
+                        }
+                        // One slash
+                        if ( (data_split.length - 1) == 1 && (ref_split.length - 1) == 1 ) {
+                            var passed_slash = true;
+                            $("#slash_chk").attr('class', 'list-group-item list-group-item-success');
+                        }
+                        else {
+                            $("#slash_chk").attr('class', 'list-group-item list-group-item-danger');
+                            passed = false;
+                        }
+                        // Text on both sides of slash
+                        if ( passed_slash && data_split.indexOf("") <= -1 && ref_split.indexOf("") <= -1 ) {
+                            $("#form_chk").attr('class', 'list-group-item list-group-item-success');
+                        }
+                        else {
+                            $("#form_chk").attr('class', 'list-group-item list-group-item-danger');
+                            passed = false;
+                        }
+                        // Ends with DQMIO
+                        if (data_split[data_split.length - 1] == "DQMIO" && ref_split[ref_split.length - 1] == "DQMIO") {
+                            $("#dqmio_chk").attr('class', 'list-group-item list-group-item-success');
+                        }
+                        else {
+                            $("#dqmio_chk").attr('class', 'list-group-item list-group-item-danger');
+                            passed = false;
+                        }
+
+                        if (passed) {
                             $("#submit").removeAttr('disabled');
+                        }
+                        else {
+                            $("#submit").attr('disabled', 'disabled');
                         }
                     }
 
@@ -190,19 +237,46 @@
                         });
 
                         // Select menu functions
-                        $("#sample_list").val("none")
+                        $("#sample_list").val("none");
+                        var relval_ex = "e.g. /CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO";
+                        var singlemu_ex = "e.g. /REPLACE THIS/DQMIO";
+                        var none_ex = "Please select a sample."
                         $("#sample_list").on('change', function() {
+                            // Store current sample (global variable)
+                            cur_sample = this.value;
+                            prefix = this.value;
+
+                            // Reset input field
+                            $("#" + cur_sample)[0].reset();
+
+                            // Disable data set name input if no sample selected
                             if (this.value == "none") {
-                                console.log("bad")
                                 $("#path").attr('disabled', 'disabled');
                                 $("#ref_path").attr('disabled', 'disabled');
+                                $("#path").attr('placeholder', none_ex);
+                                $("#ref_path").attr('placeholder', none_ex);
+                                $("#data_sample").attr('placeholder', "/sample/");
+                                $("#ref_sample").attr('placeholder', "/sample/");
                             }
                             else {
                                 $("#path").removeAttr('disabled');
                                 $("#ref_path").removeAttr('disabled');
+                                if (this.value == "RelVal") {
+                                    $("#path").attr('placeholder', relval_ex);
+                                    $("#ref_path").attr('placeholder', relval_ex);
+                                    $("#data_sample").attr('placeholder', "/" + prefix + "/");
+                                    $("#ref_sample").attr('placeholder', "/" + prefix + "/");
+                                }
+                                if (this.value == "SingleMuon") {
+                                    $("#path").attr('placeholder', singlemu_ex);
+                                    $("#ref_path").attr('placeholder', singlemu_ex);
+                                    $("#data_sample").attr('placeholder', "/" + prefix + "/");
+                                    $("#ref_sample").attr('placeholder', "/" + prefix + "/");
+                                }
                             }
-                            var opts = document.getElementById("sample_list").options;
 
+                            // Show proper input for selected sample
+                            var opts = document.getElementById("sample_list").options;
                             for ( var i = 0; i < opts.length; i++ ) {
                                 if (opts[i].value == this.value) {
                                     $("#" + this.value).show();
@@ -257,15 +331,15 @@
                                 <div class="form-group row">
                                     <form id="RelVal" action="/" method="post" role="form">
                                         <div class="form-group">
-                                            <label for="sample">RelVal Sample</label>
-                                            <input type="text" class="form-control" id="sample" onkeyup="updt_data()" name="relval_sample" placeholder="e.g. ZMM_14">
+                                            <label for="RelVal_input">RelVal Sample</label>
+                                            <input type="text" class="form-control" id="RelVal_input" onkeyup="updt_sample()" placeholder="e.g. ZMM_14">
                                         </div>
                                     </form>
                                 <!-- SingleMuon Run Entry -->
                                     <form id="SingleMuon" action="/" method="post" role="form">
                                         <div class="form-group">
-                                            <label for="sample">Run Number</label>
-                                            <input type="text" class="form-control" id="sample" name="singlemu_run" placeholder="e.g. 30016">
+                                            <label for="SingleMuon_input">Run Number</label>
+                                            <input type="text" class="form-control" id="SingleMuon_input" name="singlemu_run" onkeyup="updt_sample()" placeholder="e.g. 30016">
                                         </div>
                                     </form>
                                 </div>
@@ -276,9 +350,10 @@
                         <p><br /></p>
                         <div class="list-group">
                             <li class="list-group-item">Requirements</li>
-                            <li class="list-group-item list-group-item-danger">Sample form filled</li>
-                            <li class="list-group-item list-group-item-danger">Three slashes</li>
-                            <li class="list-group-item list-group-item-danger">Ends with DQMIO</li>
+                            <li class="list-group-item list-group-item-danger" id="sample_chk">Sample form filled</li>
+                            <li class="list-group-item list-group-item-danger" id="slash_chk">One slash</li>
+                            <li class="list-group-item list-group-item-danger" id="form_chk">Text on both sides of slash</li>
+                            <li class="list-group-item list-group-item-danger" id="dqmio_chk">Ends with DQMIO</li>
                         </div>
                     </div>
                 </div>
@@ -289,11 +364,17 @@
                         <hr>
 
                         <div class="row">
-                            <div class="col-md-10">
+                            <div class="col-sm-2" style="padding: 0px">
+                                <div class="form-group">
+                                    <label for="data_sample">Sample</label>
+                                    <input type="text" class="form-control" id="data_sample" placeholder="/sample/" style="text-align: right" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
                                 <form id="full" action="./" method="post" role="form">
                                     <div class="form-group row">
                                         <label for="path">Dataset Name</label>
-                                        <input type="text" class="form-control" id="path" onkeyup="dataName_full()" name="path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
+                                        <input type="text" class="form-control" id="path" onkeyup="updt_data()" name="path" placeholder="Please select a sample.">
                                     </div>
                                 </form>
                             </div>
@@ -306,11 +387,17 @@
                         <hr>
 
                         <div class="row">
-                            <div class="col-md-10">
+                            <div class="col-md-2" style="padding: 0px">
+                                <div class="form-group">
+                                    <label for="ref_sample">Sample</label>
+                                    <input type="text" class="form-control" id="ref_sample" placeholder="/sample/" style="text-align: right" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
                                 <form id="ref_full" action="./" method="post" role="form">
                                     <div class="form-group row">
                                         <label for="ref_path">Dataset Name</label>
-                                        <input type="text" class="form-control" id="ref_path" onkeyup="refName_full()" name="ref_path" placeholder="e.g. /RelValZMM_14/CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO">
+                                        <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="Please select a sample.">
                                     </div>
                                 </form>
                             </div>
