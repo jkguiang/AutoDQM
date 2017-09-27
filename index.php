@@ -241,7 +241,7 @@
                         // Select menu functions
                         $("#sample_list").val("none");
                         var relval_ex = "e.g. /CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO";
-                        var singlemu_ex = "e.g. /REPLACE THIS/DQMIO";
+                        var singlemu_ex = "e.g. /SingleMuon/Run2017C-PromptReco-v1/DQMIO";
                         var none_ex = "Please select a sample."
                         $("#sample_list").on('change', function() {
                             // Store current sample (global variable)
