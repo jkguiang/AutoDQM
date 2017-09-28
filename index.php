@@ -41,7 +41,8 @@
                     // Global variables
                     var t0 = 0;
                     var cur_sample = "none"; // So script knows what sample is selected
-                    var sample_info = ""; // To be sent with query
+                    var data_info = ""; // To be sent with query
+                    var ref_info = ""; // To be sent with query
                     var prefix = ""; // Sample name that is placed in front of dataset name
 
                     // Form functions: mostly for updating 'preview' wells
@@ -62,17 +63,21 @@
                     }
 
                     function updt_sample() {
-                        var sample_input = document.getElementById(cur_sample + "_input").value;
 
                         if (cur_sample == "RelVal") {
+                            var sample_input = document.getElementById(cur_sample + "_input").value;
                             prefix = cur_sample + sample_input;
-                            sample_info = sample_input;
+                            data_info = sample_input;
+                            ref_info = sample_input;
                             $("#data_sample").attr('placeholder', "/"+ prefix +"/");
                             $("#ref_sample").attr('placeholder', "/"+ prefix +"/");
                         }
                         else if (cur_sample == "SingleMuon") {
+                            var sample_dataInput = document.getElementById(cur_sample + "_dataInput").value;
+                            var sample_refInput = document.getElementById(cur_sample + "_refInput").value;
                             prefix = cur_sample;
-                            sample_info = sample_input;
+                            data_info = sample_dataInput;
+                            ref_info = sample_refInput;
                         }
                         updt_data();
                         updt_ref();
@@ -88,12 +93,25 @@
                         ref_split = ref_inp.split("/");
 
                         // Sample form filled
-                        if  (document.getElementById(cur_sample + "_input").value != "") {
-                            $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
+                        if (cur_sample == "SingleMuon") {
+                            if  (document.getElementById(cur_sample + "_dataInput").value != "" || document.getElementById(cur_sample + "_refInput").value != "") {
+                                $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
+                            }
+
+                            else {
+                                $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
+                                passed = false;
+                            }
                         }
-                        else {
-                            $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
-                            passed = false;
+                        if (cur_sample == "RelVal") {
+                            if  (document.getElementById(cur_sample + "_input").value != "") {
+                                $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
+                            }
+
+                            else {
+                                $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
+                                passed = false;
+                            }
                         }
                         // One slash
                         if ( (data_split.length - 1) == 1 && (ref_split.length - 1) == 1 ) {
@@ -249,10 +267,12 @@
                             prefix = this.value;
 
                             // Reset fields
-                            $("#" + cur_sample)[0].reset();
-                            updt_data();
-                            updt_ref();
-                            updt_sample();
+                            if (cur_sample != "none"){
+                                $("#" + cur_sample)[0].reset();
+                                updt_data();
+                                updt_ref();
+                                updt_sample();
+                            }
 
                             // Disable data set name input if no sample selected
                             if (this.value == "none") {
@@ -298,9 +318,10 @@
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
                                 "sample": cur_sample,
-                                "info": sample_info,
+                                "data_info": data_info,
+                                "ref_info": ref_info,
                             }
-                            check(query);
+                            check_query(query);
                         });
                     
                     });
@@ -345,8 +366,11 @@
                                 <!-- SingleMuon Run Entry -->
                                     <form id="SingleMuon" action="/" method="post" role="form">
                                         <div class="form-group">
-                                            <label for="SingleMuon_input">Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_input" name="singlemu_run" onkeyup="updt_sample()" placeholder="e.g. 30016">
+                                            <label for="SingleMuon_dataInput">Data Run Number</label>
+                                            <input type="text" class="form-control" id="SingleMuon_dataInput" onkeyup="updt_sample()" placeholder="e.g. 30016">
+                                            <hr style="margin:0px; height:10px; visibility:hidden;" />
+                                            <label for="SingleMuon_refInput">Reference Run Number</label>
+                                            <input type="text" class="form-control" id="SingleMuon_refInput" onkeyup="updt_sample()" placeholder="e.g. 29916">
                                         </div>
                                     </form>
                                 </div>
