@@ -73,11 +73,9 @@
                             $("#ref_sample").attr('placeholder', "/"+ prefix +"/");
                         }
                         else if (cur_sample == "SingleMuon") {
-                            var sample_dataInput = document.getElementById(cur_sample + "_dataInput").value;
-                            var sample_refInput = document.getElementById(cur_sample + "_refInput").value;
+                            data_info = document.getElementById(cur_sample + "_dataInput").value;
+                            ref_info = document.getElementById(cur_sample + "_refInput").value;
                             prefix = cur_sample;
-                            data_info = sample_dataInput;
-                            ref_info = sample_refInput;
                         }
                         updt_data();
                         updt_ref();
@@ -170,9 +168,9 @@
                             }                            
 
                             else {
-                                localStorage["data"] = response["query"][1]
-                                localStorage["ref"] = response["query"][2]
-                                pass_object(response["query"])
+                                localStorage["data"] = response["query"][1];
+                                localStorage["ref"] = response["query"][2];
+                                pass_object(response["query"]);
                                 $("#finished").show();
                             }
                         }
@@ -258,8 +256,8 @@
 
                         // Select menu functions
                         $("#sample_list").val("none");
-                        var relval_ex = "e.g. /CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO";
-                        var singlemu_ex = "e.g. /SingleMuon/Run2017C-PromptReco-v1/DQMIO";
+                        var relval_ex = "e.g. CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO";
+                        var singlemu_ex = "e.g. Run2017C-PromptReco-v1/DQMIO";
                         var none_ex = "Please select a sample."
                         $("#sample_list").on('change', function() {
                             // Store current sample (global variable)
