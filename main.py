@@ -42,32 +42,6 @@ def compile_hists(new_dir):
     counter = 0
     for path in dir_list:
         f = ROOT.TFile(new_dir + "/" + path)
-        t = f.Get("TH2Fs")
-
-        for event in t:
-            path = str(event.FullName)
-            name = str(event.Value.GetName())
-
-            # Only look at muon paths
-            if not ("CSC/CSCOfflineMonitor" in path): continue
-            if type(event.Value) != ROOT.TH2F: continue
-
-            if name not in old_h:
-                old_h[name] = event.Value.Clone(name)
-                old_h[name].SetDirectory(0)
-            else:
-                old_h[name].Add(event.Value)
-
-        f.Close()
-
-    return old_h
-
-def compile_test(new_dir):
-    old_h = {}
-    dir_list = os.listdir(new_dir)
-    counter = 0
-    for path in dir_list:
-        f = ROOT.TFile(new_dir + "/" + path)
         trees = {1:{"tree":f.Get("TH2Fs"), "type":ROOT.TH2F},
                 2:{"tree":f.Get("TH1Fs"), "type":ROOT.TH1F, "hists":["hSnhits", "hSnSegments", "hWirenGroupsTotal", "hStripNFired", "hRHnrechits"], 
                                                             "wildcards":["hRHTimingAnode", "hRHTiming", "hWireTBin"]}}
@@ -104,11 +78,8 @@ def compile_test(new_dir):
 
 @timer
 def get_hists(fdir, rdir, f_id):
-    # f_hists = compile_hists(fdir)
-    # r_hists = compile_hists(rdir)
-
-    f_hists = compile_test(fdir)
-    r_hists = compile_test(rdir)
+    f_hists = compile_hists(fdir)
+    r_hists = compile_hists(rdir)
 
     subprocess.check_call(["{0}/make_html.sh".format(os.getcwd()), "setup"])
 
@@ -117,46 +88,111 @@ def get_hists(fdir, rdir, f_id):
 
     subprocess.check_call(["{0}/make_html.sh".format(os.getcwd()), "updt"])
 
-    return
+    return True
 
+# Generates 'id' used to identify RelVal comparison plots
 def get_id(path):
     return path.split("/DQMIO")[0].split("_")[-1].split("-")[0]
 
+# Generates run number for SingleMuon identification
+def get_run(path):
+    split = path.split("/000/")[1].split("/00000/")[0].split("/")
+    return (split[0] + split[1])
+
 @timer
-def get_files(path, opt):
+def get_files(path, targ_dir, run=None):
 
     response = dis_client.query(q=path, typ="files", detail=True)
     data = response["response"]["payload"]
-    xrd_args = ["{0}/get_xrd.sh".format(os.getcwd()), opt]
+    xrd_args = ["{0}/get_xrd.sh".format(os.getcwd()), targ_dir]
 
-    cur_dir = os.listdir(os.getcwd() + "/" +  opt)
+    # Path to targ dir, used to check if files already exist
+    cur_dir = os.listdir(os.getcwd() + "/" +  targ_dir)
 
     for tfile in data:
-        if tfile["name"].split("/")[-1] in cur_dir: return
-        xrd_args.append(tfile["name"])
+        # Check if files already downloaded to targ_dir
+        if tfile["name"].split("/")[-1] in cur_dir: return True
+        if run:
+            # keep this check separate from run existance check so file is not appended in else statement
+            if run == get_run(tfile["name"]):
+                xrd_args.append(tfile["name"])
+        else:
+            xrd_args.append(tfile["name"])
+
+    if len(xrd_args) == 2: return False
 
     subprocess.check_call(xrd_args)
+    return True
 
-    return
+def check(is_success, func):
+    if not is_success: raise Exception('Function failed: {0}'.format(func))
+    else: return None
 
-def process_query(args):
-    t0 = time.time()
+def handle_RelVal(args):
     
     # Ensure pile-up matches
     if (get_id(args[1]) != get_id(args[2])):
-        # get_response : (t0, status, fail_reason, query, payload)
-        return get_response(t0, "failed", "Error: Pile-up of data is not equal to reference pile-up.", 
-                            args, "Data ID: {0}, Ref ID: {1}".format(get_id(args[1]), get_id(args[2])))
+        return False 
 
-    # Generate root files via bash subprocess
-    get_files(str(args[1]), "data")
-    get_files(str(args[2]), "ref")
+    # Values for tracking script's progress
+    is_success = False
+    fail_reason = None
 
-    # Root files should now be in data and ref directories
-    get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1]))
+    try:
+        # Generate root files via bash subprocess
+        is_success = get_files(str(args[1]), "data")
+        check(is_success, 'get_files')
+        is_success = get_files(str(args[2]), "ref")
+        check(is_success, 'get_files')
 
-    return get_response(t0, "success", None, args,  "Query proccessed successfully")
+        # Root files should now be in data and ref directories
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1]))
+        check(is_success, 'get_hists')
+
+    except Exception as error:
+        fail_reason = error
+        return is_success, fail_reason
+
+    return is_success, fail_reason
+
+def handle_SingleMuon(args):
+
+    # Values for tracking script's progress
+    is_success = False
+    fail_reason = None
+
+    try:
+        # Generate root files via bash subprocess
+        is_success = get_files(str(args[1]), "data", args[4])
+        check(is_success, 'get_files')
+        is_success = get_files(str(args[2]), "ref", args[4])
+        check(is_success, 'get_files')
+
+        # Root files should now be in data and ref directories
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1]))
+        check(is_success, 'get_hists')
+
+    except Exception as error:
+        fail_reason = error
+        return is_success, fail_reason
+
+    return is_success, fail_reason
+
+def process_query(args):
+    t0 = time.time()
+
+    if args[3] == "RelVal":
+        is_success, fail_reason = handle_RelVal(args)
+    elif args[3] == "SingleMuon":
+        is_success, fail_reason = handle_RelVal(args)
+    
+    if is_success:
+        return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
+    else:
+        return get_response(t0, "fail", fail_reason, args,  "Query failed")
 
 if __name__ == "__main__":
-    # print(process_query(["0_index_is_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO"]))
+    # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO"]))
     print(process_query(sys.argv))
+
+    print process_query(["0th_indix_is_this_file.py", "/SingleMuon/Run2017C-PromptReco-v1/DQMIO", "/SingleMuon/Run2017E-PromptReco-v1/DQMIO", "SingleMuon", ""])
