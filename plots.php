@@ -2,12 +2,12 @@
     <head>
         <title>AutoPlotter</title>
 
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
         <!-- Latest compiled and minified Boostrap CSS and Javascript -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 
         <!-- Slider -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.1/css/bootstrap-slider.min.css">
@@ -122,10 +122,7 @@
                     tmp = params[i].split('=');
                     response[tmp[0]] = tmp[1];
                 }
-                response["query"] = response["query"].split("%2C");
-                for (var i = 1; i < 3; i++) {
-                    response["query"][i] = unescape(response["query"][i]);
-                }
+                response["query"] = unescape(response["query"]).split(",");
                 console.log(response);
             }
 
@@ -142,11 +139,12 @@
                 if (page_loads == 1) {
                     try {
                         fetch_object();
-                        $("#data_title").text(response["query"][1]);
-                        $("#ref_title").text(response["query"][2]);
+                        $("#data_title").text(response["query"][3]);
+                        $("#ref_title").text(response["query"][5]);
                     }
                     catch(TypeError) {
-                        $("#title_wells").hide();
+                        $("#data_title").text(localStorage["data"]);
+                        $("#ref_title").text(localStorage["ref"]);
                     }
                 }
                 $('[id^=img_]').mouseenter(
@@ -333,7 +331,7 @@
     <body>
         <ul class="nav nav-tabs" id="navbar" role="tablist">
             <li role="presentation"><a href="./">AutoDQM</a></li>
-            <li role="presentation"><a href="#">Search</a></li>
+            <li role="presentation"><a href="search.php">Search</a></li>
             <li role="presentation" class="active"><a href="plots.php">Plots</a></li>
         </ul>
 
@@ -388,9 +386,6 @@
                     <!-- Footer -->
                     <div class="container">
                         <hr> <!-- thin, grey horizontal line -->
-                        <footer>
-                            <p>Made by Jonathan Guiang 2017</p>
-                        </footer>
                     </div>
                 </div>
             </div>

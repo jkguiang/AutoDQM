@@ -168,8 +168,8 @@
                             }                            
 
                             else {
-                                localStorage["data"] = response["query"][1];
-                                localStorage["ref"] = response["query"][2];
+                                localStorage["data"] = response["query"][3];
+                                localStorage["ref"] = response["query"][5];
                                 pass_object(response["query"]);
                                 $("#finished").show();
                             }
