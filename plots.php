@@ -8,10 +8,6 @@
         <!-- Latest compiled and minified Boostrap CSS and Javascript -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-        <!-- Slider -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.1/css/bootstrap-slider.min.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.1/bootstrap-slider.min.js"></script>
  
         <!-- My Code -->
         
@@ -163,27 +159,6 @@
                         }
                     } 
                 );
-
-                $("#slider").bootstrapSlider({
-                        id: "slider0",
-                        ticks: [0, 100, 150],
-                        ticks_labels: ['0%', '', '150%'],
-                        ticks_snap_bounds: 5,
-                        tooltip_position: 'bottom'
-                });
-                $("#slider").on("slide", function(slideEvt) {
-                    /* $("img").attr("width", indexMap["thumbnails"]["width"]*(slideEvt.value/100)); */
-                    /* $("img").attr("height", indexMap["thumbnails"]["height"]*(slideEvt.value/100)); */
-                    $("#preview").attr("width", indexMap["thumbnails"]["width"]*(slideEvt.value/100));
-                    $("#preview").attr("height", indexMap["thumbnails"]["height"]*(slideEvt.value/100));
-                    /* $("#preview").attr("height", indexMap["thumbnails"]["height"]); */
-                    /* $("#preview").attr("width", indexMap["thumbnails"]["width"]); */
-                });
-
-                // Ensure that images are drawn with slideEvt value when page is loaded (so if page is refreshed by search funct, maintain size)
-                var val = $("#slider").attr("value");
-                $("img").attr("width", indexMap["thumbnails"]["width"]*(val/100));
-                $("img").attr("height", indexMap["thumbnails"]["height"]*(val/100));
 
             }
 
@@ -348,9 +323,6 @@
                                 <form>
                                     <div class="form-group">
                                         <input type="text" id="search" onkeyup="refresh()" placeholder="Search" class="form-control">
-                                    </div>
-                                    <div class="form-group">
-                                        <input id="slider" type="text" data-slider-ticks="[0, 100, 150]" data-slider-ticks-snap-bounds="5" data-slider-ticks-labels='["0%", "", "150%"]' data-slider-value="100"/>
                                     </div>
                                 </form>
                                 <a style="z-index: auto; position: relative;" class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoDQM" role="button">Github &raquo;</a>
