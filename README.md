@@ -16,17 +16,22 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [x] Previews input in a readable way
 - [x] Gives a clear indication on the status of a user's query 
 
+###### search.php
+- [ ] Allows user to quickly search data set names
+- [ ] Stores searched data set names to be used in home page
+
 ###### plots.php
 - [x] Dynamically displays text files below AutoPlotter toolbar
+- [x] Unique url's for sharing plots pages with the data and reference data set names
 
 ## Using AutoDQM
 
 ###### Setup:
-Clone this repository and move its contents to a public html directory. Currently AutoDQM relies on DIS technology (not included in this repository). This will be changed soon. Or, you can use any AutoDQM page that is publicly accessible.
+Clone this repository and move its contents to a public html directory. Currently AutoDQM relies on DIS technology (not included in this repository). This will be changed soon. Alternatively, you can use any AutoDQM page that is publicly accessible.
 
 ###### Input:
-1. You can enter your data sets into AutoDQM in one of two ways:
-    1. By identifying parts of the full data set name - sample, CMSSW version, and processing version (see an AutoDQM page for an example)
-    2. By the full data set name
-2. Click the submit button.
-3. After a response from the AutoDQM algorithm has been received, navigate to the 'plots' tab to view the results.
+1. Select sample name
+- Currently supported samples: RelVal, SingleMuon
+2. Enter data and reference data set names
+3. Click submit.
+- After process is complete, you will be automatically redirected to the 'plots page'
