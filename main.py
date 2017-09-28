@@ -91,8 +91,8 @@ def get_hists(fdir, rdir, f_id):
     return True
 
 # Generates 'id' used to identify RelVal comparison plots
-def get_id(path):
-    return path.split("/DQMIO")[0].split("_")[-1].split("-")[0]
+def get_id(path, sample):
+    return (sample + "_" + path.split("/DQMIO")[0].split("_")[-1].split("-")[0])
 
 # Generates run number for SingleMuon identification
 def get_run(path):
@@ -130,10 +130,6 @@ def check(is_success, func):
 
 def handle_RelVal(args):
     
-    # Ensure pile-up matches
-    if (get_id(args[1]) != get_id(args[2])):
-        return False 
-
     # Values for tracking script's progress
     is_success = False
     fail_reason = None
@@ -146,7 +142,7 @@ def handle_RelVal(args):
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1]))
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1], args[4]))
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -165,11 +161,11 @@ def handle_SingleMuon(args):
         # Generate root files via bash subprocess
         is_success = get_files(str(args[1]), "data", args[4])
         check(is_success, 'get_files')
-        is_success = get_files(str(args[2]), "ref", args[4])
+        is_success = get_files(str(args[2]), "ref", args[5])
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1]))
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[4])
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -184,7 +180,9 @@ def process_query(args):
     if args[3] == "RelVal":
         is_success, fail_reason = handle_RelVal(args)
     elif args[3] == "SingleMuon":
-        is_success, fail_reason = handle_RelVal(args)
+        is_success, fail_reason = handle_SingleMuon(args)
+    else:
+        return get_response(t0, "fail", "Sample not supported", args,  "Query failed")
     
     if is_success:
         return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
@@ -192,7 +190,8 @@ def process_query(args):
         return get_response(t0, "fail", fail_reason, args,  "Query failed")
 
 if __name__ == "__main__":
-    # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO"]))
+    # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
+    # print process_query(["0th_indix_is_this_file.py", "/SingleMuon/Run2017E-PromptReco-v1/DQMIO", "/SingleMuon/Run2017C-PromptReco-v1/DQMIO", "SingleMuon", "303824", "299649"])
+
     print(process_query(sys.argv))
 
-    print process_query(["0th_indix_is_this_file.py", "/SingleMuon/Run2017C-PromptReco-v1/DQMIO", "/SingleMuon/Run2017E-PromptReco-v1/DQMIO", "SingleMuon", ""])
