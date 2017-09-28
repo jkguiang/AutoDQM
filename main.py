@@ -42,9 +42,11 @@ def compile_hists(new_dir):
     counter = 0
     for path in dir_list:
         f = ROOT.TFile(new_dir + "/" + path)
-        trees = {1:{"tree":f.Get("TH2Fs"), "type":ROOT.TH2F},
-                2:{"tree":f.Get("TH1Fs"), "type":ROOT.TH1F, "hists":["hSnhits", "hSnSegments", "hWirenGroupsTotal", "hStripNFired", "hRHnrechits"], 
-                                                            "wildcards":["hRHTimingAnode", "hRHTiming", "hWireTBin"]}}
+        trees = {1:{"tree":f.Get("TH2Fs"), "type":ROOT.TH2F, "hists":["hORecHits", "hOStrips", "hOWires"],
+                                                             "wildcards":["hRHGlobal"]},
+                 2:{"tree":f.Get("TH1Fs"), "type":ROOT.TH1F, "hists":["hSnhits", "hSnSegments", "hWirenGroupsTotal", "hStripNFired", "hRHnrechits"],
+                                                             "wildcards":["hRHTimingAnode", "hRHTiming", "hWireTBin"]}
+                 }
 
         for t_dict in trees.values():
 
@@ -55,15 +57,14 @@ def compile_hists(new_dir):
                 # Only look at muon paths
                 if not ("CSC/CSCOfflineMonitor" in path): continue
                 if type(event.Value) != t_dict["type"]: continue
-                # Special 1D Histogram Checks
-                if type(event.Value) == ROOT.TH1F:
-                    passed = False
-                    if name in t_dict["hists"]: passed = True
-                    if not passed:
-                        for wc in t_dict["wildcards"]:
-                            if wc in name:
-                                passed = True
-                    if not passed: continue
+                # Histogram Checks - don't plot unwanted hists
+                passed = False
+                if name in t_dict["hists"]: passed = True
+                if not passed:
+                    for wc in t_dict["wildcards"]:
+                        if wc in name:
+                            passed = True
+                if not passed: continue
 
 
                 if name not in old_h:
@@ -109,20 +110,23 @@ def get_files(path, targ_dir, run=None):
     # Path to targ dir, used to check if files already exist
     cur_dir = os.listdir(os.getcwd() + "/" +  targ_dir)
 
+    found = False
     for tfile in data:
         # Check if files already downloaded to targ_dir
         if tfile["name"].split("/")[-1] in cur_dir: return True
         if run:
             # keep this check separate from run existance check so file is not appended in else statement
             if run == get_run(tfile["name"]):
+                found = True
                 xrd_args.append(tfile["name"])
         else:
+            found = True
             xrd_args.append(tfile["name"])
-
-    if len(xrd_args) == 2: return False
-
-    subprocess.check_call(xrd_args)
-    return True
+    if not found:
+        return False
+    else:
+        subprocess.check_call(xrd_args)
+        return True
 
 def check(is_success, func):
     if not is_success: raise Exception('Function failed: {0}'.format(func))
@@ -136,9 +140,9 @@ def handle_RelVal(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success = get_files(str(args[1]), "data")
+        is_success = get_files(str(args[3]), "data")
         check(is_success, 'get_files')
-        is_success = get_files(str(args[2]), "ref")
+        is_success = get_files(str(args[5]), "ref")
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
@@ -159,17 +163,17 @@ def handle_SingleMuon(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success = get_files(str(args[1]), "data", args[4])
+        is_success = get_files(str(args[3]), "data", args[2])
         check(is_success, 'get_files')
-        is_success = get_files(str(args[2]), "ref", args[5])
+        is_success = get_files(str(args[5]), "ref", args[4])
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[4])
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[2])
         check(is_success, 'get_hists')
 
     except Exception as error:
-        fail_reason = error
+        fail_reason = str(error)
         return is_success, fail_reason
 
     return is_success, fail_reason
@@ -177,14 +181,14 @@ def handle_SingleMuon(args):
 def process_query(args):
     t0 = time.time()
 
-    if args[3] == "RelVal":
+    if args[1] == "RelVal":
         is_success, fail_reason = handle_RelVal(args)
-    elif args[3] == "SingleMuon":
+    elif args[1] == "SingleMuon":
         is_success, fail_reason = handle_SingleMuon(args)
     else:
         return get_response(t0, "fail", "Sample not supported", args,  "Query failed")
     
-    if is_success:
+    if is_success and fail_reason == None:
         return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
     else:
         return get_response(t0, "fail", fail_reason, args,  "Query failed")

@@ -135,6 +135,8 @@
                 if (page_loads == 1) {
                     try {
                         fetch_object();
+                        localStorage["data"] == response["query"][3];
+                        localStorage["ref"] == response["query"][5];
                         $("#data_title").text(response["query"][3]);
                         $("#ref_title").text(response["query"][5]);
                     }

@@ -88,7 +88,7 @@
 
                         // Sample form filled
                         if (cur_sample == "SingleMuon") {
-                            if  (document.getElementById(cur_sample + "_dataInput").value != "" || document.getElementById(cur_sample + "_refInput").value != "") {
+                            if  (document.getElementById(cur_sample + "_dataInput").value != "" && document.getElementById(cur_sample + "_refInput").value != "") {
                                 $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
                             }
 
@@ -154,10 +154,12 @@
                         console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
                         try {
                             // Handle output from main.py
+                            console.log("query:")
+                            console.log(response["query"]);
                             console.log(response["response"]["payload"]);
                             var resp = response["response"];
 
-                            if (resp["status"] == "failed") {
+                            if (resp["status"] == "fail") {
                                 $("#internal_err").text(resp["fail_reason"]);
                                 $("#submit").show();
                                 $("#internal_err").show();
@@ -308,6 +310,10 @@
 
                         // Main query handler
                         $("#submit").click(function(){
+                            $("#load").hide();
+                            $("#finished").hide();
+                            $("#input_err").hide();
+                            $("#internal_err").hide();
                             var query = {
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
