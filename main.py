@@ -32,8 +32,7 @@ def timer(func):
 
 def get_response(t0, status, fail_reason, query, payload):
     duration = time.time() - t0
-    warning = None
-    return json.dumps( { "query": query, "start": t0, "duration":duration, "response": { "status": status, "fail_reason": fail_reason, "warning": warning, "payload": times } } )
+    return json.dumps( { "query": query, "start": t0, "duration":duration, "response": { "status": status, "fail_reason": str(fail_reason), "payload": times } } )
 
 @timer
 def compile_hists(new_dir):
@@ -163,13 +162,13 @@ def handle_SingleMuon(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success = get_files(str(args[3]), "data", args[2])
+        is_success = get_files(args[3], "data", args[4])
         check(is_success, 'get_files')
-        is_success = get_files(str(args[5]), "ref", args[4])
+        is_success = get_files(args[5], "ref", args[2])
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[2])
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[4])
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -195,7 +194,7 @@ def process_query(args):
 
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
-    # print process_query(["0th_indix_is_this_file.py", "/SingleMuon/Run2017E-PromptReco-v1/DQMIO", "/SingleMuon/Run2017C-PromptReco-v1/DQMIO", "SingleMuon", "303824", "299649"])
+    print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
 
-    print(process_query(sys.argv))
+    # print(process_query(sys.argv))
 
