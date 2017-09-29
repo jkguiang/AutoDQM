@@ -154,8 +154,9 @@
                         console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
                         try {
                             // Handle output from main.py
-                            console.log("query:")
-                            console.log(response["query"]);
+                            console.log("query received by main.py:");
+                            console.log(response["query"])
+                            console.log("response:")
                             console.log(response["response"]["payload"]);
                             var resp = response["response"];
 
@@ -166,9 +167,16 @@
                             }                            
 
                             else {
-                                localStorage["data"] = response["query"][3];
-                                localStorage["ref"] = response["query"][5];
-                                pass_object(response["query"]);
+                                if (cur_sample == "RelVal") {
+                                    localStorage["data"] = response["query"][3];
+                                    localStorage["ref"] = response["query"][5];
+                                }
+                                else if (cur_sample == "SingleMuon") {
+                                    localStorage["data"] = response["query"][4];
+                                    localStorage["ref"] = response["query"][2];
+                                }
+                                reduced_resp = [localStorage["data"], localStorage["ref"]];
+                                pass_object(reduced_resp);
                                 $("#finished").show();
                             }
                         }
@@ -243,6 +251,11 @@
                         $("#path").attr('disabled', 'disabled');
                         $("#ref_path").attr('disabled', 'disabled');
                         $("#submit").attr('disabled', 'disabled');
+
+                        // Update plots link if search stored in local storage
+                        if (localStorage.hasOwnProperty("data")) {
+                            $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
+                        }
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
                         $(window).keydown(function(event) {
@@ -334,7 +347,7 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
                 <li role="presentation"><a href="search.php">Search</a></li>
-                <li role="presentation"><a href="plots.php">Plots</a></li>
+                <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul>
 
 
@@ -367,10 +380,10 @@
                                     <form id="SingleMuon" action="/" method="post" role="form">
                                         <div class="form-group">
                                             <label for="SingleMuon_dataInput">Data Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_dataInput" onkeyup="updt_sample()" placeholder="e.g. 30016">
+                                            <input type="text" class="form-control" id="SingleMuon_dataInput" onkeyup="updt_sample()" placeholder="e.g. 301531">
                                             <hr style="margin:0px; height:10px; visibility:hidden;" />
                                             <label for="SingleMuon_refInput">Reference Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_refInput" onkeyup="updt_sample()" placeholder="e.g. 29916">
+                                            <input type="text" class="form-control" id="SingleMuon_refInput" onkeyup="updt_sample()" placeholder="e.g. 300811">
                                         </div>
                                     </form>
                                 </div>

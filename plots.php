@@ -135,10 +135,10 @@
                 if (page_loads == 1) {
                     try {
                         fetch_object();
-                        localStorage["data"] == response["query"][3];
-                        localStorage["ref"] == response["query"][5];
-                        $("#data_title").text(response["query"][3]);
-                        $("#ref_title").text(response["query"][5]);
+                        localStorage["data"] == response["query"][0];
+                        localStorage["ref"] == response["query"][1];
+                        $("#data_title").text(response["query"][0]);
+                        $("#ref_title").text(response["query"][1]);
                     }
                     catch(TypeError) {
                         $("#data_title").text(localStorage["data"]);
