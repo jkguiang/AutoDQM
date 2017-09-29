@@ -5,7 +5,7 @@ import time
 import ROOT
 import subprocess
 
-import dis_client
+import new_dis
 import AutoDQM
 
 # Global dict for holding all run times
@@ -102,7 +102,7 @@ def get_run(path):
 @timer
 def get_files(path, targ_dir, run=None):
 
-    response = dis_client.query(q=path, typ="files", detail=True)
+    response = new_dis.handle_query({"query":path, "type":"files", "short":False})
     data = response["response"]["payload"]
     xrd_args = ["{0}/get_xrd.sh".format(os.getcwd()), targ_dir]
 
@@ -194,7 +194,7 @@ def process_query(args):
 
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
-    print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
+    # print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
 
-    # print(process_query(sys.argv))
+    print(process_query(sys.argv))
 
