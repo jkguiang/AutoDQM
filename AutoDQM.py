@@ -165,7 +165,7 @@ def scan_2D(f_hist, r_hist, name, f_id, targ_dir):
     chi2 = (chi2/nBins)
 
     # Chi2 Cut
-    if chi2 > 50:
+    if chi2 > 500 or abs(max_pull) > 40:
         # Used in outliers count
         is_outlier = True
 
@@ -218,6 +218,9 @@ def draw_same(f_hist, r_hist, name, f_id, targ_dir):
     # Normalize f_hist
     f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
 
+    # Ensure plot accounts for maximum value
+    r_hist.SetMaximum(max(f_hist.GetMaximum(), r_hist.GetMaximum()))
+
     for x in range(1, r_hist.GetNbinsX()+1):
 
         # Bin 1 data
@@ -255,18 +258,44 @@ def draw_same(f_hist, r_hist, name, f_id, targ_dir):
     chi2 = (chi2/nBins)
 
     # Chi2 Cut
-    if chi2 > 50 or name in hists:
+    if chi2 > 500 or abs(max_pull) > 40 or name in hists:
         # Used in outliers count
         is_outlier = True
+
+        # Stat boxes only for names in hists
+        if name in hists:
+            ROOT.gStyle.SetOptStat(1)
+        else:
+            ROOT.gStyle.SetOptStat(0)
 
         # Set hist style
         r_hist.SetLineColor(28)
         r_hist.SetFillColor(20)
+        r_hist.SetLineWidth(2)
         f_hist.SetLineColor(ROOT.kBlack)
+        f_hist.SetLineWidth(2)
 
         # Plot hist
         r_hist.Draw()
-        f_hist.Draw("same")
+        f_hist.Draw("sames")
+
+        if name in hists:
+            # Draw stats boxes
+            r_hist.SetName("Reference")
+            f_hist.SetName("Data")
+            c.Update()
+
+            r_stats = r_hist.FindObject("stats")
+            f_stats = f_hist.FindObject("stats")
+
+            r_stats.SetY1NDC(0.15)
+            r_stats.SetY2NDC(0.30)
+            r_stats.SetTextColor(28)
+            r_stats.Draw()
+
+            f_stats.SetY1NDC(0.35)
+            f_stats.SetY2NDC(0.50)
+            f_stats.Draw()
 
         # Text box
         text = ROOT.TLatex(.15,.91,"#scale[0.6]{Run: "+f_id+"}") 
