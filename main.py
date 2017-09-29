@@ -77,14 +77,14 @@ def compile_hists(new_dir):
     return old_h
 
 @timer
-def get_hists(fdir, rdir, f_id):
+def get_hists(fdir, rdir, data_id, ref_id):
     f_hists = compile_hists(fdir)
     r_hists = compile_hists(rdir)
 
     subprocess.check_call(["{0}/make_html.sh".format(os.getcwd()), "setup"])
 
     # AutoDQM takes dicts of data and ref hists, 'ID' of sample (i.e. PU200, noPU, etc. May change this later), and target directory (currently using cwd)
-    AutoDQM.autodqm(f_hists, r_hists, f_id, os.getcwd())
+    AutoDQM.autodqm(f_hists, r_hists, data_id, ref_id, os.getcwd())
 
     subprocess.check_call(["{0}/make_html.sh".format(os.getcwd()), "updt"])
 
@@ -145,7 +145,7 @@ def handle_RelVal(args):
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1], args[4]))
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1], args[4]), get_id(args[1], args[2]))
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -168,7 +168,7 @@ def handle_SingleMuon(args):
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[4])
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[4], args[2])
         check(is_success, 'get_hists')
 
     except Exception as error:
