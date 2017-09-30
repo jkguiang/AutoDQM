@@ -9,10 +9,6 @@
                 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
                 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-                <!-- Slider -->
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.1/css/bootstrap-slider.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.1/bootstrap-slider.min.js"></script>
- 
                 <!-- My Code -->
                 
                 <!-- CSS -->
@@ -23,11 +19,11 @@
                     .loader {
                         text-align: center;
                         margin: auto;
-                        border: 16px solid #f3f3f3; /* Light grey */
-                        border-top: 16px solid #3498db; /* Blue */
+                        border: 8px solid #f3f3f3; /* Light grey */
+                        border-top: 8px solid #3498db; /* Blue */
                         border-radius: 50%;
-                        width: 120px;
-                        height: 120px;
+                        width: 40px;
+                        height: 40px;
                         animation: spin 2s linear infinite;
                     }
                     @keyframes spin {
@@ -83,6 +79,18 @@
                     // End form functions
 
                     // Query handlers
+                    function display(new_list) {
+                        var ul = $("#results");
+                        var toappend = "";
+
+                        for (var i = 0; i < new_list.length; i++) {
+                            toappend += "<li>"+ new_list[i] +"</li>"
+                        }
+
+                        ul.append(toappend);
+                    
+                    }
+
                     function handle_response(response) {
                         console.log(response); 
                         console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
@@ -98,30 +106,24 @@
                             }                            
 
                             else {
-                                localStorage["data"] = response["query"][1]
-                                localStorage["ref"] = response["query"][2]
+                                display(resp["payload"]);
                                 $("#finished").show();
                             }
                         }
                         catch(TypeError) {
+                            console.log("typeerror")
                             // Handle crashes, system error, timeouts, etc.
                             console.log(response["responseText"]);
                             var resp = response["responseText"];
                             var err_msg = "";
                             
-                            if (resp.indexOf("504") !== 1) {
-                                err_msg = "Error: Gateway timed out. Could not reach server."
-                            }
-                            else {
-                                err_msg = "Error: An internal error occured."
-                            }
-
                             $("#internal_err").text(err_msg);
 
                             $("#submit").show();
                             $("#internal_err").show();
                         }
                         finally {
+                            $("#search").show();
                             $("#load").hide();
                         }
                     }
@@ -141,21 +143,9 @@
                     }
 
                     function check(query) {
-                        var fail = false;
-                        
-                        if (cur_tag == "#none") {
-                            fail = true;
-                        }
-
-                        if (fail) {
-                            $("#input_err").show();
-                        }
-
-                        else {
-                            $("#input_err").hide();
-                            console.log(query);
-                            submit(query);
-                        }
+                        $("#input_err").hide();
+                        console.log(query);
+                        submit(query);
                     }
                     // End query handlers
 
@@ -180,8 +170,9 @@
 
                         // Main query handler
                         $("#search").click(function() {
+                            $("#search").hide();
                             var query = {
-                                "data_query": $(cur_tag).text(),
+                                "search": document.getElementById("search_txt").value,
                             }
                             check(query);
                         });
@@ -262,25 +253,27 @@
                 <p><br /><br /></p>
                 <div class="row">
                     <div class="col-sm-2"></div>
-                    <div class="col-sm-8">
+                    <div class="col-sm-8" style="padding: 0px">
                         <form id="modular" action="/" method="post" role="form">
                             <div class="form-group row">
                                 <div class="col-sm-10">
                                     <input type="text" class="form-control" id="search_txt" onkeyup="check_search()" name="search_txt" placeholder="Dataset name">
                                 </div>
-                                <div class="col-sm-1">
-                                    <button id="search" type="submit" class="btn btn-success" disabled>Search</button>
-                                </div>
-                                <div class="col-sm-1"><div class="loader" id="load"></div></div>
                             </div>
                         </form>
                     </div>
-                    <div class="col-sm-2"></div>
+                    <div class="col-sm-2" style="padding: 0px">
+                        <div class="col-sm-1">
+                            <button id="search" type="submit" class="btn btn-success" disabled>Search</button>
+                        </div>
+                        <div class="col-sm-1"><div class="loader" id="load"></div></div>
+                    </div>
                 </div>
                 <hr>
                 <div class="row">
                     <div class="well">
-                        <p id="result">Search results will appear here</p>
+                        <ul id="results">
+                        </ul>
                     </div>
                 </div>
                 <div class="row">

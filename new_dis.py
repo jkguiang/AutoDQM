@@ -147,41 +147,16 @@ def handle_query(arg_dict):
 
 if __name__=='__main__':
 
-    arg_dict = {"query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "type":"files", "short":False}
-    # arg_dict = {"query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
-    # arg_dict = {"query": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
-    # arg_dict = {"type": "snt", "query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
-    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER, gtag=*74X*", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07*", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/G* | grep cms3tag"}
-    # arg_dict = {"type": "driver", "query": "/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"}
-    # arg_dict = {"type": "lhe", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
-    # arg_dict = {"type": "driver", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
-    # arg_dict = {"type": "parents", "query": "/SMS-T1tttt_mGluino-1500_mLSP-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM"}
-    # arg_dict = {"type": "mcm", "query": "/QCD_Pt-80to120_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM | grep cross_section", "short":"short"}
-    # arg_dict = {"type": "mcm", "query": "/QCD_Pt-80to120_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM", "short":"short"}
-    # arg_dict = {"type": "update_snt", "query": "dataset_name=test,cms3tag=CMS3_V07-06-03_MC,sample_type=CMS3,gtag=test,location=/hadoop/crap/crap/", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "test", "short":"short"}
-    # arg_dict = {"type": "basic", "query": "/SingleElectron/Run2016B-PromptReco-v1/MINIAOD"}
-    # arg_dict = {"type": "dbs", "query": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files?dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM&detail=1&lumi_list=[134007]&run_num=1"}
-    # arg_dict = {"type": "runs", "query": "/SinglePhoton/Run2016E-PromptReco-v2/MINIAOD"}
-    # arg_dict = {"type": "pick", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
-    # arg_dict = {"type": "pick_cms3", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
-    # arg_dict = {"type": "pick_cms3", "query": "/DoubleEG/Run2016C-23Sep2016-v1/MINIAOD,275912:91:164211755", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/WJetsToLNu_TuneCUETP8M1_13TeV-madgr*"}
-    # arg_dict = {"type": "sites", "query": "/SingleMuon/Run2016B-PromptReco-v2/MINIAOD"}
-    # arg_dict = {"type": "sites", "query": "/store/data/Run2017B/MET/MINIAOD/PromptReco-v1/000/297/562/00000/A456D6BA-BA5C-E711-A4F1-02163E0133C4.root"}
+    args = sys.argv
 
-    if not arg_dict:
-        arg_dict_str = sys.argv[1]
-        arg_dict = ast.literal_eval(arg_dict_str)
+    full_response = handle_query({"query":args[1], "type":"files", "short":False})
 
-    response = json.loads(handle_query(arg_dict))
-    data = response["response"]["payload"]
+    files = []
 
-    for tfile in data:
-        print(tfile["name"])
+    for obj in full_response["response"]["payload"]:
+        files.append(obj["name"])
 
+    full_response["response"]["payload"] = files
+
+    print(json.dumps(full_response))
+    
