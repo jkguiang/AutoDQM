@@ -84,10 +84,15 @@
                         var toappend = "";
 
                         for (var i = 0; i < new_list.length; i++) {
-                            toappend += "<li>"+ new_list[i] +"</li>"
+                            toappend += "<a href='#' class='list-group-item' id=dsname_"+ i +">"+ new_list[i] +"</a>"
                         }
 
                         ul.append(toappend);
+
+                        $('[id^=dsname_]').click(function() {
+                            $(cur_tag + "_well").text($(this).text());
+                        });
+
                     
                     }
 
@@ -169,6 +174,7 @@
                         });
 
                         // Main query handler
+
                         $("#search").click(function() {
                             $("#search").hide();
                             var query = {
@@ -196,7 +202,6 @@
                         $("#data_check").on("click", function(){
                             if ( $(this).is(":checked") ) {
                                 cur_tag = "#data";
-                                $("#ref_check").attr('disabled', 'disabled');
 
                                 $("#data_well").show();
                                 $("#none_well").hide();
@@ -206,7 +211,6 @@
                             }
                             else {
                                 cur_tag = "#none";
-                                $("#ref_check").removeAttr('disabled');
 
                                 $("#none_well").show();
                                 $("#data_well").hide();
@@ -217,7 +221,6 @@
                         $("#ref_check").on("click", function(){
                             if ( $(this).is(":checked") ) {
                                 cur_tag = "#ref";
-                                $("#data_check").attr('disabled', 'disabled');
 
                                 $("#ref_well").show();
                                 $("#data_well").hide();
@@ -227,7 +230,6 @@
                             }
                             else {
                                 cur_tag = "#none";
-                                $("#data_check").removeAttr('disabled');
 
                                 $("#none_well").show();
                                 $("#data_well").hide();
@@ -252,29 +254,32 @@
             <div class="container-wide">
                 <p><br /><br /></p>
                 <div class="row">
-                    <div class="col-sm-2"></div>
-                    <div class="col-sm-8" style="padding: 0px">
-                        <form id="modular" action="/" method="post" role="form">
-                            <div class="form-group row">
-                                <div class="col-sm-10">
-                                    <input type="text" class="form-control" id="search_txt" onkeyup="check_search()" name="search_txt" placeholder="Dataset name">
-                                </div>
+                    <div class="col-md-2"></div>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <form id="modular" action="/" method="post" role="form">
+                                    <div class="form-group row">
+                                        <input type="text" class="form-control" id="search_txt" onkeyup="check_search()" name="search_txt" placeholder="Dataset name">
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                            <div class="col-sm-2">
+                                <button id="search" type="submit" class="btn btn-success" disabled>Search</button>
+                                <div class="loader" id="load"></div>
+                            </div>
+                        </div> <!-- End top row -->
+                        <div class="row">
+                            <div class="col-sm-10"><div class="alert alert-danger" id="input_err">Error: Incomplete input.</div></div>
+                            <div class="col-sm-10"><div class="alert alert-danger" id="internal_err">Error: Internal error.</div></div>
+                        </div> <!-- End bottom row -->
                     </div>
-                    <div class="col-sm-2" style="padding: 0px">
-                        <div class="col-sm-1">
-                            <button id="search" type="submit" class="btn btn-success" disabled>Search</button>
-                        </div>
-                        <div class="col-sm-1"><div class="loader" id="load"></div></div>
+                    <div class="col-md-2">
                     </div>
                 </div>
                 <hr>
                 <div class="row">
-                    <div class="well">
-                        <ul id="results">
-                        </ul>
-                    </div>
+                    <div class="list-group" id="results"></div>
                 </div>
                 <div class="row">
                     <div class="col-lg-6">
@@ -286,8 +291,8 @@
 
                         <div class="row">
                             <div class="col-sm-3"></div>
-                            <div class="col-sm-2"><div class="checkbox"><label><input id="data_check" type="checkbox" value="data">Data</label></div></div>
-                            <div class="col-sm-2"><div class="checkbox"><label><input id="ref_check" type="checkbox" value="ref">Reference</label></div></div>
+                            <div class="col-sm-2"><label class="radio-inline"><input id="data_check" type="radio" value="data">Data</label></div>
+                            <div class="col-sm-2"><label class="radio-inline"><input id="ref_check" type="radio" value="ref">Reference</label></div>
                             <div class="col-sm-2"><button id="select" type="submit" class="btn btn-success" disabled>Select</button></div>
                             <div class="col-sm-3"></div>
                         </div>
@@ -305,14 +310,6 @@
                         </div>
                     </div>
                 </div> <!-- end secondary row -->
-                <div class="row">
-                    <p><br /></p>
-                    <hr>
-                    <div class="col-lg-3"></div>
-                    <div class="col-lg-6"><div class="alert alert-danger" id="input_err">Error: Incomplete input.</div></div>
-                    <div class="col-lg-6"><div class="alert alert-danger" id="internal_err">Error: Internal error.</div></div>
-                    <div class="col-lg-3"></div>
-                </div>
             </div> <!-- end container -->
         </body>
 </html>

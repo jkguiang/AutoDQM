@@ -69,6 +69,37 @@ def dataset_event_count(dataset):
             return { "nevents": ret[0]['num_event'], "filesizeGB": round(ret[0]['file_size']/1.9e9,2), "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
     return None
 
+def list_of_datasets(wildcardeddataset, short=False):
+    if wildcardeddataset.count("/") != 3:
+        raise RuntimeError("You need three / in your dataset query")
+
+    _, pd, proc, tier = wildcardeddataset.split("/")
+    # url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?primary_ds_name=%s&processed_ds_name=%s&data_tier_name=%s&detail=0" % (get_dbs_instance(wildcardeddataset),pd,proc,tier)
+    ret = get_url_with_cert(url)
+    if len(ret) > 0:
+        vals = []
+
+        def get_info(d):
+            info = dataset_event_count(d["dataset"])
+            info["dataset"] = d["dataset"]
+            return info
+
+        if short: vals = [d["dataset"] for d in ret]
+        else: 
+            if len(ret) > 150:
+                raise Exception("Getting detailed information for all these datasets (%i) will take too long" % len(ret))
+
+            from multiprocessing.dummy import Pool as ThreadPool 
+
+            pool = ThreadPool(8)
+            vals = pool.map(get_info, ret)
+            pool.close()
+            pool.join()
+
+            return vals
+    return []
+
 def get_dataset_files(dataset, run_num=None,lumi_list=[]):
     # return list of 3-tuples (LFN, nevents, size_in_GB) of files in a given dataset
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=1&detail=1" % (get_dbs_instance(dataset),dataset)
@@ -121,29 +152,45 @@ def handle_query(arg_dict):
 
     if not entity:
         failed = True
-        fail_reason = "Dataset not specified"
+        payload = True
+        raise Exception("Dataset not specified")
 
+    try:
+        if query_type == "basic":
+            info = dataset_event_count(entity)
+            if not info:
+                failed = True
+                payload = None
+                raise Exception("Dataset not found")
+            payload = info
 
-    if query_type == "basic":
-        info = dataset_event_count(entity)
-        if not info:
+        elif query_type == "files":
+            files = get_dataset_files(entity)
+            payload = filelist_to_dict(files, short, num=10)
+
+        elif query_type == "listdatasets":
+            datasets = list_of_datasets(entity, short)
+            if not datasets:
+                failed = True
+                payload = None
+                raise Exception("No datasets found")
+            payload = datasets
+
+        elif query_type == "runs":
+            payload = get_dataset_runs(entity)
+
+        else:
             failed = True
-            fail_reason = "Dataset not found"
-        payload = info
+            payload = None
+            raise Exception("Query type not supported")
 
-    elif query_type == "files":
-        files = get_dataset_files(entity)
-        payload = filelist_to_dict(files, short, num=10)
-
-    elif query_type == "runs":
-        payload = get_dataset_runs(entity)
-
-    else:
+    except Exception as error:
         failed = True
-        fail_reason = "Query type not supported"
+        fail_reason = str(error)
         payload = None
 
-    return json.loads(make_response(arg_dict, payload, failed, fail_reason, warning))
+    finally:
+        return json.loads(make_response(arg_dict, payload, failed, fail_reason, warning))
 
 if __name__=='__main__':
 
@@ -153,8 +200,12 @@ if __name__=='__main__':
 
     files = []
 
-    for obj in full_response["response"]["payload"]:
-        files.append(obj["name"])
+    if full_response["response"]["payload"]:
+        for obj in full_response["response"]["payload"]:
+            if "*" in args[1]:
+                files.append(obj["dataset"])
+            else:
+                files.append(obj["name"])
 
     full_response["response"]["payload"] = files
 
