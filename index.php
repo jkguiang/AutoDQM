@@ -19,11 +19,11 @@
                     .loader {
                         text-align: center;
                         margin: auto;
-                        border: 16px solid #f3f3f3; /* Light grey */
-                        border-top: 16px solid #3498db; /* Blue */
+                        border: 6px solid #f3f3f3; /* Light grey */
+                        border-top: 6px solid #3498db; /* Blue */
                         border-radius: 50%;
-                        width: 120px;
-                        height: 120px;
+                        width: 60px;
+                        height: 60px;
                         animation: spin 2s linear infinite;
                     }
                     @keyframes spin {
@@ -289,8 +289,8 @@
                                 $("#ref_path").attr('disabled', 'disabled');
                                 $("#path").attr('placeholder', none_ex);
                                 $("#ref_path").attr('placeholder', none_ex);
-                                $("#data_sample").attr('placeholder', "/sample/");
-                                $("#ref_sample").attr('placeholder', "/sample/");
+                                $("#data_sample").text("/sample/");
+                                $("#ref_sample").text("/sample/");
                             }
                             else {
                                 $("#path").removeAttr('disabled');
@@ -298,14 +298,14 @@
                                 if (this.value == "RelVal") {
                                     $("#path").attr('placeholder', relval_ex);
                                     $("#ref_path").attr('placeholder', relval_ex);
-                                    $("#data_sample").attr('placeholder', "/" + prefix + "/");
-                                    $("#ref_sample").attr('placeholder', "/" + prefix + "/");
+                                    $("#data_sample").text("/" + prefix + "/");
+                                    $("#ref_sample").text("/" + prefix + "/");
                                 }
                                 if (this.value == "SingleMuon") {
                                     $("#path").attr('placeholder', singlemu_ex);
                                     $("#ref_path").attr('placeholder', singlemu_ex);
-                                    $("#data_sample").attr('placeholder', "/" + prefix + "/");
-                                    $("#ref_sample").attr('placeholder', "/" + prefix + "/");
+                                    $("#data_sample").text("/" + prefix + "/");
+                                    $("#ref_sample").text("/" + prefix + "/");
                                 }
                             }
 
@@ -406,45 +406,27 @@
                     <div class="col-lg-6">
                         <h2>Data</h2>
                         <hr>
-
-                        <div class="row">
-                            <div class="col-sm-2" style="padding: 0px">
-                                <div class="form-group">
-                                    <label for="data_sample">Sample</label>
-                                    <input type="text" class="form-control" id="data_sample" placeholder="/sample/" style="text-align: right" disabled>
-                                </div>
-                            </div>
-                            <div class="col-md-9">
-                                <form id="full" action="./" method="post" role="form">
-                                    <div class="form-group row">
-                                        <label for="path">Dataset Name</label>
-                                        <input type="text" class="form-control" id="path" onkeyup="updt_data()" name="path" placeholder="Please select a sample.">
-                                    </div>
-                                </form>
-                            </div>
+                        
+                        <label for="path">Dataset Name</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="data_sample">/sample/</span>
+                            <form class="form-inline" id="full" action="./" method="post" role="form">
+                                <input type="text" class="form-control" id="path" onkeyup="updt_ref()" name="path" placeholder="Please select a sample.">
+                            </form>
                         </div>
 
-                    </div> <!-- end left col -->
+                    </div > <!-- end right col -->
 
                     <div class="col-lg-6">
                         <h2>Reference</h2>
                         <hr>
-
-                        <div class="row">
-                            <div class="col-md-2" style="padding: 0px">
-                                <div class="form-group">
-                                    <label for="ref_sample">Sample</label>
-                                    <input type="text" class="form-control" id="ref_sample" placeholder="/sample/" style="text-align: right" disabled>
-                                </div>
-                            </div>
-                            <div class="col-md-9">
-                                <form id="ref_full" action="./" method="post" role="form">
-                                    <div class="form-group row">
-                                        <label for="ref_path">Dataset Name</label>
-                                        <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="Please select a sample.">
-                                    </div>
-                                </form>
-                            </div>
+                        
+                        <label for="ref_path">Dataset Name</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="ref_sample">/sample/</span>
+                            <form class="form-inline" id="ref_full" action="./" method="post" role="form">
+                                <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="Please select a sample.">
+                            </form>
                         </div>
 
                     </div > <!-- end right col -->
