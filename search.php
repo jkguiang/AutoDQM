@@ -261,6 +261,12 @@
                             }
                         });
 
+                        // Update plots link if query stored in local storage
+                        if (localStorage.hasOwnProperty("data")) {
+                            $("#plots_url").attr('href', "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
+                        }
+
+
                         // Main query handler
                         $("#test").click(function() {
                             console.log("clicked");
@@ -339,7 +345,7 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation"><a href="./">AutoDQM</a></li>
                 <li role="presentation" class="active"><a href="search.php">Search</a></li>
-                <li role="presentation"><a href="plots.php">Plots</a></li>
+                <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul>
 
 
