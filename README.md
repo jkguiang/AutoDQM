@@ -17,7 +17,8 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [x] Gives a clear indication on the status of a user's query 
 
 ###### search.php
-- [ ] Allows user to quickly search data set names
+- [x] Allows user to quickly search data set names
+- [x] Allows user to quickly search file name from selected data set name
 - [ ] Stores searched data set names to be used in home page
 
 ###### plots.php
