@@ -14,7 +14,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 
 ###### index.php
 - [x] Previews input in a readable way
-- [x] Gives a clear indication on the status of a user's query 
+- [x] Gives a clear indication of the status of a user's query 
 
 ###### search.php
 - [x] Allows user to quickly search data set names
