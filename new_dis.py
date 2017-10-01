@@ -205,7 +205,16 @@ if __name__=='__main__':
             if "*" in args[1]:
                 files.append(obj["dataset"])
             else:
-                files.append(obj["name"])
+                if "SingleMuon" in args[1] and "PromptReco" in args[1]:
+                    name_split = obj["name"].split("/000/")[1].split("/00000/")[0].split("/")
+                    name = int(name_split[0] + name_split[1])
+
+                    if name not in files: files.append(name)
+                else:
+                    files.append(obj["name"])
+    
+    if "SingleMuon" in args[1] and "PromptReco" in args[1]:
+        files.sort(key=int)
 
     full_response["response"]["payload"] = files
 
