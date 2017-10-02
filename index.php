@@ -168,12 +168,12 @@
 
                             else {
                                 if (cur_sample == "RelVal") {
-                                    localStorage["data"] = response["query"][3];
-                                    localStorage["ref"] = response["query"][5];
+                                    localStorage["data"] = response["query"][0];
+                                    localStorage["ref"] = response["query"][1];
                                 }
                                 else if (cur_sample == "SingleMuon") {
-                                    localStorage["data"] = response["query"][4];
-                                    localStorage["ref"] = response["query"][2];
+                                    localStorage["data"] = response["query"][0];
+                                    localStorage["ref"] = response["query"][1];
                                 }
                                 reduced_resp = [localStorage["data"], localStorage["ref"]];
                                 pass_object(reduced_resp);
@@ -248,22 +248,25 @@
                         if (new_query["sample"] == "SingleMuon") {
                             $("#SingleMuon_dataInput").val(new_query["data_info"]);
                             $("#SingleMuon_refInput").val(new_query["ref_info"]);
-                            $("#path").val(new_query["data_query"]);
-                            $("#ref_path").val(new_query["ref_query"]);
+                            $("#path").val(new_query["data_query"].split("/" + new_query["sample"] + "/")[1]);
+                            $("#ref_path").val(new_query["ref_query"].split("/" + new_query["sample"] + "/")[1]);
                         
                         }
                         if (new_query["sample"] == "RelVal") {
                             $("#RelVal_input").val(new_query["data_info"]);
-                            $("#path").val(new_query["data_query"]);
-                            $("#ref_path").val(new_query["ref_query"]);
+                            $("#path").val(new_query["data_query"].split("/" + new_query["sample"] + new_query["data_info"] + "/")[1]);
+                            $("#ref_path").val(new_query["ref_query"].split("/" + new_query["sample"] + new_query["data_info"] + "/")[1]);
                         
                         }
+                        updt_data();
+                        updt_ref();
                         check_input();
+
                         $("#load").hide();
                         $("#finished").hide();
                         $("#input_err").hide();
                         $("#internal_err").hide();
-                        /* submit(new_query); */
+                        submit(new_query);
                     }
                     // End query handlers
 
@@ -286,11 +289,6 @@
                         // Update plots link if search stored in local storage
                         if (localStorage.hasOwnProperty("data")) {
                             $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
-                        }
-
-                        // Update form if query passed from search page
-                        if (localStorage.hasOwnProperty("search_query")) {
-                            get_search(localStorage["search_query"]);
                         }
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
@@ -364,6 +362,7 @@
                             $("#input_err").hide();
                             $("#internal_err").hide();
                             var query = {
+                                "type": "retrieve",
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
                                 "sample": cur_sample,
@@ -372,6 +371,12 @@
                             }
                             check_query(query);
                         });
+
+                        // Update form if query passed from search page
+                        if (localStorage.hasOwnProperty("search_query")) {
+                            get_search(localStorage["search_query"]);
+                            localStorage.removeItem("search_query");
+                        }
                     
                     });
 

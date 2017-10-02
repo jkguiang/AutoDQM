@@ -91,7 +91,7 @@ def get_hists(fdir, rdir, data_id, ref_id):
     return True
 
 # Generates 'id' used to identify RelVal comparison plots
-def get_id(path, sample):
+def get_id(sample, path):
     return (sample + "_" + path.split("/DQMIO")[0].split("_")[-1].split("-")[0])
 
 # Generates run number for SingleMuon identification
@@ -139,13 +139,13 @@ def handle_RelVal(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success = get_files(str(args[3]), "data")
+        is_success = get_files(str(args["data_query"]), "data")
         check(is_success, 'get_files')
-        is_success = get_files(str(args[5]), "ref")
+        is_success = get_files(str(args["ref_query"]), "ref")
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args[1], args[4]), get_id(args[1], args[2]))
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args["data_info"], args["data_query"]), get_id(args["ref_info"], args["ref_query"]))
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -162,13 +162,13 @@ def handle_SingleMuon(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success = get_files(args[3], "data", args[4])
+        is_success = get_files(args["data_query"], "data", args["data_info"])
         check(is_success, 'get_files')
-        is_success = get_files(args[5], "ref", args[2])
+        is_success = get_files(args["ref_query"], "ref", args["ref_info"])
         check(is_success, 'get_files')
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args[4], args[2])
+        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args["data_info"], args["ref_info"])
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -180,21 +180,24 @@ def handle_SingleMuon(args):
 def process_query(args):
     t0 = time.time()
 
-    if args[1] == "RelVal":
+    if args["sample"] == "RelVal":
         is_success, fail_reason = handle_RelVal(args)
-    elif args[1] == "SingleMuon":
+    elif args["sample"] == "SingleMuon":
         is_success, fail_reason = handle_SingleMuon(args)
     else:
         return get_response(t0, "fail", "Sample not supported", args,  "Query failed")
     
     if is_success and fail_reason == None:
-        return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
+        return get_response(t0, "success", fail_reason, [args["data_info"], args["ref_info"]],  "Query proccessed successfully")
     else:
-        return get_response(t0, "fail", fail_reason, args,  "Query failed")
+        return get_response(t0, "fail", fail_reason, [args["data_info"], args["ref_info"]],  "Query failed")
 
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
     # print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
+    # test = {"type":"retrieve","sample":"SingleMuon", "ref_info":"300811", "ref_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "data_info":"301531", "data_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO"}
 
-    print(process_query(sys.argv))
+    args = json.loads(sys.argv[1])
+
+    print(process_query(args))
 
