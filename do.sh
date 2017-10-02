@@ -8,4 +8,15 @@
 
 cd /cvmfs/cms.cern.ch/slc6_amd64_gcc530/cms/cmssw/CMSSW_9_2_8; eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`; cd ~-
 
-python new_dis.py $*
+if [[ "$1" == "retrieve" ]] ; then
+    shift
+    python main.py "$*"
+
+elif [[ "$1" == "search" ]] ; then
+    shift
+    python new_dis.py "$*"
+else
+    echo 'Invalid command.'
+    exit 1
+fi
+# python test.py $*
