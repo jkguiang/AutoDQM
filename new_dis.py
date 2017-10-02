@@ -194,18 +194,18 @@ def handle_query(arg_dict):
 
 if __name__=='__main__':
 
-    args = sys.argv
+    args = json.loads(sys.argv[1])
 
-    full_response = handle_query({"query":args[1], "type":"files", "short":False})
+    full_response = handle_query({"query":args["search"], "type":"files", "short":False})
 
     files = []
 
     if full_response["response"]["payload"]:
         for obj in full_response["response"]["payload"]:
-            if "*" in args[1]:
+            if "*" in args["search"]:
                 files.append(obj["dataset"])
             else:
-                if "SingleMuon" in args[1] and "PromptReco" in args[1]:
+                if "SingleMuon" in args["search"] and "PromptReco" in args["search"]:
                     name_split = obj["name"].split("/000/")[1].split("/00000/")[0].split("/")
                     name = int(name_split[0] + name_split[1])
 
@@ -213,7 +213,7 @@ if __name__=='__main__':
                 else:
                     files.append(obj["name"])
     
-    if "SingleMuon" in args[1] and "PromptReco" in args[1]:
+    if "SingleMuon" in args["search"] and "PromptReco" in args["search"]:
         files.sort(key=int)
 
     full_response["response"]["payload"] = files

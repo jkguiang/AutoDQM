@@ -40,6 +40,7 @@
                     var cur_sample = ""; // Stores current sample (RelVal, SingleMuon) so script knows whether to require run selection
                     var info = ""; // Stores info for sample, passed to query when selection is completed
                     var query = {
+                        "type": "retrieve",
                         "data_query": "", 
                         "ref_query": "", 
                         "sample": "", 
@@ -107,10 +108,10 @@
 
                     function check_submission() {
                         is_good = true;
-                        if ($("#data_select").text() == "No data selected.") {
+                        if ($("#data_preview").text() == "No data selected.") {
                             is_good = false;
                         }
-                        if ($("#ref_select").text() == "No reference selected.") {
+                        if ($("#ref_preview").text() == "No reference selected.") {
                             is_good = false;
                         }
                         if (cur_sample == "SingleMuon" || cur_sample == "RelVal") {
@@ -120,6 +121,9 @@
                         }
                         if (is_good) {
                             $("#submit").removeAttr('disabled');
+                        }
+                        else {
+                            $("#submit").attr('disabled', 'disabled');
                         }
                     }
 
@@ -266,7 +270,7 @@
                         console.log(t0);
 
                         $.ajaxSetup({timeout:300000}); // Set timeout to 5 minutes
-                        $.get("search_handler.py", query)
+                        $.get("handler.py", query)
                             .done(function(response) {})
                             .always(handle_response);
                     }
@@ -320,6 +324,7 @@
                             $("#internal_err").hide();
                             $("#dsnames").html("");
                             var query = {
+                                "type": "search",
                                 "search": (document.getElementById("search_txt").value + "*"),
                             }
                             check(query);
@@ -332,6 +337,7 @@
                             $("#internal_err").hide();
                             $("#files").html("");
                             var query = {
+                                "type": "search",
                                 "search": $(cur_tag).text(),
                             }
                             check(query);
