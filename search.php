@@ -36,16 +36,25 @@
                 <script>
                     // Global variables
                     var cur_tag = "#data";
-                    var cur_search = ""; // Stores most recent search type so script knows which div to fill
+                    var cur_search = ""; // Stores most recent search (files or dsnames) type so script knows which div to fill
+                    var cur_sample = ""; // Stores current sample (RelVal, SingleMuon) so script knows whether to require run selection
+                    var info = ""; // Stores info for sample, passed to query when selection is completed
+                    var query = {
+                        "data_query": "", 
+                        "ref_query": "", 
+                        "sample": "", 
+                        "data_info": "", 
+                        "ref_info": "", 
+                    }; // Stores query to be sent to index.php
                     var t0 = 0;
 
                     // Form functions: mostly for updating 'preview' wells
                     function check_search() {
                         // Ensure form is filled
                         if ( document.getElementById("search_txt").value == "" ) {
-                            // TODO Add some check for correct input here
                             $("#search").attr('disabled', 'disabled');
                         }
+                        // TODO Add some check for correct input here
                         else {
                             $("#search").removeAttr('disabled');
                         }
@@ -53,16 +62,46 @@
 
                     function check_selection() {
                         is_good = true;
+                        // Get selection, update cur_sample
+                        if ($(cur_tag).text().indexOf("SingleMuon") > -1) {
+                            cur_sample = "SingleMuon";
+                        }
+                        else if ($(cur_tag).text().indexOf("RelVal") > -1) {
+                            cur_sample = "RelVal";
+                        }
+
+                        // Check for good selection
                         if ($(cur_tag).text() == "No selection.") {
                             is_good = false;
                         }
+                        // Check for cur_sample-related requirements
+                        if (cur_sample == "SingleMuon") {
+                            $("#run_well").show();
+                            $("#get_files").removeAttr('disabled');
+                            if ($("#run").text() == "No selection.") {
+                                is_good = false;
+                            }
+                            else {
+                                info = $("#run").text();
+                            }
+                        }
+                        else if (cur_sample == "RelVal") {
+                            $("#get_files").attr('disabled', 'disabled');
+                            $("#run_well").hide();
+                            info = $(cur_tag).text().split("/")[1]
+                        }
+                        else {
+                            $("#get_files").attr('disabled', 'disabled');
+                            info = "";
+                            is_good = false;
+                        }
+
+                        // Final check
                         if (is_good) {
                             $("#select").removeAttr('disabled');
-                            $("#get_files").removeAttr('disabled');
                         }
                         else {
                             $("#select").attr('disabled', 'disabled');
-                            $("#get_files").attr('disabled', 'disabled');
                         }
                     }
 
@@ -73,6 +112,11 @@
                         }
                         if ($("#ref_select").text() == "No reference selected.") {
                             is_good = false;
+                        }
+                        if (cur_sample == "SingleMuon" || cur_sample == "RelVal") {
+                            if (query["data_info"] == "" || query["ref_info"] == "") {
+                                is_good = false;
+                            }
                         }
                         if (is_good) {
                             $("#submit").removeAttr('disabled');
@@ -119,10 +163,10 @@
                             for (var i = 0; i < new_list.length; i++) {
                                 toappend += "<a class='list-group-item' id="+ tag +"_"+ i +">"+ new_list[i] +"</a>";
                                 if ((i + 1) % 10 == 0 && i != 0) {
-                                    toappend += "</div>"
+                                    toappend += "</div>";
                                     if (i == 9) {
                                         toappend += "<div class='row text-center' id='pagenavbar_"+ counter +"'>";
-                                        toappend += "   <hr>"
+                                        toappend += "   <hr>";
                                         toappend += "   <div class='col-sm-2'><input class='btn btn-default btn-sm' id='nav_1' type='button' value='1' disabled></div>";
                                         toappend += "   <div class='col-sm-3'></div>";
                                         toappend += "   <div class='col-sm-2'><p>"+counter+"</p></div>";
@@ -132,7 +176,7 @@
                                     }
                                     else {
                                         toappend += "<div class='row text-center' id='pagenavbar_"+ counter +"' hidden>";
-                                        toappend += "   <hr>"
+                                        toappend += "   <hr>";
                                         toappend += "   <div class='col-sm-2'><input class='btn btn-success btn-sm' id='nav_"+(counter-1)+"'  type='button' value="+(counter-1)+"></div>";
                                         toappend += "   <div class='col-sm-3'></div>";
                                         toappend += "   <div class='col-sm-2'><p>"+counter+"</p></div>";
@@ -146,9 +190,9 @@
                             }
 
                             if (new_list.length % 10 != 0) {
-                                toappend += "</div>"
+                                toappend += "</div>";
                                 toappend += "<div class='row text-center' id='pagenavbar_"+ counter +"' hidden>";
-                                toappend += "   <hr>"
+                                toappend += "   <hr>";
                                 toappend += "   <div class='col-sm-2'><input class='btn btn-success btn-sm' id='nav_"+(counter - 1)+"'  type='button' value="+(counter - 1)+"></div>";
                                 toappend += "   <div class='col-sm-3'></div>";
                                 toappend += "   <div class='col-sm-2'><p>"+counter+"</p></div>";
@@ -162,8 +206,8 @@
                             $('[id^='+ tag +'_]').click(function() {
                                 $('[id^=' +tag+ '_]').attr("class", "list-group-item");
                                 $(this).attr("class", "list-group-item active");
-                                $(cur_tag).text("");
-                                $(cur_tag).text($(this).text());
+                                $("#run").text("");
+                                $("#run").text($(this).text());
                                 check_selection();
                             });
 
@@ -240,6 +284,7 @@
                         $("#dsnames_load").hide();
                         $("#files_load").hide();
                         $("#ref_well").hide();
+                        $("#run_well").hide();
 
                         // Error hides
                         $("#internal_err").hide();
@@ -268,10 +313,6 @@
 
 
                         // Main query handler
-                        $("#test").click(function() {
-                            console.log("clicked");
-                        });
-
                         $("#search").click(function() {
                             cur_search = "dsnames";
 
@@ -299,6 +340,10 @@
                         $("#select").click(function() {
                             console.log("select button clicked");
                             $(cur_tag + "_preview").text($(cur_tag).text());
+                            query[cur_tag.split("#")[1] + "_info"] = info;
+                            query[cur_tag.split("#")[1] + "_query"] = $(cur_tag).text();
+                            query["sample"] = cur_sample;
+                            console.log(query);
                             check_submission();
                         });
 
@@ -307,8 +352,7 @@
                                 $("#input_err").show();
                             }
                             else {
-                                localStorage["data"] = $("#data_preview").text();
-                                localStorage["ref"] = $("#ref_preview").text();
+                                localStorage["search_query"] = JSON.stringify(query);
                                 document.location.href="./";
                             }
                         });
@@ -389,7 +433,8 @@
                         <div class="row">
                             <div class="col-sm-12" id="data_well"><label>Selection</label><div class="alert alert-success"><p id="data">No selection.</p></div></div>
                             <div class="col-sm-12" id="ref_well"><label>Selection</label><div class="alert alert-info"><p id="ref">No selection.</p></div></div>
-                        </div>
+                            <div class="col-sm-12" id="run_well"><label>Run</label><div class="alert alert-warning"><p id="run">No selection.</p></div></div>
+                        </div><!-- pelection preview pane -->
 
                         <div class="row">
                             <div class="col-sm-2"></div>
@@ -397,6 +442,8 @@
                             <div class="col-sm-2"><label class="radio-inline"><input id="ref_check" type="radio" value="ref">Reference</label></div>
                             <div class="col-sm-2"><button id="select" type="submit" class="btn btn-success" disabled>Select</button></div>
                             <div class="col-sm-2"><button id="get_files" type="submit" class="btn btn-success" disabled>Get File List</button><div class="loader" id="files_load"></div></div>
+                            <!-- radio selection menu -->
+
                             <div class="col-sm-2"></div>
                         </div>
                     </div> <!-- end slection preview -->

@@ -155,8 +155,8 @@
                         try {
                             // Handle output from main.py
                             console.log("query received by main.py:");
-                            console.log(response["query"])
-                            console.log("response:")
+                            console.log(response["query"]);
+                            console.log("response:");
                             console.log(response["response"]["payload"]);
                             var resp = response["response"];
 
@@ -235,10 +235,41 @@
                             submit(query);
                         }
                     }
+
+                    function get_search(search_query) {
+                        // Use json to get object from stringified search query
+                        new_query = JSON.parse(search_query);
+                        $("#sample_list").val(new_query["sample"]);
+                        $("#" + new_query["sample"]).show();
+                        $("#data_sample").text("/" + new_query["sample"] + "/");
+                        $("#ref_sample").text("/" + new_query["sample"] + "/");
+                        $("#path").removeAttr('disabled');
+                        $("#ref_path").removeAttr('disabled');
+                        if (new_query["sample"] == "SingleMuon") {
+                            $("#SingleMuon_dataInput").val(new_query["data_info"]);
+                            $("#SingleMuon_refInput").val(new_query["ref_info"]);
+                            $("#path").val(new_query["data_query"]);
+                            $("#ref_path").val(new_query["ref_query"]);
+                        
+                        }
+                        if (new_query["sample"] == "RelVal") {
+                            $("#RelVal_input").val(new_query["data_info"]);
+                            $("#path").val(new_query["data_query"]);
+                            $("#ref_path").val(new_query["ref_query"]);
+                        
+                        }
+                        check_input();
+                        $("#load").hide();
+                        $("#finished").hide();
+                        $("#input_err").hide();
+                        $("#internal_err").hide();
+                        /* submit(new_query); */
+                    }
                     // End query handlers
 
                     // Main function
                     $(function() {
+                        console.log(localStorage);
                         // Initital hides
                         $("#load").hide();
                         $("#finished").hide();
@@ -255,6 +286,11 @@
                         // Update plots link if search stored in local storage
                         if (localStorage.hasOwnProperty("data")) {
                             $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
+                        }
+
+                        // Update form if query passed from search page
+                        if (localStorage.hasOwnProperty("search_query")) {
+                            get_search(localStorage["search_query"]);
                         }
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
