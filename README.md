@@ -10,7 +10,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [x] Outputs histograms that clearly highlight outliers
 - [x] Creates a .txt file along with each .pdf with relevant information on it
 - [x] Allows user to easily change input
-- [ ] Seeks and accurately finds outliers
+- [x] Seeks and accurately finds outliers
 
 ###### index.php
 - [x] Previews input in a readable way
@@ -19,7 +19,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 ###### search.php
 - [x] Allows user to quickly search data set names
 - [x] Allows user to quickly search file name from selected data set name
-- [ ] Stores searched data set names to be used in home page
+- [x] Stores searched data set names to be used in home page
 
 ###### plots.php
 - [x] Dynamically displays text files below AutoPlotter toolbar
