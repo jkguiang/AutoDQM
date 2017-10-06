@@ -207,7 +207,10 @@ if __name__=='__main__':
             else:
                 if "SingleMuon" in args["search"] and "PromptReco" in args["search"]:
                     name_split = obj["name"].split("/000/")[1].split("/00000/")[0].split("/")
-                    name = int(name_split[0] + name_split[1])
+                    if len(name_split) > 1:
+                        name = int(name_split[0] + name_split[1])
+                    else:
+                        name = int(name_split[0] + "000")
 
                     if name not in files: files.append(name)
                 else:
