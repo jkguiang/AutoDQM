@@ -118,12 +118,13 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     is_outlier = False
     max_pull = 0
     nBins = 0
+    ks = 0
     
     # Reject empty histograms
     if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
         if name not in hists:
             is_good = False
-            return is_good, chi2, max_pull, is_outlier
+            return is_good, ks, is_outlier
 
     # Normalize f_hist
     f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
@@ -131,44 +132,9 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     # Ensure plot accounts for maximum value
     r_hist.SetMaximum(max(f_hist.GetMaximum(), r_hist.GetMaximum())*1.1)
 
-    for x in range(1, r_hist.GetNbinsX()+1):
+    ks = f_hist.KolmogorovTest(r_hist, "M")
 
-        # Bin 1 data
-        bin1 = f_hist.GetBinContent(x)
-        bin1err = f_hist.GetBinError(x)
-
-        # Bin 2 data
-        bin2 = r_hist.GetBinContent(x)
-        bin2err = r_hist.GetBinError(x)
-
-        # Count bins for chi2 calculation
-        nBins += 1
-
-        # Ensure that divide-by-zero error is not thrown when calculating pull
-        if bin1err == 0 and bin2err == 0:
-            continue
-
-        # Calculate pull
-        new_pull = pull(bin1, bin1err, bin2, bin2err)
-
-        # Sum pulls
-        chi2 += new_pull**2
-
-        # Check if max_pull
-        if abs(new_pull) > abs(max_pull):
-            max_pull = new_pull
-
-        # Cap pull values displayed on histogram (max pull calculated before this)
-        if new_pull > 100:
-            new_pull = 100
-        if new_pull < -100:
-            new_pull = -100
-
-    # Compute chi2
-    chi2 = (chi2/nBins)
-
-    # Chi2 Cut
-    if chi2 > 500 or abs(max_pull) > 40 or name in hists:
+    if ks > 0.09 or name in hists:
         # Used in outliers count
         is_outlier = True
 
@@ -181,13 +147,13 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         # Set hist style
         r_hist.SetLineColor(28)
         r_hist.SetFillColor(20)
-        r_hist.SetLineWidth(2)
+        r_hist.SetLineWidth(1)
         f_hist.SetLineColor(ROOT.kRed)
-        f_hist.SetLineWidth(2)
+        f_hist.SetLineWidth(1)
 
         # Plot hist
         r_hist.Draw()
-        f_hist.Draw("sames hist")
+        f_hist.Draw("sames hist e")
 
         if name in hists:
             # Draw stats boxes
@@ -221,12 +187,11 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         # Write text file
         new_txt = open("{0}/txts/{1}_{2}.txt".format(targ_dir, name, data_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
-                            "Max Pull Value: {0}\n".format(max_pull),
-                            "Chi^2: {0}\n".format(chi2),
+                            "KS: {0}\n".format(ks),
                             "Entries: {0}\n".format(int(f_hist.GetEntries()))])
         new_txt.close()
 
-    return is_good, chi2, max_pull, is_outlier
+    return is_good, ks, is_outlier
 
 # End Comparison Plots
 
@@ -255,7 +220,7 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     max_2D = 0
 
     C = ROOT.TCanvas("C", "Chi2")
-    chi2_1D = ROOT.TH1F("chi2_1D", "#Chi^{2} for 1D Histograms", 60, 0, 300)
+    ks_1D = ROOT.TH1F("ks_1D", "Kolmogorov-Smirnov Test for TH1F's", 20, 0, 1)
     chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2} for 2D Histograms", 60, 0, 300)
 
     outliers = 0
@@ -265,11 +230,11 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
         if type(f_hists[name]) != type(r_hists[name]): continue
 
         if type(f_hists[name]) == ROOT.TH1F:
-            is_good, chi2, max_pull, is_outlier = draw_same(f_hists[name], r_hists[name], name, data_id, ref_id, targ_dir)
+            is_good, ks, is_outlier = draw_same(f_hists[name], r_hists[name], name, data_id, ref_id, targ_dir)
             if is_good:
-                chi2_1D.Fill(chi2)
-                if chi2 > max_1D:
-                    max_1D = chi2
+                ks_1D.Fill(ks)
+                if ks > max_1D:
+                    max_1D = ks
             if is_outlier:
                 outliers += 1
         elif type(f_hists[name]) == ROOT.TH2F:
@@ -284,20 +249,14 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
         else:
             skip += 1
 
-    chi2_1D.GetXaxis().SetTitle("#Chi^{2}")
-    chi2_1D.GetYaxis().SetTitle("Entries")
+    ks_1D.GetXaxis().SetTitle("KS Value")
+    ks_1D.GetYaxis().SetTitle("Entries")
 
-    chi2_1D.GetXaxis().SetRangeUser(0, int(max_1D))
-    chi2_1D.GetXaxis().SetLimits(0, max_1D)
-
-    chi2_1D.Draw("hist")
-    C.SaveAs("{0}/pdfs/chi2_1D.pdf".format(targ_dir))
+    ks_1D.Draw("hist")
+    C.SaveAs("{0}/pdfs/ks_1D.pdf".format(targ_dir))
 
     chi2_2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_2D.GetYaxis().SetTitle("Entries")
-
-    # chi2_2D.GetXaxis().SetRangeUser(0, int(max_2D))
-    # chi2_2D.GetXaxis().SetLimits(0, max_2D)
 
     chi2_2D.Draw("hist")
     C.SaveAs("{0}/pdfs/chi2_2D.pdf".format(targ_dir))
