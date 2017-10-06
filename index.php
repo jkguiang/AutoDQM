@@ -245,18 +245,21 @@
                         $("#ref_sample").text("/" + new_query["sample"] + "/");
                         $("#path").removeAttr('disabled');
                         $("#ref_path").removeAttr('disabled');
+
                         cur_sample = new_query["sample"];
                         if (new_query["sample"] == "SingleMuon") {
                             $("#SingleMuon_dataInput").val(new_query["data_info"]);
                             $("#SingleMuon_refInput").val(new_query["ref_info"]);
                             $("#path").val(new_query["data_query"].split("/" + new_query["sample"] + "/")[1]);
                             $("#ref_path").val(new_query["ref_query"].split("/" + new_query["sample"] + "/")[1]);
+                            prefix = "SingleMuon";
                         
                         }
                         if (new_query["sample"] == "RelVal") {
                             $("#RelVal_input").val(new_query["data_info"]);
-                            $("#path").val(new_query["data_query"].split("/" + new_query["sample"] + new_query["data_info"] + "/")[1]);
-                            $("#ref_path").val(new_query["ref_query"].split("/" + new_query["sample"] + new_query["data_info"] + "/")[1]);
+                            prefix = new_query["sample"] + new_query["data_info"];
+                            $("#path").val(new_query["data_query"].split("/" + prefix + "/")[1]);
+                            $("#ref_path").val(new_query["ref_query"].split("/" + prefix + "/")[1]);
                         
                         }
                         updt_data();
