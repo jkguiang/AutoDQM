@@ -129,7 +129,7 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
 
     # Ensure plot accounts for maximum value
-    r_hist.SetMaximum(max(f_hist.GetMaximum(), r_hist.GetMaximum()))
+    r_hist.SetMaximum(max(f_hist.GetMaximum(), r_hist.GetMaximum())*1.1)
 
     for x in range(1, r_hist.GetNbinsX()+1):
 
@@ -182,12 +182,12 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         r_hist.SetLineColor(28)
         r_hist.SetFillColor(20)
         r_hist.SetLineWidth(2)
-        f_hist.SetLineColor(ROOT.kBlack)
+        f_hist.SetLineColor(ROOT.kRed)
         f_hist.SetLineWidth(2)
 
         # Plot hist
         r_hist.Draw()
-        f_hist.Draw("sames")
+        f_hist.Draw("sames hist")
 
         if name in hists:
             # Draw stats boxes
@@ -205,6 +205,7 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 
             f_stats.SetY1NDC(0.35)
             f_stats.SetY2NDC(0.50)
+            f_stats.SetTextColor(ROOT.kRed)
             f_stats.Draw()
 
         # Text box
