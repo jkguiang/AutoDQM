@@ -13,6 +13,11 @@
                 
                 <!-- CSS -->
                 <style>
+                    .alert-grey {
+                        color: #727272;
+                        background-color: #d6d6d6;
+                        border-color: #cecece;
+                    }
                     .container-wide {
                         padding: 0 50px !important;
                     }
@@ -78,6 +83,8 @@
                         // Check for cur_sample-related requirements
                         if (cur_sample == "SingleMuon") {
                             $("#run_well").show();
+                            $("#data_run").attr("class", "alert alert-success");
+                            $("#ref_run").attr("class", "alert alert-info");
                             $("#get_files").removeAttr('disabled');
                             if ($("#run").text() == "No selection.") {
                                 is_good = false;
@@ -89,6 +96,8 @@
                         else if (cur_sample == "RelVal") {
                             $("#get_files").attr('disabled', 'disabled');
                             $("#run_well").hide();
+                            $("#data_run").attr("class", "alert alert-grey");
+                            $("#ref_run").attr("class", "alert alert-grey");
                             info = $(cur_tag).text().split("/")[1]
                         }
                         else {
@@ -147,9 +156,15 @@
 
                             ul.append(toappend);
 
+                            // dsname list item functionality
                             $('[id^='+ tag +'_]').click(function() {
                                 $('[id^=' +tag+ '_]').attr("class", "list-group-item");
                                 $(this).attr("class", "list-group-item active");
+                                if ($(cur_tag).text() != $(this).text()) {
+                                    // Reset file list and run selection if navigates to different list item
+                                    $("#files").html("");
+                                    $("#run").text("No selection.");
+                                }
                                 $(cur_tag).text("");
                                 $(cur_tag).text($(this).text());
                                 check_selection();
@@ -207,6 +222,7 @@
 
                             ul.append(toappend);
 
+                            // File list item functionality
                             $('[id^='+ tag +'_]').click(function() {
                                 $('[id^=' +tag+ '_]').attr("class", "list-group-item");
                                 $(this).attr("class", "list-group-item active");
@@ -215,6 +231,7 @@
                                 check_selection();
                             });
 
+                            // Allows for navigation between lists of files
                             $('[id^=nav_]').click(function() {
                                 show_value = $(this).attr('value');
                                 $('[id^=pagenavbar_]').hide();
@@ -294,6 +311,10 @@
                         $("#internal_err").hide();
                         $("#input_err").hide();
 
+                        // Ensure run previews are greyed out
+                        $("#data_run").attr("class", "alert alert-grey");
+                        $("#ref_run").attr("class", "alert alert-grey");
+
                         // Ensure proper radio is selected
                         $("#data_check").prop('checked', true);
                         $("#ref_check").removeAttr('checked');
@@ -323,6 +344,7 @@
                             $("#search").hide();
                             $("#internal_err").hide();
                             $("#dsnames").html("");
+                            $("#files").html("");
                             var query = {
                                 "type": "search",
                                 "search": (document.getElementById("search_txt").value + "*"),
@@ -346,11 +368,16 @@
                         $("#select").click(function() {
                             console.log("select button clicked");
                             $(cur_tag + "_preview").text($(cur_tag).text());
+                            $(cur_tag + "_run").text($("#run").text());
                             query[cur_tag.split("#")[1] + "_info"] = info;
                             query[cur_tag.split("#")[1] + "_query"] = $(cur_tag).text();
                             query["sample"] = cur_sample;
                             console.log(query);
+                            $("#run").text("No selection.");
                             check_submission();
+                            check_selection();
+                            // Deselect file
+                            $('[id^=file_]').attr("class", "list-group-item");
                         });
 
                         $("#submit").click(function() {
@@ -370,6 +397,7 @@
 
                             $("#data_well").show();
                             $("#ref_well").hide();
+                            $("#run").attr("class", "alert alert-success");
 
                             check_selection();
                         });
@@ -381,6 +409,7 @@
 
                             $("#ref_well").show();
                             $("#data_well").hide();
+                            $("#run").attr("class", "alert alert-info");
 
                             check_selection();
                         });
@@ -439,7 +468,7 @@
                         <div class="row">
                             <div class="col-sm-12" id="data_well"><label>Selection</label><div class="alert alert-success"><p id="data">No selection.</p></div></div>
                             <div class="col-sm-12" id="ref_well"><label>Selection</label><div class="alert alert-info"><p id="ref">No selection.</p></div></div>
-                            <div class="col-sm-12" id="run_well"><label>Run</label><div class="alert alert-warning"><p id="run">No selection.</p></div></div>
+                            <div class="col-sm-12" id="run_well"><label>Run</label><div class="alert alert-success" id="run">No selection.</div></div>
                         </div><!-- pelection preview pane -->
 
                         <div class="row">
@@ -455,10 +484,20 @@
                     </div> <!-- end slection preview -->
                     
                     <div class="col-lg-6">
-                        <label for="data_preview">Data</label>
-                        <div class="alert alert-success" id="data_preview">No data selected.</div>
-                        <label for="ref_preview">Reference</label>
-                        <div class="alert alert-info" id="ref_preview">No reference selected.</div>
+                        <div class="row">
+                            <div class="col-md-9">
+                                <label for="data_preview">Data</label>
+                                <div class="alert alert-success" id="data_preview">No data selected.</div>
+                                <label for="ref_preview">Reference</label>
+                                <div class="alert alert-info" id="ref_preview">No reference selected.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="data_run">Run</label>
+                                <div class="alert alert-grey" id="data_run">None.</div>
+                                <label for="ref_run">Run</label>
+                                <div class="alert alert-grey" id="ref_run">None.</div>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-sm-5"></div>
                             <div class="col-sm-2"><button id="submit" type="submit" class="btn btn-success" disabled>Submit</button></div>

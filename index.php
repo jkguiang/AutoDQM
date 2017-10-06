@@ -154,7 +154,7 @@
                         console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
                         try {
                             // Handle output from main.py
-                            console.log("query received by main.py:");
+                            console.log("query to be stored:");
                             console.log(response["query"]);
                             console.log("response:");
                             console.log(response["response"]["payload"]);
@@ -245,6 +245,7 @@
                         $("#ref_sample").text("/" + new_query["sample"] + "/");
                         $("#path").removeAttr('disabled');
                         $("#ref_path").removeAttr('disabled');
+                        cur_sample = new_query["sample"];
                         if (new_query["sample"] == "SingleMuon") {
                             $("#SingleMuon_dataInput").val(new_query["data_info"]);
                             $("#SingleMuon_refInput").val(new_query["ref_info"]);
