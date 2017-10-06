@@ -214,7 +214,10 @@ if __name__=='__main__':
                     files.append(obj["name"])
     
     if "SingleMuon" in args["search"] and "PromptReco" in args["search"]:
-        files.sort(key=int)
+        try:
+            files.sort(key=int)
+        except ValueError:
+            pass
 
     full_response["response"]["payload"] = files
 
