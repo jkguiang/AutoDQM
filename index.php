@@ -265,6 +265,9 @@
                         updt_data();
                         updt_ref();
                         check_input();
+                        updt_sample();
+                        updt_data();
+                        updt_ref();
 
                         $("#load").hide();
                         $("#finished").hide();
@@ -294,6 +297,9 @@
                         if (localStorage.hasOwnProperty("data")) {
                             $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
                         }
+
+                        // If user refreshes after a search has failed, ensures that all form info will be properly stored
+                        check_input();
 
                         // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
                         $(window).keydown(function(event) {
@@ -456,7 +462,7 @@
                         <div class="input-group">
                             <span class="input-group-addon" id="data_sample">/sample/</span>
                             <form class="form-inline" id="full" action="./" method="post" role="form">
-                                <input type="text" class="form-control" id="path" onkeyup="updt_ref()" name="path" placeholder="Please select a sample.">
+                                <input type="text" class="form-control" id="path" onkeyup="updt_data()" name="path" placeholder="Please select a sample.">
                             </form>
                         </div>
 
