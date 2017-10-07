@@ -14,7 +14,7 @@ if [[ "$1" == "retrieve" ]] ; then
 
 elif [[ "$1" == "search" ]] ; then
     shift
-    python new_dis.py "$*"
+    python search.py "$*"
 else
     echo 'Invalid command.'
     exit 1

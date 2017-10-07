@@ -5,7 +5,7 @@ import time
 import ROOT
 import subprocess
 
-import new_dis
+import search
 import AutoDQM
 
 # Global dict for holding all run times
@@ -102,7 +102,7 @@ def get_run(path):
 @timer
 def get_files(path, targ_dir, run=None):
 
-    response = new_dis.handle_query({"query":path, "type":"files", "short":False})
+    response = search.handle_query({"query":path, "type":"files", "short":False})
     data = response["response"]["payload"]
     xrd_args = ["{0}/get_xrd.sh".format(os.getcwd()), targ_dir]
 
@@ -160,20 +160,20 @@ def handle_SingleMuon(args):
     is_success = False
     fail_reason = None
 
-    try:
-        # Generate root files via bash subprocess
-        is_success = get_files(args["data_query"], "data", args["data_info"])
-        check(is_success, 'get_files')
-        is_success = get_files(args["ref_query"], "ref", args["ref_info"])
-        check(is_success, 'get_files')
+    # try:
+    # Generate root files via bash subprocess
+    is_success = get_files(args["data_query"], "data", args["data_info"])
+    check(is_success, 'get_files')
+    is_success = get_files(args["ref_query"], "ref", args["ref_info"])
+    check(is_success, 'get_files')
 
-        # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args["data_info"], args["ref_info"])
-        check(is_success, 'get_hists')
+    # Root files should now be in data and ref directories
+    is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args["data_info"], args["ref_info"])
+    check(is_success, 'get_hists')
 
-    except Exception as error:
-        fail_reason = str(error)
-        return is_success, fail_reason
+    # except Exception as error:
+    #     fail_reason = str(error)
+    #     return is_success, fail_reason
 
     return is_success, fail_reason
 
@@ -195,9 +195,9 @@ def process_query(args):
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
     # print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
-    # test = {"type":"retrieve","sample":"SingleMuon", "ref_info":"300811", "ref_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "data_info":"301531", "data_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO"}
+    # test = {"type":"retrieve","sample":"SingleMuon", "ref_info":"300811", "ref_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "data_info":"299614", "data_query":"/SingleMuon/Run2017C-PromptReco-v1/DQMIO"}
+    # print(process_query(test))
 
     args = json.loads(sys.argv[1])
-
     print(process_query(args))
 

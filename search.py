@@ -108,7 +108,7 @@ def get_dataset_files(dataset, run_num=None,lumi_list=[]):
     ret = get_url_with_cert(url)
     files = []
     for f in ret:
-        files.append( [f['logical_file_name'], f['event_count'], f['file_size']/1.0e9] )
+        files.append( [f['logical_file_name'], f['event_count'], f['file_size']/1.0e9, f['last_modification_date']] )
     return files
 
 def get_dataset_runs(dataset):
@@ -118,7 +118,7 @@ def get_dataset_runs(dataset):
 def filelist_to_dict(files, short=False, num=10):
     newfiles = []
     for f in files:
-        newfiles.append({"name": f[0], "nevents": f[1], "sizeGB": round(f[2],2)})
+        newfiles.append({"name": f[0], "nevents": f[1], "sizeGB": round(f[2],2), "last_modified":f[3]})
     if short: newfiles = newfiles[:num]
     return newfiles
 
@@ -192,9 +192,7 @@ def handle_query(arg_dict):
     finally:
         return json.loads(make_response(arg_dict, payload, failed, fail_reason, warning))
 
-if __name__=='__main__':
-
-    args = json.loads(sys.argv[1])
+def handle_main(args):
 
     full_response = handle_query({"query":args["search"], "type":"files", "short":False})
 
@@ -207,10 +205,7 @@ if __name__=='__main__':
             else:
                 if "SingleMuon" in args["search"] and "PromptReco" in args["search"]:
                     name_split = obj["name"].split("/000/")[1].split("/00000/")[0].split("/")
-                    if len(name_split) > 1:
-                        name = int(name_split[0] + name_split[1])
-                    else:
-                        name = int(name_split[0] + "000")
+                    name = int(name_split[0] + name_split[1])
 
                     if name not in files: files.append(name)
                 else:
@@ -225,4 +220,12 @@ if __name__=='__main__':
     full_response["response"]["payload"] = files
 
     print(json.dumps(full_response))
+
+    return
+
+if __name__=='__main__':
+
+    args = json.loads(sys.argv[1])
+
+    handle_main(args)
     
