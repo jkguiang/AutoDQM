@@ -139,10 +139,20 @@
                         localStorage["ref"] == response["query"][1];
                         $("#data_title").text(response["query"][0]);
                         $("#ref_title").text(response["query"][1]);
+                        $("#title_wells").show();
+                        if (response["query"][0] == "" || response["query"][1] == "") {
+                            $("#title_wells").hide();
+                        }
                     }
                     catch(TypeError) {
-                        $("#data_title").text(localStorage["data"]);
-                        $("#ref_title").text(localStorage["ref"]);
+                        if (localStorage.hasOwnProperty("data")) {
+                            $("#data_title").text(localStorage["data"]);
+                            $("#ref_title").text(localStorage["ref"]);
+                            $("#title_wells").show();
+                        }
+                        else {
+                            $("#title_wells").hide();
+                        }
                     }
                 }
                 $('[id^=img_]').mouseenter(
