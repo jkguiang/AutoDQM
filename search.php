@@ -317,6 +317,7 @@
 
                         // Ensure proper radio is selected
                         $("#data_check").prop('checked', true);
+                        $("#toggle_submit").prop('checked', true);
                         $("#ref_check").removeAttr('checked');
 
                         // Ensure proper buttons are disabled
@@ -413,6 +414,15 @@
 
                             check_selection();
                         });
+
+                        $("#toggle_submit").on("click", function(){
+                            if ($(this).is(":checked")) {
+                                $("#submit_form").show();
+                            }
+                            else {
+                                $("#submit_form").hide();
+                            }
+                        });
                     
                     });
 
@@ -452,6 +462,7 @@
                         </div> <!-- End bottom row -->
                     </div>
                     <div class="col-md-2">
+                        <div class="checkbox"><label class="checkbox-inline"><input type="checkbox" id="toggle_submit" checked>Toggle Submit Form</label></div>
                     </div>
                 </div>
                 <hr>
@@ -483,7 +494,7 @@
                         </div>
                     </div> <!-- end slection preview -->
                     
-                    <div class="col-lg-6">
+                    <div class="col-lg-6" id="submit_form">
                         <div class="row">
                             <div class="col-md-9">
                                 <label for="data_preview">Data</label>
@@ -503,9 +514,9 @@
                             <div class="col-sm-2"><button id="submit" type="submit" class="btn btn-success" disabled>Submit</button></div>
                             <div class="col-sm-5"></div>
                         </div>
-                        <p><br /><br /></p>
                     </div>
                 </div> <!-- end secondary row -->
+                <p><br /><br /></p>
             </div> <!-- end container -->
         </body>
 </html>
