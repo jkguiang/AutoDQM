@@ -1,25 +1,26 @@
 import os
 import sys
-import time
 import json
-import test
+import time
+
+import search
 
 def handle_main(args):
         short = False
-        datasets = test.list_of_datasets(args["cron"], short)
+        datasets = search.list_of_datasets(args["cron"], short)
         try:
             with open("{0}/new_files.json".format(os.getcwd()), "r") as fhin:
                 cur_database = json.load(fhin)
         except ValueError:
-            cur_database = {"newest":time.time()}
+            cur_database = {"newest":1507364400, "timestamp":time.time()}
 
         to_write = []
 
         for ds in datasets:
             dsname = ds["dataset"]
             print(dsname)
-            files = test.get_dataset_files(dsname)
-            file_dict = test.filelist_to_dict(files, short, num=10)
+            files = search.get_dataset_files(dsname)
+            file_dict = search.filelist_to_dict(files, short, num=10)
 
             newest = cur_database["newest"]
 
@@ -35,13 +36,16 @@ def handle_main(args):
                     if name not in to_write:
                         to_write.append(name)
 
-        new_database = {"newest":newest, "files":{}}
+        to_write.sort(key=int)
+
+        new_database = {"newest":newest, "timestamp":time.time(), "files":{}}
         for name in to_write:
             new_database["files"][name] = dsname
 
         if new_database["files"]:
             with open("{0}/new_files.json".format(os.getcwd()), "w") as fhout:
                 json.dump(new_database, fhout, sort_keys = True, indent = 4, separators=(',',':'))
+        else: print("failed")
 
         return
 
