@@ -40,7 +40,7 @@ Clone this repository and move its contents to a public html directory.
     - Currently supported samples: RelVal, SingleMuon
 2. Enter data and reference data set names
 3. Click submit.
-    - After process is complete, you will be automatically redirected to the 'plots page'
+    - After process is complete, you will be automatically redirected to the "plots" page
 
 ###### Search Page:
 1. Enter a data set name into the search bar
