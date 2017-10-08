@@ -460,11 +460,13 @@
                         <hr>
                         
                         <label for="path">Dataset Name</label>
-                        <div class="input-group">
-                            <span class="input-group-addon" id="data_sample">/sample/</span>
-                            <form class="form-inline" id="full" action="./" method="post" role="form">
-                                <input type="text" class="form-control" id="path" onkeyup="updt_data()" name="path" placeholder="Please select a sample.">
-                            </form>
+                        <div class="alert alert-success"> 
+                            <div class="input-group">
+                                <span class="input-group-addon" id="data_sample">/sample/</span>
+                                <form class="form-inline" id="full" action="./" method="post" role="form">
+                                    <input type="text" class="form-control" id="path" onkeyup="updt_data()" name="path" placeholder="Please select a sample.">
+                                </form>
+                            </div>
                         </div>
 
                     </div > <!-- end right col -->
@@ -474,11 +476,13 @@
                         <hr>
                         
                         <label for="ref_path">Dataset Name</label>
-                        <div class="input-group">
-                            <span class="input-group-addon" id="ref_sample">/sample/</span>
-                            <form class="form-inline" id="ref_full" action="./" method="post" role="form">
-                                <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="Please select a sample.">
-                            </form>
+                        <div class="alert alert-info">
+                            <div class="input-group">
+                                <span class="input-group-addon" id="ref_sample">/sample/</span>
+                                <form class="form-inline" id="ref_full" action="./" method="post" role="form">
+                                    <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="Please select a sample.">
+                                </form>
+                            </div>
                         </div>
 
                     </div > <!-- end right col -->

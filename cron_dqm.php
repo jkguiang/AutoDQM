@@ -213,11 +213,20 @@
                     <div class="col-lg-2"></div><!-- end ref preview right padding -->
                     <div class="col-lg-6">
                         <label for="ref_preview">Dataset Name</label>
-                        <div class="alert alert-info" id="ref_preview">No selection.</div>
+                        <div class="alert alert-info" id="ref_preview">
+                            <div class="input-group">
+                                <span class="input-group-addon" id="ref_sample">/SingleMuon/</span>
+                                <form class="form-inline" id="ref_full" action="./" method="post" role="form">
+                                    <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="e.g. Run2017C-PromptReco-v3/DQMIO">
+                                </form>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-lg-2">
                         <label for="ref_run">Run</label>
-                        <div class="alert alert-info" id="ref_run">None</div>
+                        <div class="alert alert-info" id="ref_run">
+                            <input type="text" class="form-control" id="ref_path" onkeyup="updt_run()" name="ref_run" placeholder="e.g. 300811">
+                        </div>
                     </div><!-- end ref run div -->
                     <div class="col-lg-2"></div><!-- end ref preview right padding -->
                 </div><!-- end ref preview div --> 
