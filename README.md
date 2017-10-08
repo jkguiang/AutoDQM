@@ -19,7 +19,12 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 ###### search.php
 - [x] Allows user to quickly search data set names
 - [x] Allows user to quickly search file name from selected data set name
-- [x] Stores searched data set names to be used in home page
+- [x] Allows user to submit a retrieve query to index
+
+###### cron_dqm.php
+- [ ] Automatically generates a list of new DQM files
+- [ ] Allows user to manually refresh DQM file list
+- [ ] Allows user to submit a retrieve query to index
 
 ###### plots.php
 - [x] Dynamically displays text files below AutoPlotter toolbar
