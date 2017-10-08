@@ -1,5 +1,5 @@
 # AutoDQM
-AutoDQM parses DQM histograms and identifies outliers by various statistical tests for further analysis by the user. It's output can be easily parsed by eye on an AutoPlotter-based html page which is automatically generated when you submit a query from the AutoDQM GUI.
+AutoDQM parses DQM histograms and identifies outliers by various statistical tests for further analysis by the user. Its output can be easily parsed by eye on an AutoPlotter-based html page which is automatically generated when you submit a query from the AutoDQM GUI.
 
 Example Page: http://uaf-10.t2.ucsd.edu/~jguiang/dqmGUI_test  
 AutoPlotter: http://github.com/jkguiang/AutoPlotter
