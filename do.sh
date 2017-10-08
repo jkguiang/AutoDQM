@@ -10,11 +10,18 @@ cd /cvmfs/cms.cern.ch/slc6_amd64_gcc530/cms/cmssw/CMSSW_9_2_8; eval `/cvmfs/cms.
 
 if [[ "$1" == "retrieve" ]] ; then
     shift
-    python main.py "$*"
+    python index.py "$*"
 
 elif [[ "$1" == "search" ]] ; then
     shift
     python search.py "$*"
+elif [[ "$1" == "refresh" ]] ; then
+    if ! [[ -e new_files.json ]] ; then
+        touch new_files.json
+    fi
+    shift
+    python cron_dqm.py "$*"
+    chmod 755 new_files.json
 else
     echo 'Invalid command.'
     exit 1

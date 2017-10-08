@@ -236,9 +236,9 @@
                         }
                     }
 
-                    function get_search(search_query) {
+                    function get_search(external_query) {
                         // Use json to get object from stringified search query
-                        new_query = JSON.parse(search_query);
+                        new_query = JSON.parse(external_query);
                         $("#sample_list").val(new_query["sample"]);
                         $("#" + new_query["sample"]).show();
                         $("#data_sample").text("/" + new_query["sample"] + "/");
@@ -383,9 +383,9 @@
                         });
 
                         // Update form if query passed from search page
-                        if (localStorage.hasOwnProperty("search_query")) {
-                            get_search(localStorage["search_query"]);
-                            localStorage.removeItem("search_query");
+                        if (localStorage.hasOwnProperty("external_query")) {
+                            get_search(localStorage["external_query"]);
+                            localStorage.removeItem("external_query");
                         }
                     
                     });
@@ -398,6 +398,7 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
                 <li role="presentation"><a href="search.php">Search</a></li>
+                <li role="presentation"><a href="cron_dqm.php">New DQM Files</a></li>
                 <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul>
 

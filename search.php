@@ -386,7 +386,7 @@
                                 $("#input_err").show();
                             }
                             else {
-                                localStorage["search_query"] = JSON.stringify(query);
+                                localStorage["external_query"] = JSON.stringify(query);
                                 document.location.href="./";
                             }
                         });
@@ -434,6 +434,7 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation"><a href="./">AutoDQM</a></li>
                 <li role="presentation" class="active"><a href="search.php">Search</a></li>
+                <li role="presentation"><a href="cron_dqm.php">New DQM Files</a></li>
                 <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul>
 
