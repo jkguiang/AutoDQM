@@ -168,12 +168,12 @@
 
                             else {
                                 if (cur_sample == "RelVal") {
-                                    localStorage["data"] = response["query"][0];
-                                    localStorage["ref"] = response["query"][1];
+                                    localStorage["data"] = response["query"]["data_info"];
+                                    localStorage["ref"] = response["query"]["ref_info"];
                                 }
                                 else if (cur_sample == "SingleMuon") {
-                                    localStorage["data"] = response["query"][0];
-                                    localStorage["ref"] = response["query"][1];
+                                    localStorage["data"] = response["query"]["data_info"];
+                                    localStorage["ref"] = response["query"]["ref_info"];
                                 }
                                 reduced_resp = [localStorage["data"], localStorage["ref"]];
                                 pass_object(reduced_resp);
@@ -186,7 +186,7 @@
                             var resp = response["responseText"];
                             var err_msg = "";
                             
-                            if (resp.indexOf("504") !== 1) {
+                            if (resp.indexOf("504") <= -1) {
                                 err_msg = "Error: Gateway timed out. Could not reach server."
                             }
                             else {
@@ -200,21 +200,87 @@
                         }
                         finally {
                             $("#load").hide();
+                            $("#load_msg").text("Loading...");
+                            $("#load_msg").hide();
                         }
                     }
 
+                    function handle_processes(response) {
+                        console.log(response); 
+                        console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
+
+                        try {
+                            // Handle output from main.py
+                            console.log("query to be stored:");
+                            console.log(response["query"]);
+                            console.log("response:");
+                            console.log(response["response"]["payload"]);
+                            var resp = response["response"];
+
+                            if (resp["status"] == "fail") {
+                                $("#load").hide()
+                                $("#load_msg").hide()
+                                $("#internal_err").text(resp["fail_reason"]);
+                                $("#submit").show();
+                                $("#internal_err").show();
+                            }                            
+
+                            else if (response["query"]["type"] == "retrieve_data") {
+                                console.log("data retrieved");
+                                $("#load_msg").text("Loading reference...")
+                                response["query"]["type"] = "retrieve_ref";
+                                submit(response["query"]);
+                            }
+
+                            else if (response["query"]["type"] == "retrieve_ref") {
+                                console.log("processing")
+                                response["query"]["type"] = "process";
+                                $("#load_msg").text("Processing...")
+                                $.ajaxSetup({timeout:0});
+                                $.get("handler.py", response["query"])
+                                    .done(function(response) {})
+                                    .always(handle_response);
+                            }
+                        }
+                        catch(TypeError) {
+                            // Handle crashes, system error, timeouts, etc.
+                            console.log(response["responseText"]);
+                            var resp = response["responseText"];
+                            var err_msg = "";
+                            
+                            if (resp.indexOf("504") <= -1) {
+                                err_msg = "Error: Gateway timed out. Could not reach server."
+                            }
+                            else {
+                                err_msg = "Error: An internal error occured."
+                            }
+
+                            $("#load").hide()
+                            $("#load_msg").hide()
+                            $("#internal_err").text(err_msg);
+
+                            $("#submit").show();
+                            $("#internal_err").show();
+                        }
+                    
+                    }
+
                     function submit(query) {
-                        console.log("submitting query");
+                        console.log("retrieving");
                         console.log(query);
                         $("#load").show();
+                        $("#load_msg").show();
                         $("#submit").hide();
+                        $("#finished").hide();
+                        $("#input_err").hide();
+                        $("#internal_err").hide();
                         t0 = Math.floor(Date.now() / 1000);
                         console.log(t0);
 
-                        $.ajaxSetup({timeout:300000}); // Set timeout to 5 minutes
+                        $.ajaxSetup({timeout:0}); // Set timeout to 5 minutes
                         $.get("handler.py", query)
                             .done(function(response) {})
-                            .always(handle_response);
+                            .always(handle_processes);
                     }
 
                     function check_query(query) {
@@ -270,6 +336,7 @@
                         updt_ref();
 
                         $("#load").hide();
+                        $("#load_msg").hide();
                         $("#finished").hide();
                         $("#input_err").hide();
                         $("#internal_err").hide();
@@ -282,6 +349,7 @@
                         console.log(localStorage);
                         // Initital hides
                         $("#load").hide();
+                        $("#load_msg").hide();
                         $("#finished").hide();
                         $("#input_err").hide();
                         $("#internal_err").hide();
@@ -368,11 +436,12 @@
                         // Main query handler
                         $("#submit").click(function(){
                             $("#load").hide();
+                            $("#load_msg").text("Loading data...")
                             $("#finished").hide();
                             $("#input_err").hide();
                             $("#internal_err").hide();
                             var query = {
-                                "type": "retrieve",
+                                "type": "retrieve_data",
                                 "data_query": $("#preview").text(),
                                 "ref_query": $("#ref_preview").text(),
                                 "sample": cur_sample,
@@ -520,6 +589,7 @@
                             <div class="alert alert-danger" id="internal_err">Error: Internal error.</div>
                         </div>
                         <div class="loader" id="load"></div>
+                        <div class="text-center"><small class="form-text text-muted" id="load_msg">Loading...</small></div>
                     </div> <!-- end secondary row middle col -->
                     <div class="col-lg-3">
                     </div> <!-- end secondary row right padding -->

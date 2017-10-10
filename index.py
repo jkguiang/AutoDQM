@@ -88,7 +88,7 @@ def get_hists(fdir, rdir, data_id, ref_id):
 
     subprocess.check_call(["{0}/make_html.sh".format(os.getcwd()), "updt"])
 
-    return True
+    return True, None
 
 # Generates 'id' used to identify RelVal comparison plots
 def get_id(sample, path):
@@ -112,23 +112,24 @@ def get_files(path, targ_dir, run=None):
     found = False
     for tfile in data:
         # Check if files already downloaded to targ_dir
-        if tfile["name"].split("/")[-1] in cur_dir: return True
         if run:
             # keep this check separate from run existance check so file is not appended in else statement
             if run == get_run(tfile["name"]):
+                if tfile["name"].split("/")[-1] in cur_dir: return True, None
                 found = True
                 xrd_args.append(tfile["name"])
         else:
+            if tfile["name"].split("/")[-1] in cur_dir: return True, None
             found = True
             xrd_args.append(tfile["name"])
     if not found:
-        return False
+        return False, "Files not found - {0}".format(targ_dir)
     else:
         subprocess.check_call(xrd_args)
-        return True
+        return True, None
 
-def check(is_success, func):
-    if not is_success: raise Exception('Function failed: {0}'.format(func))
+def check(is_success, fail_reason):
+    if not is_success: raise Exception('Error: {0}'.format(fail_reason))
     else: return None
 
 def handle_RelVal(args):
@@ -139,13 +140,13 @@ def handle_RelVal(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success = get_files(str(args["data_query"]), "data")
-        check(is_success, 'get_files')
-        is_success = get_files(str(args["ref_query"]), "ref")
-        check(is_success, 'get_files')
+        is_success, fail_reason = get_files(str(args["data_query"]), "data")
+        check(is_success, fail_reason)
+        is_success, fail_reason = get_files(str(args["ref_query"]), "ref")
+        check(is_success, fail_reason)
 
         # Root files should now be in data and ref directories
-        is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args["data_info"], args["data_query"]), get_id(args["ref_info"], args["ref_query"]))
+        is_success, fail_reason = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args["data_info"], args["data_query"]), get_id(args["ref_info"], args["ref_query"]))
         check(is_success, 'get_hists')
 
     except Exception as error:
@@ -160,20 +161,23 @@ def handle_SingleMuon(args):
     is_success = False
     fail_reason = None
 
-    # try:
-    # Generate root files via bash subprocess
-    is_success = get_files(args["data_query"], "data", args["data_info"])
-    check(is_success, 'get_files')
-    is_success = get_files(args["ref_query"], "ref", args["ref_info"])
-    check(is_success, 'get_files')
+    try:
+        if args["type"] == "retrieve_data":
+            # Generate root files via bash subprocess
+            is_success, fail_reason = get_files(args["data_query"], "data", args["data_info"])
+            check(is_success, fail_reason)
+        elif args["type"] == "retrieve_ref":
+            is_success, fail_reason = get_files(args["ref_query"], "ref", args["ref_info"])
+            check(is_success, fail_reason)
 
-    # Root files should now be in data and ref directories
-    is_success = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args["data_info"], args["ref_info"])
-    check(is_success, 'get_hists')
+        elif args["type"] == "process":
+            # Root files should now be in data and ref directories
+            is_success, fail_reason = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), args["data_info"], args["ref_info"])
+            check(is_success, 'get_hists')
 
-    # except Exception as error:
-    #     fail_reason = str(error)
-    #     return is_success, fail_reason
+    except Exception as error:
+        fail_reason = str(error)
+        return is_success, fail_reason
 
     return is_success, fail_reason
 
@@ -188,14 +192,14 @@ def process_query(args):
         return get_response(t0, "fail", "Sample not supported", args,  "Query failed")
     
     if is_success and fail_reason == None:
-        return get_response(t0, "success", fail_reason, [args["data_info"], args["ref_info"]],  "Query proccessed successfully")
+        return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
     else:
-        return get_response(t0, "fail", fail_reason, [args["data_info"], args["ref_info"]],  "Query failed")
+        return get_response(t0, "fail", fail_reason, args,  "Query failed")
 
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
     # print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
-    # test = {"type":"retrieve","sample":"SingleMuon", "ref_info":"300811", "ref_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "data_info":"299614", "data_query":"/SingleMuon/Run2017C-PromptReco-v1/DQMIO"}
+    # test = {"type":"retrieve","sample":"SingleMuon", "ref_info":"301531", "ref_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "data_info":"301165", "data_query":"/SingleMuon/Run2017C-PromptReco-v1/DQMIO"}
     # print(process_query(test))
 
     args = json.loads(sys.argv[1])
