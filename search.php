@@ -45,7 +45,7 @@
                     var cur_sample = ""; // Stores current sample (RelVal, SingleMuon) so script knows whether to require run selection
                     var info = ""; // Stores info for sample, passed to query when selection is completed
                     var query = {
-                        "type": "retrieve",
+                        "type": "retrieve_data",
                         "data_query": "", 
                         "ref_query": "", 
                         "sample": "", 

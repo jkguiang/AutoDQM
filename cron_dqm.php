@@ -46,6 +46,7 @@
 
                     $new_files = array();
                     $timestamp = $files_dict["timestamp"];
+                    $newest = $files_dict["newest"];
 
                     foreach($files_dict["files"] as $key => $val) {
                         $new_files[$key] = $val;
@@ -57,7 +58,7 @@
                 <script>
                     // Global variables
                     var query = {
-                        "type": "retrieve",
+                        "type": "retrieve_data",
                         "data_query": "", 
                         "ref_query": "", 
                         "sample": "", 
@@ -67,6 +68,7 @@
 
                     var new_files = <?php echo json_encode($new_files);  ?> // New files dict {"run_number":"dataset_name", ...} from php
                     var timestamp = new Date(Number(<?php echo $timestamp ?>) * 1000);
+                    var newest = new Date(Number(<?php echo $newest ?>) * 1000);
 
                     // Form handlers
                     function display(new_files) {
@@ -186,6 +188,9 @@
                         <div class="row">
                             <div class="list-group" id="file_list"></div>
                         </div><!-- end file list row -->
+                        <div class="row">
+                            <small class="form-text text-muted" id="newest">Newest File: 0/00/00 00:00</small>
+                        </div><!-- end file list newest timestamp row -->
                         <div class="row">
                             <div class="col-sm-5"></div>
                             <div class="col-sm-2 text-center"><button id="refresh" type="submit" class="btn btn-success">Refresh</div>
