@@ -140,14 +140,17 @@ def handle_RelVal(args):
 
     try:
         # Generate root files via bash subprocess
-        is_success, fail_reason = get_files(str(args["data_query"]), "data")
-        check(is_success, fail_reason)
-        is_success, fail_reason = get_files(str(args["ref_query"]), "ref")
-        check(is_success, fail_reason)
+        if args["type"] == "retrieve_data":
+            is_success, fail_reason = get_files(str(args["data_query"]), "data")
+            check(is_success, fail_reason)
+        elif args["type"] == "retrieve_ref":
+            is_success, fail_reason = get_files(str(args["ref_query"]), "ref")
+            check(is_success, fail_reason)
 
-        # Root files should now be in data and ref directories
-        is_success, fail_reason = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args["data_info"], args["data_query"]), get_id(args["ref_info"], args["ref_query"]))
-        check(is_success, 'get_hists')
+        elif args["type"] == "process":
+            # Root files should now be in data and ref directories
+            is_success, fail_reason = get_hists("{0}/data".format(os.getcwd()), "{0}/ref".format(os.getcwd()), get_id(args["data_info"], args["data_query"]), get_id(args["ref_info"], args["ref_query"]))
+            check(is_success, 'get_hists')
 
     except Exception as error:
         fail_reason = error
