@@ -185,7 +185,7 @@ $(function() {
 
     // Update plots link if query stored in local storage
     if (localStorage.hasOwnProperty("data")) {
-        $("#plots_url").attr('href', "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
+        $("#plots_url").attr('href', "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"], localStorage["user_id"]]));
     }
 
 

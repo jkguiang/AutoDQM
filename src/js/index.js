@@ -135,12 +135,14 @@ function handle_response(response) {
             if (cur_sample == "RelVal") {
                 localStorage["data"] = response["query"]["data_info"];
                 localStorage["ref"] = response["query"]["ref_info"];
+                localStorage["user_id"] = response["query"]["user_id"];
             }
             else if (cur_sample == "SingleMuon") {
                 localStorage["data"] = response["query"]["data_info"];
                 localStorage["ref"] = response["query"]["ref_info"];
+                localStorage["user_id"] = response["query"]["user_id"];
             }
-            reduced_resp = [localStorage["data"], localStorage["ref"], response["query"]["user_id"]];
+            reduced_resp = [localStorage["data"], localStorage["ref"], localStorage["user_id"]];
             pass_object(reduced_resp);
             $("#finished").show();
         }
@@ -330,7 +332,7 @@ $(function() {
 
     // Update plots link if search stored in local storage
     if (localStorage.hasOwnProperty("data")) {
-        $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"]]));
+        $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"], localStorage["user_id"]]));
     }
 
     // If user refreshes after a search has failed, ensures that all form info will be properly stored
