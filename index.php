@@ -73,10 +73,10 @@
                                     <form id="SingleMuon" action="/" method="post" role="form">
                                         <div class="form-group">
                                             <label for="SingleMuon_dataInput">Data Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_dataInput" onkeyup="updt_sample()" placeholder="e.g. 301531">
+                                            <input type="text" class="form-control" id="SingleMuon_dataInput" onkeyup="updt_sample()" placeholder="e.g. 300811">
                                             <hr style="margin:0px; height:10px; visibility:hidden;" />
                                             <label for="SingleMuon_refInput">Reference Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_refInput" onkeyup="updt_sample()" placeholder="e.g. 300811">
+                                            <input type="text" class="form-control" id="SingleMuon_refInput" onkeyup="updt_sample()" placeholder="e.g. 301531">
                                         </div>
                                     </form>
                                 </div>
