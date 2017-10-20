@@ -191,7 +191,7 @@ def handle_SingleMuon(args):
 
         elif args["type"] == "process":
             # Root files should now be in data and ref directories
-            is_success, fail_reason = get_hists("{0}/ref/{1}".format(os.getcwd(), args["user_id"]), "{0}/data/{1}".format(os.getcwd(), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists("{0}/data/{1}".format(os.getcwd(), args["user_id"]), "{0}/ref/{1}".format(os.getcwd(), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:
