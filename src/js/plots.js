@@ -31,6 +31,7 @@ function load_page(php_out) {
             fetch_object();
             localStorage["data"] = response["query"][0];
             localStorage["ref"] = response["query"][1];
+            localStorage["user_id"] = response["query"][2];
             console.log(localStorage);
             $("#data_title").text(response["query"][0]);
             $("#ref_title").text(response["query"][1]);
