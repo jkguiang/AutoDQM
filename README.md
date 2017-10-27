@@ -1,7 +1,7 @@
 # AutoDQM
 AutoDQM parses DQM histograms and identifies outliers by various statistical tests for further analysis by the user. Its output can be easily parsed by eye on an AutoPlotter-based html page which is automatically generated when you submit a query from the AutoDQM GUI.
 
-Example Page: http://uaf-10.t2.ucsd.edu/~jguiang/dqmGUI_test  
+Example Page: http://uaf-7.t2.ucsd.edu/~jguiang/AutoDQM
 AutoPlotter: http://github.com/jkguiang/AutoPlotter
 
 ## Features
@@ -21,7 +21,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [x] Allows user to quickly search file name from selected data set name
 - [x] Allows user to submit a retrieve query to index
 
-###### cron_dqm.php
+###### database.php
 - [ ] Automatically generates a list of new DQM files
 - [ ] Allows user to manually refresh DQM file list
 - [ ] Allows user to submit a retrieve query to index
