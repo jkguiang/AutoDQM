@@ -38,15 +38,14 @@ elif [[ "$1" == "search" ]] ; then
     shift
     python search.py "$*"
 elif [[ "$1" == "refresh" ]] ; then
-    if ! [[ -e new_files.json ]] ; then
-        touch new_files.json
+    if ! [[ -e db_map.json ]] ; then
+        touch db_map.json
     fi
     shift
     shift
-    python cron_dqm.py "$*"
-    chmod 755 new_files.json
+    python database.py
+    chmod 755 db_map.json
 else
     echo 'Invalid command.'
     exit 1
 fi
-# python test.py $*

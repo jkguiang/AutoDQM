@@ -89,14 +89,15 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/pdfs/{1}/{2}_d{3}r{4}.pdf".format(os.getcwd(), targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(os.getcwd(), targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/txts/{1}/{2}_d{3}r{4}.txt".format(os.getcwd(), targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.getcwd(), targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Max Pull Value: {0}\n".format(max_pull),
                             "Chi^2: {0}\n".format(chi2),
-                            "Entries: {0}\n".format(int(f_hist.GetEntries()))])
+                            "Data Entries: {0}\n".format(int(f_hist.GetEntries())),
+                            "Reference Entries: {0}\n".format(int(r_hist.GetEntries()))])
         new_txt.close()
 
     return is_good, chi2, max_pull, is_outlier
@@ -182,13 +183,14 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/pdfs/{1}/{2}_d{3}r{4}.pdf".format(os.getcwd(), targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(os.getcwd(), targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/txts/{1}/{2}_d{3}r{4}.txt".format(os.getcwd(), targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.getcwd(), targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Chi^2: {0}\n".format(chi2),
-                            "Entries: {0}\n".format(int(f_hist.GetEntries()))])
+                            "Data Entries: {0}\n".format(int(f_hist.GetEntries())), 
+                            "Reference Entries: {0}\n".format(int(r_hist.GetEntries()))])
         new_txt.close()
 
     return is_good, ks, is_outlier
@@ -224,6 +226,7 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     chi2_2D = ROOT.TH1F("chi2_2D", "#Chi^{2} for 2D Histograms", 60, 0, 300)
 
     outliers = 0
+    skip = 0
 
     for name in f_hists:
         if not (name in r_hists): continue
