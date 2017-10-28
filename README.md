@@ -51,8 +51,7 @@ Clone this repository and move its contents to a public html directory.
 4. Repeat for other data set if necessary
 5. Click the "Submit" button
 
-###### New DQM Files Page:
+###### Database Page:
 1. Select one of the automatically updated data sets
-    - You may manually refresh the list by clicking the "Refresh" button
-2. Enter a reference data set and run number
+2. Use the radio menu to channel selection into either the data or reference form
 3. Click the "Submit" button
