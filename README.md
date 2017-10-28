@@ -22,9 +22,9 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [x] Allows user to submit a retrieve query to index
 
 ###### database.php
-- [ ] Automatically generates a list of new DQM files
+- [x] Automatically generates a list of DQM files currently stored in a local database
 - [ ] Allows user to manually refresh DQM file list
-- [ ] Allows user to submit a retrieve query to index
+- [x] Allows user to submit a retrieve query to index
 
 ###### plots.php
 - [x] Dynamically displays text files below AutoPlotter toolbar
