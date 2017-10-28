@@ -2,14 +2,14 @@
 // Global variables
 var query = {
     "type": "retrieve_data",
-    "data_query": "", 
-    "ref_query": "", 
     "sample": "", 
     "data_info": "", 
     "ref_info": "", 
+    "user_id": "",
 }; // Stores query to be sent to index.php
 
 var page_loads = 0;
+var cur_tag = "#data";
 map = {};
 
 // Form handlers
@@ -20,6 +20,21 @@ function updt_search() {
 
 }
 
+function check_submission() {
+
+    var passed = true;
+
+    if ($("#data_run").text() == "None" || $("#ref_run").text() == "None") {
+        passed = false;
+    }
+
+    if (passed) {
+        $("#submit").removeAttr('disabled');
+    }
+    else {
+        $("#submit").attr('disabled', 'disabled');
+    }
+}
 
 function filter(db_map) {
 
@@ -62,7 +77,7 @@ function get_name(name, i) {
             html_name += new_split[j];
             if (name.indexOf(new_name + new_search) != -1) {
                 new_name += new_search;
-                html_name += "<font class='bg-success'>"+new_search+"</font>";
+                html_name += "<font class='bg-info'>"+new_search+"</font>";
             }
         }
     }
@@ -141,13 +156,12 @@ function display(db_map) {
         $('[id^=item_]').attr("class", "list-group-item");
         $(this).attr("class", 'list-group-item active');
         // Update preview
-        $("#run").text($(this).text());
+        $(cur_tag + "_run").text($(this).text());
         var last_mod = new Date(Number(db_map[Number(this.id.split("item_")[1])]["last_mod"]) * 1000);
-        $("#date").text(last_mod);
+        $(cur_tag + "_time").text(last_mod);
 
-        // Update global query
-        query["data_query"] = db_map[$(this).text()];
-        query["data_info"] = $(this).text();
+        // Check submission
+        check_submission();
     });
 
     // Allows for navigation between lists of files
@@ -172,8 +186,14 @@ $(function() {
     page_loads += 1;
     console.log(db_map)
 
-    //Initial Hides
+    // Initial Hides
     $("#load").hide();
+    $("#ref_well").hide();
+    
+    // Ensure proper radio button selected
+    $("#data_check").prop('checked', true);
+    $("#ref_check").removeAttr('checked');
+    check_submission();
 
     filter(db_map);
 
@@ -190,6 +210,15 @@ $(function() {
         $("#plots_url").attr('href', "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"], localStorage["user_id"]]));
     }
 
+    // Radio menu
+    $("#data_check").on("click", function(){
+        $("#ref_check").removeAttr('checked');
+        cur_tag = "#data";
+    });
+    $("#ref_check").on("click", function(){
+        $("#data_check").removeAttr('checked');
+        cur_tag = "#ref";
+    });
 
     // Main query handler
     $("#submit").click(function() {
@@ -197,6 +226,10 @@ $(function() {
             $("#input_err").show();
         }
         else {
+            query["sample"] = "SingleMuon";
+            query["data_info"] = $("#data_run").text();
+            query["ref_info"] = $("#ref_run").text();
+            query["user_id"] = Date.now();
             localStorage["external_query"] = JSON.stringify(query);
             document.location.href="./";
         }

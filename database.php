@@ -113,27 +113,23 @@
                     </div><!-- end file list content col -->
                     <div class="col-lg-2"></div><!-- end file list right padding -->
                 </div><!-- end file list div --> 
+
                 <hr>
-                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Selection</h3><hr></div><div class="col-lg-2"></div></div> <!-- end data header -->
+
                 <div class="row" id="preview_div">
-                    <div class="col-lg-2"></div><!-- end selection preview right padding -->
-                    <div class="col-lg-3">
-                        <label for="date">Last Modified</label>
-                        <div class="alert alert-success" id="date">No selection.</div>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="data_run">Run</label>
-                        <div class="alert alert-success" id="run">None</div>
-                    </div><!-- end selection run div -->
+                    <div class="col-lg-5"></div><!-- end selection preview right padding -->
+                    <div class="col-lg-1"><label class="radio-inline"><input id="data_check" type="radio" value="data" checked>Data</label></div><!-- end selection preview right padding -->
+                    <div class="col-lg-1"><label class="radio-inline"><input id="ref_check" type="radio" value="ref">Reference</label></div><!-- end selection preview right padding -->
                     <div class="col-lg-5"></div><!-- end selection preview right padding -->
                 </div><!-- end data preview div --> 
 
-                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Submission</h3><hr></div><div class="col-lg-2"></div></div> <!-- end ref header -->
+                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Submission</h3><hr></div><div class="col-lg-2"></div></div> <!-- end submission header -->
+
                 <div class="row" id="data_preview_div">
                     <div class="col-lg-2"></div><!-- end data preview right padding -->
                     <div class="col-lg-6">
-                        <label for="data_preview">Dataset Name</label>
-                        <div class="alert alert-success" id="data_preview">No selection.</div>
+                        <label for="data_preview">Timestamp</label>
+                        <div class="alert alert-success" id="data_time">No selection.</div>
                     </div>
                     <div class="col-lg-2">
                         <label for="ref_run">Run</label>
@@ -145,8 +141,8 @@
                 <div class="row" id="ref_preview_div">
                     <div class="col-lg-2"></div><!-- end ref preview right padding -->
                     <div class="col-lg-6">
-                        <label for="ref_preview">Dataset Name</label>
-                        <div class="alert alert-info" id="ref_preview">No selection.</div>
+                        <label for="ref_preview">Timestamp</label>
+                        <div class="alert alert-info" id="ref_time">No selection.</div>
                     </div>
                     <div class="col-lg-2">
                         <label for="ref_run">Run</label>
