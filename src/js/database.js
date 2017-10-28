@@ -16,12 +16,12 @@ map = {};
 function updt_search() {
 
     page_loads += 1;
-    filter(new_files);
+    filter(db_map);
 
 }
 
 
-function filter(new_files) {
+function filter(db_map) {
 
     var input = document.getElementById('search');
     if (page_loads == 1 && window.location.hash != "") {
@@ -35,16 +35,16 @@ function filter(new_files) {
         window.location.hash = search;
     }
     map["search"] = search;
-    for (var i = 0; i < new_files.length; i++) {
-        if (new_files[i]["run"].toString().indexOf(search) < 0) {
-            new_files[i]["hidden"] = true;
+    for (var i = 0; i < db_map.length; i++) {
+        if (db_map[i]["run"].toString().indexOf(search) < 0) {
+            db_map[i]["hidden"] = true;
         }
         else {
-            new_files[i]["hidden"] = false;
+            db_map[i]["hidden"] = false;
         }
     }
 
-    display(new_files);
+    display(db_map);
 }
 
 function get_name(name, i) {
@@ -75,7 +75,7 @@ function get_name(name, i) {
 
 }
 
-function display(new_files) {
+function display(db_map) {
     var ul = $("#file_list");
     ul.html("");
     toappend = "";
@@ -84,12 +84,12 @@ function display(new_files) {
     var counter = 1;
 
     true_count = 0;
-    for (var i = 0; i < new_files.length; i++) {
-        if (new_files[i]["hidden"] == true) {
+    for (var i = 0; i < db_map.length; i++) {
+        if (db_map[i]["hidden"] == true) {
             true_count++;
             continue;
         }
-        html_name = get_name(new_files[i]["run"].toString(), i);
+        html_name = get_name(db_map[i]["run"].toString(), i);
         toappend += "<a class='list-group-item' id='item_"+ i +"'>"+ html_name +"</a>";
         if ((true_count + 1) % 10 == 0 && i != 0) {
             toappend += "</div>";
@@ -119,7 +119,7 @@ function display(new_files) {
         true_count++;
     }
 
-    if (new_files.length % 10 != 0) {
+    if (db_map.length % 10 != 0) {
         toappend += "</div>";
         toappend += "<div class='row text-center' id='pagenavbar_"+ counter +"' hidden>";
         toappend += "   <hr>";
@@ -141,11 +141,12 @@ function display(new_files) {
         $('[id^=item_]').attr("class", "list-group-item");
         $(this).attr("class", 'list-group-item active');
         // Update preview
-        $("#data_preview").text(new_files[Number(this.id.split("item_")[1])]["dsname"]);
-        $("#data_run").text($(this).text());
+        $("#run").text($(this).text());
+        var last_mod = new Date(Number(db_map[Number(this.id.split("item_")[1])]["last_mod"]) * 1000);
+        $("#date").text(last_mod);
 
         // Update global query
-        query["data_query"] = new_files[$(this).text()];
+        query["data_query"] = db_map[$(this).text()];
         query["data_info"] = $(this).text();
     });
 
@@ -169,11 +170,12 @@ function display(new_files) {
 // Main function
 $(function() {
     page_loads += 1;
+    console.log(db_map)
 
     //Initial Hides
     $("#load").hide();
 
-    filter(new_files);
+    filter(db_map);
 
     // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
     $(window).keydown(function(event) {

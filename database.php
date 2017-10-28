@@ -41,28 +41,28 @@
                 <?php
 
                     $cwd = getcwd();
-                    $to_load = file_get_contents($cwd . "/src/" . "new_files.json");
+                    $to_load = file_get_contents($cwd . "/src/" . "db_map.json");
                     $files_dict = json_decode($to_load, true);
 
-                    $new_files = array();
+                    $db_map = array();
                     $timestamp = $files_dict["timestamp"];
                     $newest = $files_dict["newest"];
 
                     foreach($files_dict["files"] as $key => $val) {
                         $new_entry = array(
                             "run" => $key,
-                            "dsname" => $val,
+                            "last_mod" => $val,
                             "hidden" => false,
                         );
 
-                        $new_files[] = $new_entry;
+                        $db_map[] = $new_entry;
                     }
 
                 ?>
 
                 <!-- pass php values to js vars -->
                 <script>
-                    var new_files = <?php echo json_encode($new_files);  ?> // New files dict {"run_number":"dataset_name", ...} from php
+                    var db_map = <?php echo json_encode($db_map);  ?> // New files dict {"run_number":"dataset_name", ...} from php
                     var timestamp = new Date(Number(<?php echo $timestamp ?>) * 1000);
                     var newest = new Date(Number(<?php echo $newest ?>) * 1000);
                 </script>
@@ -114,7 +114,21 @@
                     <div class="col-lg-2"></div><!-- end file list right padding -->
                 </div><!-- end file list div --> 
                 <hr>
-                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Data</h3><hr></div><div class="col-lg-2"></div></div> <!-- end data header -->
+                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Selection</h3><hr></div><div class="col-lg-2"></div></div> <!-- end data header -->
+                <div class="row" id="preview_div">
+                    <div class="col-lg-2"></div><!-- end selection preview right padding -->
+                    <div class="col-lg-3">
+                        <label for="date">Last Modified</label>
+                        <div class="alert alert-success" id="date">No selection.</div>
+                    </div>
+                    <div class="col-lg-2">
+                        <label for="data_run">Run</label>
+                        <div class="alert alert-success" id="run">None</div>
+                    </div><!-- end selection run div -->
+                    <div class="col-lg-5"></div><!-- end selection preview right padding -->
+                </div><!-- end data preview div --> 
+
+                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Submission</h3><hr></div><div class="col-lg-2"></div></div> <!-- end ref header -->
                 <div class="row" id="data_preview_div">
                     <div class="col-lg-2"></div><!-- end data preview right padding -->
                     <div class="col-lg-6">
@@ -122,33 +136,25 @@
                         <div class="alert alert-success" id="data_preview">No selection.</div>
                     </div>
                     <div class="col-lg-2">
-                        <label for="data_run">Run</label>
+                        <label for="ref_run">Run</label>
                         <div class="alert alert-success" id="data_run">None</div>
                     </div><!-- end data run div -->
                     <div class="col-lg-2"></div><!-- end data preview right padding -->
                 </div><!-- end data preview div --> 
-                <div class="row"><div class="col-lg-2"></div><div class="col-lg-8"><h3>Reference</h3><hr></div><div class="col-lg-2"></div></div> <!-- end ref header -->
+
                 <div class="row" id="ref_preview_div">
                     <div class="col-lg-2"></div><!-- end ref preview right padding -->
                     <div class="col-lg-6">
                         <label for="ref_preview">Dataset Name</label>
-                        <div class="alert alert-info" id="ref_preview">
-                            <div class="input-group">
-                                <span class="input-group-addon" id="ref_sample">/SingleMuon/</span>
-                                <form class="form-inline" id="ref_full" action="./" method="post" role="form">
-                                    <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="e.g. Run2017C-PromptReco-v3/DQMIO">
-                                </form>
-                            </div>
-                        </div>
+                        <div class="alert alert-info" id="ref_preview">No selection.</div>
                     </div>
                     <div class="col-lg-2">
                         <label for="ref_run">Run</label>
-                        <div class="alert alert-info" id="ref_run">
-                            <input type="text" class="form-control" id="ref_path" onkeyup="updt_run()" name="ref_run" placeholder="e.g. 300811">
-                        </div>
+                        <div class="alert alert-info" id="ref_run">None</div>
                     </div><!-- end ref run div -->
                     <div class="col-lg-2"></div><!-- end ref preview right padding -->
                 </div><!-- end ref preview div --> 
+
                 <div class="row">
                     <div class="col-lg-5"></div>
                     <div class="col-lg-2 text-center"><button id="submit" type="submit" class="btn btn-success" disabled>Submit</div>
