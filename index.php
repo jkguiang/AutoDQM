@@ -55,7 +55,6 @@
                                     <label for="sample_list">Name</label>
                                     <select class="form-control" id="sample_list">
                                         <option value="none">Select Sample</option>
-                                        <option value="RelVal">RelVal</option>
                                         <option value="SingleMuon">SingleMuon</option>
                                     </select>
                                 </div>
@@ -88,71 +87,17 @@
                         <div class="list-group">
                             <li class="list-group-item">Requirements</li>
                             <li class="list-group-item list-group-item-danger" id="sample_chk">Sample form filled</li>
-                            <li class="list-group-item list-group-item-danger" id="slash_chk">One slash</li>
-                            <li class="list-group-item list-group-item-danger" id="form_chk">Text on both sides of slash</li>
-                            <li class="list-group-item list-group-item-danger" id="dqmio_chk">Ends with DQMIO</li>
                         </div>
                     </div>
                 </div>
                 <hr>
-                <div class="row">
-                    <div class="col-lg-6">
-                        <h2>Data</h2>
-                        <hr>
-                        
-                        <label for="path">Dataset Name</label>
-                        <div class="alert alert-success"> 
-                            <div class="input-group">
-                                <span class="input-group-addon" id="data_sample">/sample/</span>
-                                <form class="form-inline" id="full" action="./" method="post" role="form">
-                                    <input type="text" class="form-control" id="path" onkeyup="updt_data()" name="path" placeholder="Please select a sample.">
-                                </form>
-                            </div>
-                        </div>
-
-                    </div > <!-- end right col -->
-
-                    <div class="col-lg-6">
-                        <h2>Reference</h2>
-                        <hr>
-                        
-                        <label for="ref_path">Dataset Name</label>
-                        <div class="alert alert-info">
-                            <div class="input-group">
-                                <span class="input-group-addon" id="ref_sample">/sample/</span>
-                                <form class="form-inline" id="ref_full" action="./" method="post" role="form">
-                                    <input type="text" class="form-control" id="ref_path" onkeyup="updt_ref()" name="ref_path" placeholder="Please select a sample.">
-                                </form>
-                            </div>
-                        </div>
-
-                    </div > <!-- end right col -->
-
-                </div> <!-- end main row -->
 
                 <p><br /></p>
 
-                <hr>
                 <div class="row">
                     <div class="col-lg-3">
                     </div> <!-- end secondary row left padding -->
                     <div class="col-lg-6">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label for="preview_well">Data Preview</label>
-                                <div class="alert alert-success" id="preview_well">
-                                    <p id="preview">Please enter a data set name.</p>
-                                </div>
-                            </div>
-                        </div> <!-- end preview row -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label for="ref_preview_well">Reference Preview</label>
-                                <div class="alert alert-info" id="ref_preview_well">
-                                    <p id="ref_preview">Please enter a reference data set name.</p>
-                                </div>
-                            </div>
-                        </div> <!-- end ref_preview row -->
                         <div class="text-center">
                             <button id="submit" type="submit" class="btn btn-lg btn-success">Submit</button>
                             <p><br /></p>

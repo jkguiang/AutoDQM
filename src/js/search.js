@@ -6,11 +6,10 @@ var cur_sample = ""; // Stores current sample (RelVal, SingleMuon) so script kno
 var info = ""; // Stores info for sample, passed to query when selection is completed
 var query = {
     "type": "retrieve_data",
-    "data_query": "", 
-    "ref_query": "", 
     "sample": "", 
     "data_info": "", 
     "ref_info": "", 
+    "user_id": "",
 }; // Stores query to be sent to index.php
 var t0 = 0;
 
@@ -333,7 +332,6 @@ $(function() {
         $(cur_tag + "_preview").text($(cur_tag).text());
         $(cur_tag + "_run").text($("#run").text());
         query[cur_tag.split("#")[1] + "_info"] = info;
-        query[cur_tag.split("#")[1] + "_query"] = $(cur_tag).text();
         query["sample"] = cur_sample;
         console.log(query);
         $("#run").text("No selection.");
@@ -348,6 +346,7 @@ $(function() {
             $("#input_err").show();
         }
         else {
+            query["user_id"] = Date.now();
             localStorage["external_query"] = JSON.stringify(query);
             document.location.href="./";
         }

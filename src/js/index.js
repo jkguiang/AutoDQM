@@ -6,23 +6,7 @@ var data_info = ""; // To be sent with query
 var ref_info = ""; // To be sent with query
 var prefix = ""; // Sample name that is placed in front of dataset name
 
-// Form functions: mostly for updating 'preview' wells
-function updt_data() {
-    var path = document.getElementById("path").value;
-
-    $('#preview').text("");
-    $('#preview').text("/" + prefix + "/" + path);
-    check_input();
-}
-
-function updt_ref() {
-    var ref_path = document.getElementById("ref_path").value;
-
-    $('#ref_preview').text("");
-    $('#ref_preview').text("/" + prefix + "/" + ref_path);
-    check_input();
-}
-
+// Form functions
 function updt_sample() {
 
     if (cur_sample == "RelVal") {
@@ -38,18 +22,11 @@ function updt_sample() {
         ref_info = document.getElementById(cur_sample + "_refInput").value;
         prefix = cur_sample;
     }
-    updt_data();
-    updt_ref();
     check_input();
 }
 
 function check_input() {
     var passed = true;
-
-    data_inp = document.getElementById("path").value;
-    ref_inp = document.getElementById("ref_path").value;
-    data_split = data_inp.split("/");
-    ref_split = ref_inp.split("/");
 
     // Sample form filled
     if (cur_sample == "SingleMuon") {
@@ -62,42 +39,12 @@ function check_input() {
             passed = false;
         }
     }
-    if (cur_sample == "RelVal") {
-        if  (document.getElementById(cur_sample + "_input").value != "") {
-            $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
-        }
-
-        else {
-            $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
-            passed = false;
-        }
-    }
-    // One slash
-    if ( (data_split.length - 1) == 1 && (ref_split.length - 1) == 1 ) {
-        var passed_slash = true;
-        $("#slash_chk").attr('class', 'list-group-item list-group-item-success');
-    }
-    else {
-        $("#slash_chk").attr('class', 'list-group-item list-group-item-danger');
-        passed = false;
-    }
-    // Text on both sides of slash
-    if ( passed_slash && data_split.indexOf("") <= -1 && ref_split.indexOf("") <= -1 ) {
-        $("#form_chk").attr('class', 'list-group-item list-group-item-success');
-    }
-    else {
-        $("#form_chk").attr('class', 'list-group-item list-group-item-danger');
-        passed = false;
-    }
-    // Ends with DQMIO
-    if (data_split[data_split.length - 1] == "DQMIO" && ref_split[ref_split.length - 1] == "DQMIO") {
-        $("#dqmio_chk").attr('class', 'list-group-item list-group-item-success');
-    }
-    else {
-        $("#dqmio_chk").attr('class', 'list-group-item list-group-item-danger');
+    if (cur_sample == "none") {
+        $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
         passed = false;
     }
 
+    // Toggle submit button
     if (passed) {
         $("#submit").removeAttr('disabled');
     }
@@ -252,25 +199,6 @@ function submit(query) {
         .always(handle_processes);
 }
 
-function check_query(query) {
-    var fail = false;
-
-    var path = document.getElementById("path").value;
-    var ref_path = document.getElementById("ref_path").value;
-    if (path == "" || ref_path == "")   {
-        fail = true;
-    }
-    if (fail) {
-        $("#input_err").show();
-    }
-
-    else {
-        $("#input_err").hide();
-        console.log(query);
-        submit(query);
-    }
-}
-
 function get_search(external_query) {
     // Use json to get object from stringified search query
     new_query = JSON.parse(external_query);
@@ -278,31 +206,21 @@ function get_search(external_query) {
     $("#" + new_query["sample"]).show();
     $("#data_sample").text("/" + new_query["sample"] + "/");
     $("#ref_sample").text("/" + new_query["sample"] + "/");
-    $("#path").removeAttr('disabled');
-    $("#ref_path").removeAttr('disabled');
 
     cur_sample = new_query["sample"];
     if (new_query["sample"] == "SingleMuon") {
         $("#SingleMuon_dataInput").val(new_query["data_info"]);
         $("#SingleMuon_refInput").val(new_query["ref_info"]);
-        $("#path").val(new_query["data_query"].split("/" + new_query["sample"] + "/")[1]);
-        $("#ref_path").val(new_query["ref_query"].split("/" + new_query["sample"] + "/")[1]);
         prefix = "SingleMuon";
     
     }
     if (new_query["sample"] == "RelVal") {
         $("#RelVal_input").val(new_query["data_info"]);
         prefix = new_query["sample"] + new_query["data_info"];
-        $("#path").val(new_query["data_query"].split("/" + prefix + "/")[1]);
-        $("#ref_path").val(new_query["ref_query"].split("/" + prefix + "/")[1]);
     
     }
-    updt_data();
-    updt_ref();
     check_input();
     updt_sample();
-    updt_data();
-    updt_ref();
 
     $("#load").hide();
     $("#load_msg").hide();
@@ -326,8 +244,6 @@ $(function() {
     $("#RelVal").hide();
 
     // Initial Disables
-    $("#path").attr('disabled', 'disabled');
-    $("#ref_path").attr('disabled', 'disabled');
     $("#submit").attr('disabled', 'disabled');
 
     // Update plots link if search stored in local storage
@@ -348,9 +264,6 @@ $(function() {
 
     // Select menu functions
     $("#sample_list").val("none");
-    var relval_ex = "e.g. CMSSW_9_1_1_patch1-91X_upgrade2023_realistic_v1_D17-v1/DQMIO";
-    var singlemu_ex = "e.g. Run2017C-PromptReco-v1/DQMIO";
-    var none_ex = "Please select a sample."
     $("#sample_list").on('change', function() {
         // Store current sample (global variable)
         cur_sample = this.value;
@@ -359,35 +272,7 @@ $(function() {
         // Reset fields
         if (cur_sample != "none"){
             $("#" + cur_sample)[0].reset();
-            updt_data();
-            updt_ref();
             updt_sample();
-        }
-
-        // Disable data set name input if no sample selected
-        if (this.value == "none") {
-            $("#path").attr('disabled', 'disabled');
-            $("#ref_path").attr('disabled', 'disabled');
-            $("#path").attr('placeholder', none_ex);
-            $("#ref_path").attr('placeholder', none_ex);
-            $("#data_sample").text("/sample/");
-            $("#ref_sample").text("/sample/");
-        }
-        else {
-            $("#path").removeAttr('disabled');
-            $("#ref_path").removeAttr('disabled');
-            if (this.value == "RelVal") {
-                $("#path").attr('placeholder', relval_ex);
-                $("#ref_path").attr('placeholder', relval_ex);
-                $("#data_sample").text("/" + prefix + "/");
-                $("#ref_sample").text("/" + prefix + "/");
-            }
-            if (this.value == "SingleMuon") {
-                $("#path").attr('placeholder', singlemu_ex);
-                $("#ref_path").attr('placeholder', singlemu_ex);
-                $("#data_sample").text("/" + prefix + "/");
-                $("#ref_sample").text("/" + prefix + "/");
-            }
         }
 
         // Show proper input for selected sample
@@ -411,14 +296,12 @@ $(function() {
         $("#internal_err").hide();
         var query = {
             "type": "retrieve_data",
-            "data_query": $("#preview").text(),
-            "ref_query": $("#ref_preview").text(),
             "sample": cur_sample,
             "data_info": data_info,
             "ref_info": ref_info,
             "user_id": Date.now(), 
         };
-        check_query(query);
+        submit(query);
     });
 
     // Update form if query passed from search page
