@@ -102,20 +102,20 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def fetch(run, targ_dir):
+def fetch(run, sample, targ_dir):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Get list of files already in database
-    db_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/SingleMuon"
+    db_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/{0}".format(sample)
     dbase = os.listdir(db_dir)
 
     temp_dir = "{0}/temp".format(os.getcwd())
 
     if "{0}.root".format(run) not in dbase:
-        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/SingleMuon/")
+        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/{0}/".format(sample))
         parser = HTMLParserRuns()
         parser.feed(content)
         allRuns = parser.get_run_linktimestamps()
