@@ -33,7 +33,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 ## Using AutoDQM
 
 ###### Setup:
-Clone this repository and move its contents to a public html directory.
+Clone this repository and move its contents to a public html directory, then run `./setup.sh` to set up AutoDQM's directories.
 
 ###### Main Page:
 1. Select sample name
