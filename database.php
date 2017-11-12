@@ -48,14 +48,18 @@
                     $timestamp = $files_dict["timestamp"];
                     $newest = $files_dict["newest"];
 
-                    foreach($files_dict["files"] as $key => $val) {
-                        $new_entry = array(
-                            "run" => $key,
-                            "last_mod" => $val,
-                            "hidden" => false,
-                        );
+                    foreach($files_dict["files"] as $key0 => $val0) {
+                        $db_map[$key0] = array();
 
-                        $db_map[] = $new_entry;
+                        foreach($files_dict["files"][$key0] as $key1 => $val1) {
+                            $new_entry = array(
+                                "run" => $key1,
+                                "last_mod" => $val1,
+                                "hidden" => false,
+                            );
+
+                            $db_map[$key0][] = $new_entry;
+                        }
                     }
 
                 ?>
@@ -80,8 +84,34 @@
                 <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul><!-- end navbar -->
 
-            <div class="container-wide">
+            <div class="container">
                 <p><br /><br /></p>
+                <div class="row">
+                    <div class="col-lg-4"></div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label for="sample_list">Name</label>
+                            <select class="form-control" id="sample_list">
+                                <option value="none">Select Sample</option>
+                                <option value="SingleMuon">SingleMuon</option>
+                                <option value="Cosmics">Cosmics</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-4"></div>
+                </div>
+            </div>
+            <div class="container-wide" id="main_container">
+                <p><br /><br /></p>
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="col-lg-10">
+                        <h2 id="SingleMuon_title">SingleMuon</h2>
+                        <h2 id="Cosmics_title">Cosmics</h2>
+                        <hr>
+                    </div>
+                    <div class="col-lg-1"></div>
+                </div>
                 <div class="row">
                     <div class="col-sm-3"></div>
                     <div class="col-sm-6">

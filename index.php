@@ -56,16 +56,20 @@
                                     <select class="form-control" id="sample_list">
                                         <option value="none">Select Sample</option>
                                         <option value="SingleMuon">SingleMuon</option>
+                                        <option value="Cosmics">Cosmics</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <!-- RelVal Sample Entry -->
+                                <!-- Cosnics Run Entry -->
                                 <div class="form-group row">
-                                    <form id="RelVal" action="/" method="post" role="form">
+                                    <form id="Cosmics" action="/" method="post" role="form">
                                         <div class="form-group">
-                                            <label for="RelVal_input">RelVal Sample</label>
-                                            <input type="text" class="form-control" id="RelVal_input" onkeyup="updt_sample()" placeholder="e.g. ZMM_14">
+                                            <label for="Cosmics_dataInput">Data Run Number</label>
+                                            <input type="text" class="form-control" id="Cosmics_dataInput" onkeyup="updt_sample()" placeholder="e.g. 300811">
+                                            <hr style="margin:0px; height:10px; visibility:hidden;" />
+                                            <label for="Cosmics_refInput">Reference Run Number</label>
+                                            <input type="text" class="form-control" id="Cosmics_refInput" onkeyup="updt_sample()" placeholder="e.g. 301531">
                                         </div>
                                     </form>
                                 <!-- SingleMuon Run Entry -->

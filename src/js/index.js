@@ -9,15 +9,7 @@ var prefix = ""; // Sample name that is placed in front of dataset name
 // Form functions
 function updt_sample() {
 
-    if (cur_sample == "RelVal") {
-        var sample_input = document.getElementById(cur_sample + "_input").value;
-        prefix = cur_sample + sample_input;
-        data_info = sample_input;
-        ref_info = sample_input;
-        $("#data_sample").attr('placeholder', "/"+ prefix +"/");
-        $("#ref_sample").attr('placeholder', "/"+ prefix +"/");
-    }
-    else if (cur_sample == "SingleMuon") {
+    if (cur_sample == "SingleMuon" || cur_sample == "Cosmics") {
         data_info = document.getElementById(cur_sample + "_dataInput").value;
         ref_info = document.getElementById(cur_sample + "_refInput").value;
         prefix = cur_sample;
@@ -29,7 +21,7 @@ function check_input() {
     var passed = true;
 
     // Sample form filled
-    if (cur_sample == "SingleMuon") {
+    if (cur_sample == "SingleMuon" || cur_sample == "Cosmics") {
         if  (document.getElementById(cur_sample + "_dataInput").value != "" && document.getElementById(cur_sample + "_refInput").value != "") {
             $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
         }
@@ -79,12 +71,7 @@ function handle_response(response) {
         }                            
 
         else {
-            if (cur_sample == "RelVal") {
-                localStorage["data"] = response["query"]["data_info"];
-                localStorage["ref"] = response["query"]["ref_info"];
-                localStorage["user_id"] = response["query"]["user_id"];
-            }
-            else if (cur_sample == "SingleMuon") {
+            if (cur_sample == "SingleMuon" || cur_sample == "Cosmics") {
                 localStorage["data"] = response["query"]["data_info"];
                 localStorage["ref"] = response["query"]["ref_info"];
                 localStorage["user_id"] = response["query"]["user_id"];
@@ -214,9 +201,10 @@ function get_search(external_query) {
         prefix = "SingleMuon";
     
     }
-    if (new_query["sample"] == "RelVal") {
-        $("#RelVal_input").val(new_query["data_info"]);
-        prefix = new_query["sample"] + new_query["data_info"];
+    if (new_query["sample"] == "Cosmics") {
+        $("#Cosmics_dataInput").val(new_query["data_info"]);
+        $("#Cosmics_refInput").val(new_query["ref_info"]);
+        prefix = "Cosmics";
     
     }
     check_input();
@@ -241,7 +229,7 @@ $(function() {
     $("#input_err").hide();
     $("#internal_err").hide();
     $("#SingleMuon").hide();
-    $("#RelVal").hide();
+    $("#Cosmics").hide();
 
     // Initial Disables
     $("#submit").attr('disabled', 'disabled');

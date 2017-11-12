@@ -10,6 +10,7 @@ var query = {
 
 var page_loads = 0;
 var cur_tag = "#data";
+var cur_sample = "none";
 map = {};
 
 // Form handlers
@@ -38,6 +39,10 @@ function check_submission() {
 
 function filter(db_map) {
 
+    if (cur_sample == "none") {
+        return;
+    }
+
     var input = document.getElementById('search');
     if (page_loads == 1 && window.location.hash != "") {
         var search = window.location.hash.split("#")[1];
@@ -50,12 +55,12 @@ function filter(db_map) {
         window.location.hash = search;
     }
     map["search"] = search;
-    for (var i = 0; i < db_map.length; i++) {
-        if (db_map[i]["run"].toString().indexOf(search) < 0) {
-            db_map[i]["hidden"] = true;
+    for (var i = 0; i < db_map[cur_sample].length; i++) {
+        if (db_map[cur_sample][i]["run"].toString().indexOf(search) < 0) {
+            db_map[cur_sample][i]["hidden"] = true;
         }
         else {
-            db_map[i]["hidden"] = false;
+            db_map[cur_sample][i]["hidden"] = false;
         }
     }
 
@@ -91,6 +96,11 @@ function get_name(name, i) {
 }
 
 function display(db_map) {
+
+    if (cur_sample == "none") {
+        return;
+    }
+
     var ul = $("#file_list");
     ul.html("");
     toappend = "";
@@ -99,12 +109,12 @@ function display(db_map) {
     var counter = 1;
 
     true_count = 0;
-    for (var i = 0; i < db_map.length; i++) {
-        if (db_map[i]["hidden"] == true) {
+    for (var i = 0; i < db_map[cur_sample].length; i++) {
+        if (db_map[cur_sample][i]["hidden"] == true) {
             true_count++;
             continue;
         }
-        html_name = get_name(db_map[i]["run"].toString(), i);
+        html_name = get_name(db_map[cur_sample][i]["run"].toString(), i);
         toappend += "<a class='list-group-item' id='item_"+ i +"'>"+ html_name +"</a>";
         if ((true_count + 1) % 10 == 0 && i != 0) {
             toappend += "</div>";
@@ -134,7 +144,7 @@ function display(db_map) {
         true_count++;
     }
 
-    if (db_map.length % 10 != 0) {
+    if (db_map[cur_sample].length % 10 != 0) {
         toappend += "</div>";
         toappend += "<div class='row text-center' id='pagenavbar_"+ counter +"' hidden>";
         toappend += "   <hr>";
@@ -157,7 +167,7 @@ function display(db_map) {
         $(this).attr("class", 'list-group-item active');
         // Update preview
         $(cur_tag + "_run").text($(this).text());
-        var last_mod = new Date(Number(db_map[Number(this.id.split("item_")[1])]["last_mod"]) * 1000);
+        var last_mod = new Date(Number(db_map[cur_sample][Number(this.id.split("item_")[1])]["last_mod"]) * 1000);
         $(cur_tag + "_time").text(last_mod);
 
         // Check submission
@@ -189,6 +199,9 @@ $(function() {
     // Initial Hides
     $("#load").hide();
     $("#ref_well").hide();
+    $("#SingleMuon_title").hide();
+    $("#Cosmics_title").hide();
+    $("#main_container").hide();
     
     // Ensure proper radio button selected
     $("#data_check").prop('checked', true);
@@ -218,6 +231,34 @@ $(function() {
     $("#ref_check").on("click", function(){
         $("#data_check").removeAttr('checked');
         cur_tag = "#ref";
+    });
+
+    // Drop menu
+    $("#sample_list").val("none");
+    $("#sample_list").on('change', function() {
+        // Store current sample (global variable)
+        cur_sample = this.value;
+        prefix = this.value;
+
+        // Reset fields
+        if (cur_sample != "none"){
+            $("#main_container").show();
+            filter(db_map);
+        }
+        else {
+            $("#main_container").hide();
+        }
+
+        // Show proper input for selected sample
+        var opts = document.getElementById("sample_list").options;
+        for ( var i = 0; i < opts.length; i++ ) {
+            if (opts[i].value == this.value) {
+                $("#" + this.value + "_title").show();
+            }
+            else {
+                $("#" + opts[i].value + "_title").hide();
+            }
+        }
     });
 
     // Main query handler
