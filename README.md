@@ -37,7 +37,7 @@ Clone this repository and move its contents to a public html directory.
 
 ###### Main Page:
 1. Select sample name
-    - Currently supported samples: RelVal, SingleMuon
+    - Currently supported samples: SingleMuon, Cosmics
 2. Enter data and reference information
 3. Click submit.
     - After process is complete, you will be automatically redirected to the "plots" page
