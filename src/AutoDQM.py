@@ -188,7 +188,6 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         # Write text file
         new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.getcwd(), targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
-                            "Chi^2: {0}\n".format(chi2),
                             "Data Entries: {0}\n".format(int(f_hist.GetEntries())), 
                             "Reference Entries: {0}\n".format(int(r_hist.GetEntries()))])
         new_txt.close()
