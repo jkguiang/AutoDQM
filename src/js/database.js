@@ -267,7 +267,7 @@ $(function() {
             $("#input_err").show();
         }
         else {
-            query["sample"] = "SingleMuon";
+            query["sample"] = cur_sample;
             query["data_info"] = $("#data_run").text();
             query["ref_info"] = $("#ref_run").text();
             query["user_id"] = Date.now();
