@@ -108,10 +108,9 @@ function display(db_map) {
     toappend += "<div class='row' id='page_1'>";
     var counter = 1;
 
-    true_count = 0;
+    var true_count = 0;
     for (var i = 0; i < db_map[cur_sample].length; i++) {
         if (db_map[cur_sample][i]["hidden"] == true) {
-            true_count++;
             continue;
         }
         html_name = get_name(db_map[cur_sample][i]["run"].toString(), i);
@@ -144,7 +143,7 @@ function display(db_map) {
         true_count++;
     }
 
-    if (db_map[cur_sample].length % 10 != 0) {
+    if (true_count % 10 != 0) {
         toappend += "</div>";
         toappend += "<div class='row text-center' id='pagenavbar_"+ counter +"' hidden>";
         toappend += "   <hr>";
