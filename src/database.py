@@ -28,3 +28,6 @@ db_map["timestamp"] = time.time()
 # Dump database map into json
 with open("{0}/db_map.json".format(os.getcwd()), "w") as fhout:
     json.dump(db_map, fhout, sort_keys = True, indent = 4, separators = (',',':'))
+
+# Ensure database map has proper permissions
+os.system("chmod 755 db_map.json")
