@@ -1,37 +1,40 @@
 <html>
         <head>
-                <title>AutoDQM</title>
+            <title>AutoDQM</title>
 
-                <!-- Latest compiled and minified Boostrap CSS and Javascript -->
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-                <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+            <!-- Latest compiled and minified Boostrap CSS and Javascript -->
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 
-                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-                <!-- My Code -->
-                <script src="src/js/index.js"></script>                
+            <!-- Tab Icon -->
+            <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 
-                <!-- CSS -->
-                <style>
-                    .container-wide {
-                        padding: 0 50px !important;
-                    }
-                    .loader {
-                        text-align: center;
-                        margin: auto;
-                        border: 6px solid #f3f3f3; /* Light grey */
-                        border-top: 6px solid #3498db; /* Blue */
-                        border-radius: 50%;
-                        width: 60px;
-                        height: 60px;
-                        animation: spin 2s linear infinite;
-                    }
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                </style>
+            <!-- My Code -->
+            <script src="src/js/index.js"></script>                
+
+            <!-- CSS -->
+            <style>
+                .container-wide {
+                    padding: 0 50px !important;
+                }
+                .loader {
+                    text-align: center;
+                    margin: auto;
+                    border: 6px solid #f3f3f3; /* Light grey */
+                    border-top: 6px solid #3498db; /* Blue */
+                    border-radius: 50%;
+                    width: 60px;
+                    height: 60px;
+                    animation: spin 2s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
 
         </head>
 
