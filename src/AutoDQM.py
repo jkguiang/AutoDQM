@@ -29,7 +29,11 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         return is_good, chi2, max_pull, is_outlier
 
     # Normalize f_hist
-    f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
+    row_hists = ["hORecHits", "hOStrips", "hOWires", "hOSegments"]
+    if name in row_hists:
+        normalize_rows(f_hist, r_hist)
+    else:
+        f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
 
     for x in range(1, r_hist.GetNbinsX()+1):
         for y in range(1, r_hist.GetNbinsY()+1):
@@ -208,6 +212,45 @@ def pull(bin1, binerr1, bin2, binerr2):
     pull = ((bin1 - bin2))/((binerr1**2 + binerr2**2)**(0.5))
 
     return pull
+
+def normalize_rows(f_hist, r_hist):
+
+    for y in range(1, r_hist.GetNbinsY()+1):
+
+        # Stores sum of row elements
+        rrow = 0
+        frow = 0
+
+        # Sum over row elements
+        for x in range(1, r_hist.GetNbinsX()+1):
+
+            # Bin data
+            rbin = r_hist.GetBinContent(x, y)
+            fbin = f_hist.GetBinContent(x, y)
+            
+            rrow += rbin
+            frow += fbin
+
+        # Scaling factors
+        # Prevent divide-by-zero error
+        if frow == 0:
+            frow = 1
+        sf = float(rrow)/frow
+        # Prevent scaling everything to zero
+        if sf == 0:
+            sf = 1
+
+        # Normalization
+        for x in range(1, f_hist.GetNbinsX()+1):
+            # Bin data
+            fbin = f_hist.GetBinContent(x, y)
+            fbin_err = f_hist.GetBinError(x, y)
+
+            # Normalize bin
+            f_hist.SetBinContent(x, y, (fbin * sf))
+            f_hist.SetBinError(x, y, (fbin_err * sf))
+
+    return
 
 # End Analysis Functions ------
 
