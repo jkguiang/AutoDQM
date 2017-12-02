@@ -73,32 +73,35 @@
             
             }
 
-            $cwd = getcwd();
+            if ($user_id != "") {
 
-            $pdf_path = ("src/pdfs/" . $user_id . "/");
-            $png_path = ("src/pngs/" . $user_id . "/");
-            $txt_path = ("src/txts/" . $user_id . "/");
+                $cwd = getcwd();
 
-            $pdfs = scandir($cwd . "/" . $pdf_path);
-            $pngs = scandir($cwd . "/" . $png_path);
-            $txts = scandir($cwd . "/" . $txt_path);
+                $pdf_path = ("src/pdfs/" . $user_id . "/");
+                $png_path = ("src/pngs/" . $user_id . "/");
+                $txt_path = ("src/txts/" . $user_id . "/");
 
-            
-            // Fill JSON
-            $txt_offset = 0;
-            for ($i = 0; $i < count($pngs); $i++) {
-                $png_name = explode(".", $pngs[$i]);
-                $pdf_name = explode(".", $pdfs[$i]);
-                $txt_name = explode(".", $txts[$i - $txt_offset]);
-                if ($png_name[0] != $pdf_name[0]) continue;
-                if ($pngs[$i] == '.' || $pngs[$i] == '..') continue;
-                list($width, $height) = getimagesize($cwd . "/" . $png_path . "/" . $pngs[$i]);
-                if ($png_name[0] != $txt_name[0]) {
-                    newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i], "None", $width, $height);
-                    $txt_offset++;
-                    continue;
+                $pdfs = scandir($cwd . "/" . $pdf_path);
+                $pngs = scandir($cwd . "/" . $png_path);
+                $txts = scandir($cwd . "/" . $txt_path);
+                
+                // Fill JSON
+                $txt_offset = 0;
+                for ($i = 0; $i < count($pngs); $i++) {
+                    $png_name = explode(".", $pngs[$i]);
+                    $pdf_name = explode(".", $pdfs[$i]);
+                    $txt_name = explode(".", $txts[$i - $txt_offset]);
+                    if ($png_name[0] != $pdf_name[0]) continue;
+                    if ($pngs[$i] == '.' || $pngs[$i] == '..') continue;
+                    list($width, $height) = getimagesize($cwd . "/" . $png_path . "/" . $pngs[$i]);
+                    if ($png_name[0] != $txt_name[0]) {
+                        newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i], "None", $width, $height);
+                        $txt_offset++;
+                        continue;
+                    }
+                    newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i], $txt_path . $txts[$i - $txt_offset], $width, $height);
                 }
-                newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i], $txt_path . $txts[$i - $txt_offset], $width, $height);
+
             }
 
         ?>
