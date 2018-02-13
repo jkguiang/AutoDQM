@@ -1,0 +1,14 @@
+{
+    "CSC":{
+        "main_gdir":"DQMData/Run {0}/CSC/Run summary/CSCOfflineMonitor/",
+        "hists":{
+                "Occupancy/":["hORecHits", "hOSegments", "hOStrips", "hOWires"],
+                "recHits/":["hRHGlobal*", "hRHnrechits"],
+                "Digis/":["hWireTBin_*", "hStripNFired", "hWirenGroupsTotal"],
+                "Segments/":["hSnhits*", "hSnSegments", "hSnhits"]
+                },
+        "chi2_cut":500,
+        "pull_cap":25,
+        "pull_cut":20
+    }
+}
