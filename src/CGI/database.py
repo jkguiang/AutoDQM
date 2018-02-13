@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import time
+import fetch
 
 cmd = sys.argv[1] # commands: build->(get samples, populate database), map->(populate/update database map)
 samples = ["SingleMuon", "Cosmics"] #WIP

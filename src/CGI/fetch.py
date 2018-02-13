@@ -102,16 +102,21 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def fetch(run, sample, targ_dir):
+def fetch(subsys, run, sample, targ_dir):
+
+    # Load configs
+    all_configs = json.loads("{0}/configs.json").format(os.getcwd())
+    config = all_configs[subsys]
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Get list of files already in database
-    db_dir = "".format(sample)
+    db_dir = "{0}/main_db/{1}".format(os.abspath(os.pardir), sample)
     dbase = os.listdir(db_dir)
 
+    # Temporary dir for storing unformatted .root files
     temp_dir = "{0}/temp".format(os.abspath(os.pardir))
 
     if "{0}.root".format(run) not in dbase:
@@ -143,11 +148,8 @@ def fetch(run, sample, targ_dir):
     new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "recreate")
     new_f.Close()
 
-    main_gdir = "DQMData/Run {0}/CSC/Run summary/CSCOfflineMonitor/".format(run)
-    hists = {"Occupancy/":["hORecHits", "hOSegments", "hOStrips", "hOWires"],
-             "recHits/":["hRHGlobal*", "hRHnrechits"],
-             "Digis/":["hWireTBin_*", "hStripNFired", "hWirenGroupsTotal"],
-             "Segments/":["hSnhits*", "hSnSegments", "hSnhits"]}
+    main_gdir = config["main_gdir"].format(run)
+    hists = config["hists"]
 
     for gdir in hists:
         for h in hists[gdir]:
