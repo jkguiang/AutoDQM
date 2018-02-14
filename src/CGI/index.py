@@ -58,13 +58,13 @@ def check(is_success, fail_reason):
     else: return None
 
 @timer
-def get_hists(fdir, rdir, data_id, ref_id, user_id):
+def get_hists(subsys, fdir, rdir, data_id, ref_id, user_id):
     f_hists = compile_hists("{0}/{1}.root".format(fdir, data_id))
     r_hists = compile_hists("{0}/{1}.root".format(rdir, ref_id))
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "setup", user_id])
 
-    AutoDQM.autodqm(f_hists, r_hists, data_id, ref_id, user_id)
+    AutoDQM.autodqm(subsys, f_hists, r_hists, data_id, ref_id, user_id)
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "updt", user_id])
 
@@ -78,15 +78,15 @@ def handle_args(args):
 
     try:
         if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(os.getcwd(), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(os.abspath(os.pardir), args["user_id"]))
             check(is_success, fail_reason)
         elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(os.getcwd(), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(os.abspath(os.pardir), args["user_id"]))
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
             # Root files should now be in data and ref directories
-            is_success, fail_reason = get_hists("{0}/data/{1}".format(os.getcwd(), args["user_id"]), "{0}/ref/{1}".format(os.getcwd(), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists(args["subys"], "{0}/data/{1}".format(os.abspath(os.pardir), args["user_id"]), "{0}/ref/{1}".format(os.abspath(os.pardir), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:

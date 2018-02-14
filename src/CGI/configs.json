@@ -7,8 +7,21 @@
                 "Digis/":["hWireTBin_*", "hStripNFired", "hWirenGroupsTotal"],
                 "Segments/":["hSnhits*", "hSnSegments", "hSnhits"]
                 },
-        "chi2_cut":500,
-        "pull_cap":25,
-        "pull_cut":20
+        "2D":{
+            "chi2_cut":500,
+            "pull_cap":25,
+            "pull_cut":20,
+            "ks_cut":0.0,
+            "min_entries":100000,
+            "always_draw":[]
+        }
+        "1D":{
+            "chi2_cut":500,
+            "pull_cap":25,
+            "pull_cut":20,
+            "ks_cut":0.09,
+            "min_entries":100000,
+            "always_draw":["hSnhits", "hSnSegments", "hWirenGroupsTotal", "hStripNFired", "hRHnrechits"]
+        }
     }
 }

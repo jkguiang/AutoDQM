@@ -1,11 +1,38 @@
 import ROOT
 import os
 import sys
+import json
+
+# Load configs
+all_configs = json.loads("{0}/configs.json").format(os.getcwd())
+config = all_configs[subsys]
+# Global variables to be filled by fill_vars
+chi2_cut = None
+pull_cap = None
+pull_cut = None
+ks_cut = None 
+min_entries = None
+always_draw = None
+
+def fill_vars(dim):
+    # Fill global variables from config
+    chi2_cut = config[dim]["chi2_cut"]
+    pull_cap = config[dim]["pull_cap"]
+    pull_cut = config[dim]["pull_cut"]
+    ks_cut = config[dim]["ks_cut"]
+    min_entries = config[dim]["min_entries"]
+    always_draw = config[dim]["always_draw"]
+    
+    return
 
 # Parsing Functions -------
 
 # Scan 2D Hist, plot Pull hist and compute Chi^2
 def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
+
+    # Fill global variables for 2D hists
+    fill_vars("2D")
+
     # Set up canvas
     c = ROOT.TCanvas('c', 'Pull')
     ROOT.gStyle.SetOptStat(0)
@@ -24,7 +51,7 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     pull_hist.Reset()
 
     # Reject empty histograms
-    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
+    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < min_entries:
         is_good = False
         return is_good, chi2, max_pull, is_outlier
 
@@ -60,10 +87,10 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
                 max_pull = new_pull
 
             # Cap pull values displayed on histogram (max pull calculated before this)
-            if new_pull > 25:
-                new_pull = 25
-            if new_pull < -25:
-                new_pull = -25
+            if new_pull > pull_cap:
+                new_pull = pull_cap
+            if new_pull < -pull_cap:
+                new_pull = -pull_cap
 
             # Fill Pull Histogram
             pull_hist.SetBinContent(x, y, new_pull)
@@ -72,12 +99,12 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     chi2 = (chi2/nBins)
 
     # Chi2 Cut
-    if chi2 > 500 or abs(max_pull) > 20:
+    if chi2 > chi2_cut or abs(max_pull) > pull_cut:
         # Used in outliers count
         is_outlier = True
 
         # Plot pull hist
-        pull_hist.GetZaxis().SetRangeUser(-25, 25)
+        pull_hist.GetZaxis().SetRangeUser(-pull_cap, pull_cap)
         pull_hist.SetTitle(pull_hist.GetTitle()+" Pull Values")
         pull_hist.Draw("colz")
 
@@ -107,8 +134,12 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 # Comparison Plots ------
 
 def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
-    # Plots that should always be drawn
-    hists = ["hSnhits", "hSnSegments", "hWirenGroupsTotal", "hStripNFired", "hRHnrechits"]
+ 
+    # Fill global variables for 1D hists
+    fill_vars("1D")
+
+   # Plots that should always be drawn
+    hists = always_draw
 
     # Set up canvas
     c = ROOT.TCanvas('c', 'c')
@@ -122,7 +153,7 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     ks = 0
     
     # Reject empty histograms
-    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < 100000:
+    if f_hist.GetEntries() == 0 or f_hist.GetEntries() < min_entries:
         if name not in hists:
             is_good = False
             return is_good, ks, is_outlier
@@ -135,7 +166,7 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 
     ks = f_hist.KolmogorovTest(r_hist, "M")
 
-    if ks > 0.09 or name in hists:
+    if ks > ks_cut or name in hists:
         # Used in outliers count
         is_outlier = True
 
@@ -212,10 +243,11 @@ def pull(bin1, binerr1, bin2, binerr2):
 # End Analysis Functions ------
 
 # AutoDQM
-def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
+def autodqm(subsys, f_hists, r_hists, data_id, ref_id, targ_dir):
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
+
 
     max_1D = 0
     max_2D = 0
