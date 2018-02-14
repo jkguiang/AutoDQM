@@ -1,6 +1,7 @@
 
 // Global variables
 var t0 = 0;
+var subsys = "", // Subsystem (i.e. CSC, DT, EMTF, etc.)
 var cur_sample = "none"; // So script knows what sample is selected
 var data_info = ""; // To be sent with query
 var ref_info = ""; // To be sent with query
@@ -283,6 +284,7 @@ $(function() {
         $("#input_err").hide();
         $("#internal_err").hide();
         var query = {
+            "subsys": subsys,
             "type": "retrieve_data",
             "sample": cur_sample,
             "data_info": data_info,
