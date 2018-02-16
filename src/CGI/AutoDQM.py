@@ -4,8 +4,7 @@ import sys
 import json
 
 # Load configs
-all_configs = json.loads("{0}/configs.json").format(os.getcwd())
-config = all_configs[subsys]
+config = json.loads("{0}/configs.json").format(os.getcwd())
 # Global variables to be filled by fill_vars
 chi2_cut = None
 pull_cap = None
@@ -14,14 +13,14 @@ ks_cut = None
 min_entries = None
 always_draw = None
 
-def fill_vars(dim):
+def fill_vars(name):
     # Fill global variables from config
-    chi2_cut = config[dim]["chi2_cut"]
-    pull_cap = config[dim]["pull_cap"]
-    pull_cut = config[dim]["pull_cut"]
-    ks_cut = config[dim]["ks_cut"]
-    min_entries = config[dim]["min_entries"]
-    always_draw = config[dim]["always_draw"]
+    chi2_cut = config["chi2_cut"]
+    pull_cap = config["pull_cap"]
+    pull_cut = config["pull_cut"]
+    ks_cut = config["ks_cut"]
+    min_entries = config["min_entries"]
+    always_draw = config["always_draw"]
     
     return
 
@@ -243,7 +242,7 @@ def pull(bin1, binerr1, bin2, binerr2):
 # End Analysis Functions ------
 
 # AutoDQM
-def autodqm(subsys, f_hists, r_hists, data_id, ref_id, targ_dir):
+def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
@@ -259,7 +258,10 @@ def autodqm(subsys, f_hists, r_hists, data_id, ref_id, targ_dir):
     outliers = 0
     skip = 0
 
-    for name in f_hists:
+    hists = config["hists"]
+
+    for hist in hists:
+        name = hist["name_out"]
         if not (name in r_hists): continue
         if type(f_hists[name]) != type(r_hists[name]): continue
 

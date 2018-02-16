@@ -58,13 +58,13 @@ def check(is_success, fail_reason):
     else: return None
 
 @timer
-def get_hists(subsys, fdir, rdir, data_id, ref_id, user_id):
+def get_hists(fdir, rdir, data_id, ref_id, user_id):
     f_hists = compile_hists("{0}/{1}.root".format(fdir, data_id))
     r_hists = compile_hists("{0}/{1}.root".format(rdir, ref_id))
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "setup", user_id])
 
-    AutoDQM.autodqm(subsys, f_hists, r_hists, data_id, ref_id, user_id)
+    AutoDQM.autodqm(f_hists, r_hists, data_id, ref_id, user_id)
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "updt", user_id])
 
