@@ -78,15 +78,15 @@ def handle_args(args):
 
     try:
         if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(os.abspath(os.pardir), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
             check(is_success, fail_reason)
         elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(os.abspath(os.pardir), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
             # Root files should now be in data and ref directories
-            is_success, fail_reason = get_hists(args["subys"], "{0}/data/{1}".format(os.abspath(os.pardir), args["user_id"]), "{0}/ref/{1}".format(os.abspath(os.pardir), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists(args["subys"], "{0}/data/{1}".format(os.path.abspath(os.pardir), args["user_id"]), "{0}/ref/{1}".format(os.path.abspath(os.pardir), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:

@@ -113,10 +113,10 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(os.abspath(os.pardir), targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(os.path.abspath(os.pardir), targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.abspath(os.pardir), targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.path.abspath(os.pardir), targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Max Pull Value: {0}\n".format(max_pull),
                             "Chi^2: {0}\n".format(chi2),
@@ -205,10 +205,10 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(os.abspath(os.pardir), targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(os.path.abspath(os.pardir), targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.abspath(os.pardir), targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(os.path.abspath(os.pardir), targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Data Entries: {0}\n".format(int(f_hist.GetEntries())), 
                             "Reference Entries: {0}\n".format(int(r_hist.GetEntries()))])
@@ -284,13 +284,13 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     ks_1D.GetYaxis().SetTitle("Entries")
 
     ks_1D.Draw("hist")
-    C.SaveAs("{0}/pdfs/{1}/ks_1D.pdf".format(os.abspath(os.pardir), targ_dir))
+    C.SaveAs("{0}/pdfs/{1}/ks_1D.pdf".format(os.path.abspath(os.pardir), targ_dir))
 
     chi2_2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_2D.GetYaxis().SetTitle("Entries")
 
     chi2_2D.Draw("hist")
-    C.SaveAs("{0}/pdfs/{1}/chi2_2D.pdf".format(os.abspath(os.pardir), targ_dir))
+    C.SaveAs("{0}/pdfs/{1}/chi2_2D.pdf".format(os.path.abspath(os.pardir), targ_dir))
 
     return
 

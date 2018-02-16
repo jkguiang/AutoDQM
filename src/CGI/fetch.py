@@ -175,14 +175,14 @@ def compile(f, new_f):
     f.Close()
     return
 
-def fetch(run, sample, targ_dir):
+def fetch(run, year, sample, targ_dir):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Get list of files already in database
-    db_dir = "{0}/database/{1}".format(os.abspath(os.pardir), sample)
+    db_dir = "{0}/database/Run{1}/{2}".format(os.path.abspath(os.pardir), year, sample)
     dbase = os.listdir(db_dir)
 
     # Download file if not already in database
@@ -213,12 +213,17 @@ def fetch(run, sample, targ_dir):
     else:
         f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
 
-    # Create new .root file to be compiled, recreate if it alread exists
-    new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "recreate")
-    new_f.Close()
+    # Compile root file into smaller root file ONLY if user passes in a target directory
+    if targ_dir:
+        # Create new .root file to be compiled, recreate if it alread exists
+        new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "recreate")
+        new_f.Close()
 
-    # Check configs.json to make sure all histogram objects exist, compile into smaller .root file
-    return(compile(f, new_f))
+        # Check configs.json to make sure all histogram objects exist, compile into smaller .root file
+        return(compile(f, new_f))
+    else:
+        f.Close()
+        return
 
 if __name__=='__main__':
     fetch("301531", "{0}/dbase_dir".format(os.getcwd()))
