@@ -102,23 +102,90 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def fetch(subsys, run, sample, targ_dir):
+# Check to ensure config file is properly set up, compile into smaller root file with only subsystem-related histograms
+def compile(f, new_f):
 
     # Load configs
-    all_configs = json.loads("{0}/configs.json").format(os.getcwd())
-    config = all_configs[subsys]
+    config = json.loads("{0}/configs.json".format(os.getcwd()))
+    main_gdir = config["main_gdir"].format(run)
+    hists = config["hists"]
+
+    # Loop over all histograms, compile into smaller root file
+    for hist in hists:
+        # Clear new_hist variable - loop checks for existence of new_hist to determine success
+        new_hist = None
+
+        # Get output name for histogram (if "" or None, name of hist is not changed)
+        name_out = hist["name_out"]
+
+        # Get name of hist
+        h = hist["path"].split("/")[-1]
+        # Get path to hist
+        gdir = hist["path"].split(h)[0]
+
+        # Reset current directory to f
+        f.cd()
+
+        # Generate map of histograms for wildcard searches:
+        # Get keys of directory
+        keys = f.GetDirectory("{0}{1}".format(main_gdir, gdir))
+        h_map = []
+        # Populate map
+        for key in keys.GetListOfKeys():
+            h_map.append(key.GetName())
+
+        # Wildcard search
+        if "*" in h:
+            # Check entire directory for files matching wildcard
+            for name in h_map:
+                if h.split("*")[0] in name:
+                    new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, name))
+                    if new_hist:
+                        # Rename hist if output name given
+                        if name_out:
+                            new_hist.SetName(name_out)
+                        else:
+                            hist["name_out"] = new_hist.GetName()
+                        new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "update")
+                        new_f.cd()
+                        new_hist.Write()
+                        new_f.Close()
+                    else:
+                        return False, "File not found: {0}".format(hist)
+        # Normal search
+        else:
+            new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, h))
+            if new_hist:
+                # Rename hist if output name given
+                if name_out:
+                    new_hist.SetName(name_out)
+                else:
+                    hist["name_out"] = new_hist.GetName()
+                new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "update")
+                new_f.cd()
+                new_hist.Write()
+                new_f.Close()
+            else:
+                return False, "File not found: {0}".format(hist)
+
+    # Update config with new name_out's
+    with open("{0}/configs.json".format(os.getcwd()), "w") as fhout:
+        json.dump(config, fhout, sort_keys = True, indent = 4, separators = (',', ':'))
+
+    f.Close()
+    return
+
+def fetch(run, sample, targ_dir):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Get list of files already in database
-    db_dir = "{0}/main_db/{1}".format(os.abspath(os.pardir), sample)
+    db_dir = "{0}/database/{1}".format(os.abspath(os.pardir), sample)
     dbase = os.listdir(db_dir)
 
-    # Temporary dir for storing unformatted .root files
-    temp_dir = "{0}/temp".format(os.abspath(os.pardir))
-
+    # Download file if not already in database
     if "{0}.root".format(run) not in dbase:
         content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/{0}/".format(sample))
         parser = HTMLParserRuns()
@@ -137,59 +204,21 @@ def fetch(subsys, run, sample, targ_dir):
 
                 for new_link in parsed:
                     if run in new_link[0]:
-                        get_file_with_cert(new_link[0], "{0}/{1}_temp.root".format(temp_dir, run))
+                        get_file_with_cert(new_link[0], "{0}/{1}.root".format(db_dir, run))
 
+        #Retrieve downloaded file from database
+        f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
 
-        f = ROOT.TFile.Open("{0}/{1}_temp.root".format(temp_dir, run))
-
+    # Retrieve file from database
     else:
         f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
-    # Recreate file if already exists
+
+    # Create new .root file to be compiled, recreate if it alread exists
     new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "recreate")
     new_f.Close()
 
-    main_gdir = config["main_gdir"].format(run)
-    hists = config["hists"]
-
-    for gdir in hists:
-        for h in hists[gdir]:
-            hist = None
-            f.cd()
-            # Generate map of histograms for wildcard searches
-            # Get keys of directory
-            keys = f.GetDirectory("{0}{1}".format(main_gdir, gdir))
-            h_map = []
-            # Populate map
-            for key in keys.GetListOfKeys():
-                h_map.append(key.GetName())
-
-            if "*" in h:
-                for name in h_map:
-                    if h.split("*")[0] in name:
-                        hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, name))
-                        if hist:
-                            new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "update")
-                            new_f.cd()
-                            hist.Write()
-                            new_f.Close()
-                        else:
-                            return False, "File not found: {0}".format(run)
-            else:
-                hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, h))
-                if hist:
-                    new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "update")
-                    new_f.cd()
-                    hist.Write()
-                    new_f.Close()
-                else:
-                    return False, "File not found: {0}".format(run)
-
-    f.Close()
-
-    if os.listdir(temp_dir):
-        os.system("rm {0}/*".format(temp_dir))
-
-    return True, None
+    # Check configs.json to make sure all histogram objects exist, compile into smaller .root file
+    return(compile(f, new_f))
 
 if __name__=='__main__':
     fetch("301531", "{0}/dbase_dir".format(os.getcwd()))
