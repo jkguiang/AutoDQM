@@ -182,18 +182,21 @@ def fetch(run, year, sample, targ_dir):
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Get list of files already in database
-    db_dir = "{0}/database/Run{1}/{2}".format(os.path.abspath(os.pardir), year, sample)
+    db_dir = "{0}/database/Run{1}/{2}".format(os.getcwd(), year, sample)
     dbase = os.listdir(db_dir)
 
     # Download file if not already in database
     if "{0}.root".format(run) not in dbase:
-        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/{0}/".format(sample))
+        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run{0}/{1}/".format(year, sample))
         parser = HTMLParserRuns()
         parser.feed(content)
         allRuns = parser.get_run_linktimestamps()
         curdate = datetime.datetime.utcnow()
+        print(allRuns)
+        return
 
         # Retrieve run if exists
+        found = False
         for run_link in allRuns:
             if run[:4] in run_link[0]:
                 new_content = get_url_with_cert(run_link[0])
@@ -204,7 +207,11 @@ def fetch(run, year, sample, targ_dir):
 
                 for new_link in parsed:
                     if run in new_link[0]:
+                        found = True
                         get_file_with_cert(new_link[0], "{0}/{1}.root".format(db_dir, run))
+
+        if not found:
+            return False, "File not found: {0}".format(run)
 
         #Retrieve downloaded file from database
         f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
@@ -223,7 +230,7 @@ def fetch(run, year, sample, targ_dir):
         return(compile(f, new_f))
     else:
         f.Close()
-        return
+        return True, None
 
 if __name__=='__main__':
-    fetch("301531", "{0}/dbase_dir".format(os.getcwd()))
+    fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
