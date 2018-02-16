@@ -5,6 +5,7 @@ import json
 
 # Load configs
 config = json.loads("{0}/configs.json").format(os.getcwd())
+hists = config["hists"]
 # Global variables to be filled by fill_vars
 chi2_cut = None
 pull_cap = None
@@ -13,24 +14,20 @@ ks_cut = None
 min_entries = None
 always_draw = None
 
-def fill_vars(name):
+def fill_vars(hist):
     # Fill global variables from config
-    chi2_cut = config["chi2_cut"]
-    pull_cap = config["pull_cap"]
-    pull_cut = config["pull_cut"]
-    ks_cut = config["ks_cut"]
-    min_entries = config["min_entries"]
-    always_draw = config["always_draw"]
-    
+    chi2_cut = hist["chi2_cut"]
+    pull_cap = hist["pull_cap"]
+    pull_cut = hist["pull_cut"]
+    ks_cut = hist["ks_cut"]
+    min_entries = hist["min_entries"]
+    always_draw = hist["always_draw"]
     return
 
 # Parsing Functions -------
 
 # Scan 2D Hist, plot Pull hist and compute Chi^2
 def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
-
-    # Fill global variables for 2D hists
-    fill_vars("2D")
 
     # Set up canvas
     c = ROOT.TCanvas('c', 'Pull')
@@ -98,9 +95,10 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     chi2 = (chi2/nBins)
 
     # Chi2 Cut
-    if chi2 > chi2_cut or abs(max_pull) > pull_cut:
+    if chi2 > chi2_cut or abs(max_pull) > pull_cut or always_draw:
         # Used in outliers count
-        is_outlier = True
+        if not always_draw:
+            is_outlier = True
 
         # Plot pull hist
         pull_hist.GetZaxis().SetRangeUser(-pull_cap, pull_cap)
@@ -133,12 +131,6 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 # Comparison Plots ------
 
 def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
- 
-    # Fill global variables for 1D hists
-    fill_vars("1D")
-
-   # Plots that should always be drawn
-    hists = always_draw
 
     # Set up canvas
     c = ROOT.TCanvas('c', 'c')
@@ -165,12 +157,12 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 
     ks = f_hist.KolmogorovTest(r_hist, "M")
 
-    if ks > ks_cut or name in hists:
+    if ks > ks_cut or always_draw:
         # Used in outliers count
         is_outlier = True
 
-        # Stat boxes only for names in hists
-        if name in hists:
+        # Stat boxes only for hists that are always drawn
+        if always_draw:
             ROOT.gStyle.SetOptStat(1)
         else:
             ROOT.gStyle.SetOptStat(0)
@@ -186,7 +178,7 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         r_hist.Draw()
         f_hist.Draw("sames hist e")
 
-        if name in hists:
+        if always_draw:
             # Draw stats boxes
             r_hist.SetName("Reference")
             f_hist.SetName("Data")
@@ -243,6 +235,7 @@ def pull(bin1, binerr1, bin2, binerr2):
 
 # AutoDQM
 def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
+
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
@@ -260,8 +253,10 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
 
     hists = config["hists"]
 
+    # Main loop over histograms in config file
     for hist in hists:
         name = hist["name_out"]
+        fill_vars(hist)
         if not (name in r_hists): continue
         if type(f_hists[name]) != type(r_hists[name]): continue
 
