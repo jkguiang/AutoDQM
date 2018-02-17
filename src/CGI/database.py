@@ -44,12 +44,14 @@ def map_db():
 
 # get samples, populate/structure database
 def build_db():
+    print("Retrieving list of runs...")
+    runs = fetch.get_runs(str(year), sample)
     print("Building database...")
     start = 301531
     files_found = 0
     total = 0
     for sample in tqdm(samples):
-        for run in tqdm(range(start, start+10)):
+        for run in tqdm(runs):
             total += 1
             is_success, fail_reason = fetch.fetch(str(run), str(year), sample, "")
             if is_success:
