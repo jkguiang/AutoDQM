@@ -102,6 +102,40 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
+def get_runs(year, sample):
+
+    # Progress bar
+    from tqdm import tqdm
+
+    # List to store all run numbers
+    runs = []
+
+    # Get HTML content from DQM GUI
+    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run{0}/{1}/".format(year, sample))
+    parser = HTMLParserRuns()
+    parser.feed(content)
+    allRuns = parser.get_run_linktimestamps()
+    curdate = datetime.datetime.utcnow()
+
+    # Parse each dqm link, get run number
+    for run_link in tqdm(allRuns):
+        old_link = run_link[0]
+        new_content = get_url_with_cert(run_link[0])
+        new_parser = HTMLParserRuns()
+        new_parser.clear()
+        new_parser.feed(new_content)
+        parsed = new_parser.get_run_linktimestamps()
+
+        for new_link in tqdm(parsed):
+            split_link = new_link[0].split(old_link)[-1]
+            if ".root" not in split_link:
+                continue
+            run = split_link.split("_")[2]
+            run = run.split("R000")[-1]
+            runs.append(int(run))
+
+    return sorted(runs, reverse=True)
+
 # Check to ensure config file is properly set up, compile into smaller root file with only subsystem-related histograms
 def compile(f, new_f):
 
@@ -192,8 +226,6 @@ def fetch(run, year, sample, targ_dir):
         parser.feed(content)
         allRuns = parser.get_run_linktimestamps()
         curdate = datetime.datetime.utcnow()
-        print(allRuns)
-        return
 
         # Retrieve run if exists
         found = False
@@ -233,4 +265,5 @@ def fetch(run, year, sample, targ_dir):
         return True, None
 
 if __name__=='__main__':
-    fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
+    # fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
+    get_runs(year="2017", sample="SingleMuon")
