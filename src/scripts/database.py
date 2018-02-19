@@ -68,8 +68,8 @@ def build_db():
     # Load configs
     with open("{0}/configs.json".format(os.getcwd())) as config_file:
         config = json.load(config_file)
-    samples = config["samples"]
-    year = config["year"] # run year
+    sample = config["sample"]
+    year = config["year"]
 
     print("Building database...")
     files_found = 0
@@ -80,7 +80,7 @@ def build_db():
         print("Downloading files...")
         for i in tqdm(range(0, limit)):
             run = runs[i]
-            is_success, fail_reason = fetch.fetch(str(run), str(year), sample, "")
+            is_success, fail_reason = fetch.fetch(str(run), "")
             if not is_success:
                 print("ERROR: {0}".format(fail_reason))
                 return
