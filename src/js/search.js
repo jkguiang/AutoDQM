@@ -246,7 +246,7 @@ function submit(query) {
     console.log(t0);
 
     $.ajaxSetup({timeout:300000}); // Set timeout to 5 minutes
-    $.get("src/handler.py", query)
+    $.get("src/scripts/handler.py", query)
         .done(function(response) {})
         .always(handle_response);
 }
