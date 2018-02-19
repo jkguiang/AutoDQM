@@ -86,8 +86,8 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         pull_hist.Draw("colz")
 
         # Text box
-        data_text = ROOT.TLatex(.52,.91,"#scale[0.6]{Data: "+data_id+"}") 
-        ref_text = ROOT.TLatex(.72,.91,"#scale[0.6]{Ref: "+ref_id+"}") 
+        data_text = ROOT.TLatex(.52,.91,"#scale[0.6]{Data: "+str(data_id)+"}") 
+        ref_text = ROOT.TLatex(.72,.91,"#scale[0.6]{Ref: "+str(ref_id)+"}") 
         data_text.SetNDC(ROOT.kTRUE);
         ref_text.SetNDC(ROOT.kTRUE);
         data_text.Draw()
@@ -180,8 +180,8 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
             f_stats.Draw()
 
         # Text box
-        data_text = ROOT.TLatex(.52,.91,"#scale[0.6]{Data: "+data_id+"}") 
-        ref_text = ROOT.TLatex(.72,.91,"#scale[0.6]{Ref: "+ref_id+"}") 
+        data_text = ROOT.TLatex(.52,.91,"#scale[0.6]{Data: "+str(data_id)+"}") 
+        ref_text = ROOT.TLatex(.72,.91,"#scale[0.6]{Ref: "+str(ref_id)+"}") 
         data_text.SetNDC(ROOT.kTRUE);
         ref_text.SetNDC(ROOT.kTRUE);
         data_text.Draw()

@@ -35,7 +35,7 @@ class HTMLParserRuns(HTMLParser):
 
     def get_run_links(self):
         new_links = []
-        for link in self.links:
+        for link in self.links[1:]: # First link is Up and should be ignored
             # if "/000" not in link: continue
             new_links.append(self.BASE_URL + link)
         return new_links
@@ -110,6 +110,9 @@ def fetch(run, sample, targ_dir):
 
     # Get list of files already in database
     db_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/{0}".format(sample)
+    db_dir = os.getenv("AUTODQM_LOCALDB", "./db/") + sample
+    if not os.path.exists(db_dir):
+        os.makedirs(db_dir)
     dbase = os.listdir(db_dir)
 
     temp_dir = "{0}/temp".format(os.getcwd())
@@ -123,7 +126,7 @@ def fetch(run, sample, targ_dir):
 
         # Retrieve run if exists
         for run_link in allRuns:
-            if run[:4] in run_link[0]:
+            if str(run)[:4] in run_link[0]:
                 new_content = get_url_with_cert(run_link[0])
                 new_parser = HTMLParserRuns()
                 new_parser.clear()
@@ -131,14 +134,10 @@ def fetch(run, sample, targ_dir):
                 parsed = new_parser.get_run_linktimestamps()
 
                 for new_link in parsed:
-                    if run in new_link[0]:
-                        get_file_with_cert(new_link[0], "{0}/{1}_temp.root".format(temp_dir, run))
+                    if str(run) in new_link[0]:
+                        get_file_with_cert(new_link[0], "{0}/{1}.root".format(db_dir, run))
 
-
-        f = ROOT.TFile.Open("{0}/{1}_temp.root".format(temp_dir, run))
-
-    else:
-        f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
+    f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
     # Recreate file if already exists
     new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "recreate")
     new_f.Close()
