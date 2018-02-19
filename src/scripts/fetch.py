@@ -5,7 +5,6 @@ import ast
 import urllib2
 import json
 import datetime
-import pprint
 from HTMLParser import HTMLParser
 
 import ROOT
@@ -208,7 +207,7 @@ def compile(run, config, targ_dir, f, new_f):
     f.Close()
     return
 
-def fetch(run, targ_dir):
+def fetch(run, sample, targ_dir):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -217,7 +216,6 @@ def fetch(run, targ_dir):
     # Load configs
     with open("{0}/configs.json".format(os.getcwd())) as config_file:
         config = json.load(config_file)
-    sample = config["sample"]
     year = config["year"]
 
     # Get list of files already in database
