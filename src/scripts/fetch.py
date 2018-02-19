@@ -140,7 +140,8 @@ def get_runs(year, sample):
 def compile(f, new_f):
 
     # Load configs
-    config = json.loads("{0}/configs.json".format(os.getcwd()))
+    with open("{0}/configs.json".format(os.getcwd())) as config_file:
+        config = json.load(config_file)
     main_gdir = config["main_gdir"].format(run)
     hists = config["hists"]
 

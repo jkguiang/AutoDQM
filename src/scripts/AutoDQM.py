@@ -4,7 +4,8 @@ import sys
 import json
 
 # Load configs
-config = json.loads("{0}/configs.json").format(os.getcwd())
+with open("{0}/configs.json".format(os.getcwd())) as config_file:
+    config = json.load(config_file)
 hists = config["hists"]
 # Global variables to be filled by fill_vars
 chi2_cut = None
