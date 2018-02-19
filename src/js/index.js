@@ -1,10 +1,10 @@
 
 // Global variables
 var t0 = 0;
-var cur_sample = "none"; // So script knows what sample is selected
-var data_info = ""; // To be sent with query
-var ref_info = ""; // To be sent with query
-var prefix = ""; // Sample name that is placed in front of dataset name
+var cur_sample = "none"; /* So script knows what sample is selected */
+var data_info = ""; /* To be sent with query */
+var ref_info = ""; /* To be sent with query */
+var prefix = ""; /* Sample name that is placed in front of dataset name */
 
 // Form functions
 function updt_sample() {
