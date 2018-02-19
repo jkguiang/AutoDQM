@@ -1,0 +1,11 @@
+offline/
+*.pyc
+*.swp
+src/data/
+src/ref/
+src/pdfs/
+src/pngs/
+src/txts/
+src/db/
+src/temp/
+

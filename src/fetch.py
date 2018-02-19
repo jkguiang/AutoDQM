@@ -109,7 +109,6 @@ def fetch(run, sample, targ_dir):
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Get list of files already in database
-    db_dir = "/nfs-6/userdata/bemarsh/CSC_DQM/Run2017/{0}".format(sample)
     db_dir = os.getenv("AUTODQM_LOCALDB", "./db/") + sample
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)

@@ -30,7 +30,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 - [x] Dynamically displays text files below AutoPlotter toolbar
 - [x] Unique url's for sharing plots pages with the data and reference data set names
 
-## Using AutoDQM
+## Using AutoDQM Web GUI
 
 ###### Setup:
 Clone this repository and move its contents to a public html directory, then run `./setup.sh` to set up AutoDQM's directories.
@@ -56,3 +56,13 @@ Clone this repository and move its contents to a public html directory, then run
 1. Select one of the automatically updated data sets
 2. Use the radio menu to channel selection into either the data or reference form
 3. Click the "Submit" button
+
+## Using AutoDQM Offline
+
+Ensure you have grid certificates under `/etc/grid-security`. Set up a voms proxy with `voms-proxy-init`.
+
+1. Run `./setup.sh` to set up AutoDQM's directories
+2. Call `python ./run-offline.py [sample] [data-run] [ref-run]`
+
+Afterwards, output files are available under `./offline` (by default).
+
