@@ -137,11 +137,9 @@ def get_runs(year, sample):
     return sorted(runs, reverse=True)
 
 # Check to ensure config file is properly set up, compile into smaller root file with only subsystem-related histograms
-def compile(f, new_f):
+def compile(run, config, targ_dir, f, new_f):
 
     # Load configs
-    with open("{0}/configs.json".format(os.getcwd())) as config_file:
-        config = json.load(config_file)
     main_gdir = config["main_gdir"].format(run)
     hists = config["hists"]
 
@@ -210,11 +208,17 @@ def compile(f, new_f):
     f.Close()
     return
 
-def fetch(run, year, sample, targ_dir):
+def fetch(run, targ_dir):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
+
+    # Load configs
+    with open("{0}/configs.json".format(os.getcwd())) as config_file:
+        config = json.load(config_file)
+    sample = config["sample"]
+    year = config["year"]
 
     # Get list of files already in database
     db_dir = "{0}/database/Run{1}/{2}".format(os.getcwd(), year, sample)
@@ -260,7 +264,7 @@ def fetch(run, year, sample, targ_dir):
         new_f.Close()
 
         # Check configs.json to make sure all histogram objects exist, compile into smaller .root file
-        return(compile(f, new_f))
+        return(compile(run, config, targ_dir, f, new_f))
     else:
         f.Close()
         return True, None
