@@ -35,6 +35,8 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 ###### Setup:
 Clone this repository and move its contents to a public html directory, then run `./setup.sh` to set up AutoDQM's directories.
 
+Set the environment variable `AUTODQM_LOCALDB` to where you would like root files to be cached. If unset, the default is `./src/db`.
+
 ###### Main Page:
 1. Select sample name
     - Currently supported samples: SingleMuon, Cosmics
