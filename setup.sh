@@ -1,12 +1,7 @@
 main=${PWD}/src
 
-if [[ ${1} == "" ]] ; then
-    echo "Please pass in subsystem acronym (i.e. CSC, DT, etc.)"
-    exit 0
-fi
-
-req_dirs=( ${main}/data ${main}/ref ${main}/pdfs ${main}/pngs ${main}/txts ${main}/temp ${main}/CGI/${1}_db )
-
+# Build required directories
+req_dirs=( ${main}/data ${main}/ref ${main}/pdfs ${main}/pngs ${main}/txts ${main}/temp ${main}/CGI/database )
 for dir in "${req_dirs[@]}" ; do
     if ! [[ -e $dir ]] ; then
         mkdir $dir
@@ -15,8 +10,23 @@ for dir in "${req_dirs[@]}" ; do
     fi
 done
 
-if [[ -e ${main}/CGI/${1}_db ]] ; then
-    python ${PWD}/src/CGI/database.py map ${1}
+# Build database
+db=${main}/CGI/database
+new_db=$false
+db_dirs=( ${db}/Run2017 ${db}/Run2017/SingleMuon ${db}/Run2017/Cosmics )
+for dir in "${db_dirs[@]}" ; do
+    if ! [[ -e $dir ]] ; then
+        new_db=$true
+        mkdir $dir
+        chmod -R 755 $dir
+	echo "Created $dir"
+    fi
+done
+
+cd ${PWD}/src/CGI
+
+if [[ ${new_db} == $true ]] ; then
+    python database.py build 
 else
-    python ${PWD}/src/CGI/database.py build ${1}
+    python database.py map
 fi
