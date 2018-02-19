@@ -7,12 +7,11 @@ import fetch
 from tqdm import tqdm 
 
 cmd = sys.argv[1] # commands: build->(get samples, populate database), map->(populate/update database map)
-samples = ["SingleMuon"] #WIP
-year = 2017 # run year
-db_map = {"newest":0, "timestamp":0, "files":{}}
 
 # populate/update database map
 def map_db():
+    db_map = {"newest":0, "timestamp":0, "files":{}}
+
     # Populate database map
     for sample in samples:
         db_map["files"][sample] = {}
@@ -44,8 +43,10 @@ def map_db():
 
 # get samples, populate/structure database
 def build_db():
+    # User input loop
     while True:
         print("Enter the number of files you would like downloaded (starting from the newest DQM file).")
+        print("If you would like ot download ALL files, enter 'all'")
         limit_inp = raw_input("Input: ")
         if limit_inp == "all":
             print("\nWARNING: This process may take some time.")
@@ -64,23 +65,28 @@ def build_db():
                 print("ERROR: Please enter a number or 'all'.\n")
                 continue
 
+    # Load configs
+    config = json.loads("{0}/configs.json".format(os.getcwd()))
+    samples = config["samples"]
+    year = config["year"] # run year
+
     print("Building database...")
     files_found = 0
     total = 0
     for sample in tqdm(samples):
-        print("Retrieving list of runs...")
+        print("\nRetrieving list of runs...")
         runs = fetch.get_runs(str(year), sample)
+        print("\nDownloading files...")
         for run in tqdm(runs):
             total += 1
             is_success, fail_reason = fetch.fetch(str(run), str(year), sample, "")
             if is_success:
                 files_found += 1
             if limit and total == limit:
-                print("Finished combing {0}. Found: {1}/{2}".format(sample, files_found, total))
-                return
+                break
 
-        print("Finished combing {0}. Found: {1}/{2}".format(sample, files_found, total))
-    print("Finsihed.")
+        print("\nFinished combing {0}. Found: {1}/{2}".format(sample, files_found, total))
+    print("\nFinished building database.")
     return
 
 if __name__ == "__main__":
