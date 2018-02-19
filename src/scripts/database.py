@@ -46,7 +46,7 @@ def build_db():
     # User input loop
     while True:
         print("Enter the number of files you would like downloaded (starting from the newest DQM file).")
-        print("If you would like ot download ALL files, enter 'all'")
+        print("If you would like to download ALL files, enter 'all'")
         limit_inp = raw_input("Input: ")
         if limit_inp == "all":
             print("\nWARNING: This process may take some time.")
@@ -66,27 +66,29 @@ def build_db():
                 continue
 
     # Load configs
-    config = json.loads("{0}/configs.json".format(os.getcwd()))
+    with open("{0}/configs.json".format(os.getcwd())) as config_file:
+        config = json.load(config_file)
     samples = config["samples"]
     year = config["year"] # run year
 
     print("Building database...")
     files_found = 0
-    total = 0
     for sample in tqdm(samples):
-        print("\nRetrieving list of runs...")
+        print("Retrieving list of runs...")
         runs = fetch.get_runs(str(year), sample)
-        print("\nDownloading files...")
-        for run in tqdm(runs):
-            total += 1
+        print("\n\n\nRetrieved list of runs. There are {0} files available for download.".format(len(runs)))
+        print("Downloading files...")
+        for i in tqdm(range(0, limit)):
+            run = runs[i]
             is_success, fail_reason = fetch.fetch(str(run), str(year), sample, "")
-            if is_success:
+            if not is_success:
+                print("ERROR: {0}".format(fail_reason))
+                return
+            else:
                 files_found += 1
-            if limit and total == limit:
-                break
 
-        print("\nFinished combing {0}. Found: {1}/{2}".format(sample, files_found, total))
-    print("\nFinished building database.")
+        print("\n\nFinished combing {0}. Found: {1}/{2}".format(sample, files_found, limit))
+    print("Finished building database.")
     return
 
 if __name__ == "__main__":
