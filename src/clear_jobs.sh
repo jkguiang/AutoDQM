@@ -2,11 +2,11 @@
 
 cur_dir=/home/users/${USER}/public_html/AutoDQM/src
 
-data=$cur_dir/data
-ref=$cur_dir/ref
-pngs=$cur_dir/pngs
-pdfs=$cur_dir/pdfs
-txts=$cur_dir/txts
+data=$cur_dir/scripts/data
+ref=$cur_dir/scripts/ref
+pngs=$cur_dir/scripts/pngs
+pdfs=$cur_dir/scripts/pdfs
+txts=$cur_dir/scripts/txts
 
 to_clear=( ${data} ${ref} ${pngs} ${pdfs} ${txts} )
 
