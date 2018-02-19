@@ -78,10 +78,10 @@ def handle_args(args):
 
     try:
         if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["data_info"], "{0}/data/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
             check(is_success, fail_reason)
         elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["ref_info"], "{0}/ref/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
@@ -113,7 +113,7 @@ def process_query(args):
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))
     # print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
-    # test = {"type":"retrieve_data","sample":"SingleMuon", "ref_info":"301531", "ref_query":"/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "data_info":"301165", "data_query":"/SingleMuon/Run2017C-PromptReco-v1/DQMIO", "user_id":str(int(time.time()))}
+    # test = {"type":"retrieve_data","sample":"SingleMuon", "year":2017, "ref_info":"307063", "data_info":"307082", "user_id":str(int(time.time()))}
     # print(process_query(test))
 
     args = json.loads(sys.argv[1])
