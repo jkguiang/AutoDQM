@@ -16,6 +16,14 @@ min_entries = None
 always_draw = None
 
 def fill_vars(hist):
+    # Retrieve global variables
+    global chi2_cut
+    global pull_cap
+    global pull_cut
+    global ks_cut
+    global min_entries
+    global always_draw
+
     # Fill global variables from config
     chi2_cut = hist["chi2_cut"]
     pull_cap = hist["pull_cap"]
@@ -86,8 +94,8 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
             # Cap pull values displayed on histogram (max pull calculated before this)
             if new_pull > pull_cap:
                 new_pull = pull_cap
-            if new_pull < -pull_cap:
-                new_pull = -pull_cap
+            if new_pull < -(pull_cap):
+                new_pull = -(pull_cap)
 
             # Fill Pull Histogram
             pull_hist.SetBinContent(x, y, new_pull)
@@ -102,7 +110,7 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
             is_outlier = True
 
         # Plot pull hist
-        pull_hist.GetZaxis().SetRangeUser(-pull_cap, pull_cap)
+        pull_hist.GetZaxis().SetRangeUser(-(pull_cap), pull_cap)
         pull_hist.SetTitle(pull_hist.GetTitle()+" Pull Values")
         pull_hist.Draw("colz")
 
