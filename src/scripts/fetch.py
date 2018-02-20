@@ -201,11 +201,12 @@ def compile(run, config, targ_dir, f, new_f):
                 return False, "File not found: {0}".format(hist)
 
     # Update config with new name_out's
+    config["hists"] = hists
     with open("{0}/configs.json".format(os.getcwd()), "w") as fhout:
         json.dump(config, fhout, sort_keys = True, indent = 4, separators = (',', ':'))
 
     f.Close()
-    return
+    return True, None
 
 def fetch(run, sample, targ_dir):
 
