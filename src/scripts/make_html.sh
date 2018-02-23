@@ -1,5 +1,7 @@
 #!/bin/sh
 pardir="$(dirname "$PWD")"
+parpardir="$(dirname "$pardir")"
+main_dir=parpardir/data
 
 #Takes all .pdf's from pdf_dir and converts them to .png's at png_dir
 pdf_to_png(){
@@ -18,9 +20,9 @@ pdf_to_png(){
 setup() {
     # Update html page
     user_id=$1
-    pdf_dir=$pardir/pdfs/${user_id}
-    png_dir=$pardir/pngs/${user_id}
-    txt_dir=$pardir/txts/${user_id}
+    pdf_dir=$main_dir/pdfs/${user_id}
+    png_dir=$main_dir/pngs/${user_id}
+    txt_dir=$main_dir/txts/${user_id}
 
     dir_array=( ${pdf_dir} ${png_dir} ${txt_dir} )
 
@@ -41,9 +43,9 @@ setup() {
 updt() {
     # Update html page
     user_id=$1
-    pdf_dir=$pardir/pdfs/${user_id}
-    png_dir=$pardir/pngs/${user_id}
-    txt_dir=$pardir/txts/${user_id}
+    pdf_dir=$main_dir/pdfs/${user_id}
+    png_dir=$main_dir/pngs/${user_id}
+    txt_dir=$main_dir/txts/${user_id}
 
     rm -rf ${png_dir}/*
 
@@ -51,7 +53,7 @@ updt() {
     chmod -R 755 ${pdf_dir}
     chmod -R 755 ${png_dir}
     chmod -R 755 ${txt_dir}
-    chmod -R 755 $pardir
+    chmod -R 755 $main_dir
     exit 0
 }
 
