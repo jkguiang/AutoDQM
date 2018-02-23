@@ -7,6 +7,7 @@ import fetch
 from tqdm import tqdm 
 
 cmd = sys.argv[1] # commands: build->(get samples, populate database), map->(populate/update database map)
+main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
 # populate/update database map
 def map_db():
@@ -66,7 +67,7 @@ def build_db():
                 continue
 
     # Load configs
-    with open("{0}/configs.json".format(os.getcwd())) as config_file:
+    with open("{0}/configs.json".format(main_dir) as config_file:
         config = json.load(config_file)
     sample = config["sample"]
     year = config["year"]
