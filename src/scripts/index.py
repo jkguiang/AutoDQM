@@ -13,6 +13,9 @@ import AutoDQM
 times = {}
 cur_dir = os.getcwd()
 
+# Path to directory containing all data
+write_to = os.path.dirname(os.path.dirname(os.getcwd()))
+
 # Recursively find unique name for function call
 def get_name(name, counter):
     new_name = name + str(counter)
@@ -78,15 +81,15 @@ def handle_args(args):
 
     try:
         if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(write_to, args["user_id"]))
             check(is_success, fail_reason)
         elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(os.path.abspath(os.pardir), args["user_id"]))
+            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(write_to, args["user_id"]))
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
             # Root files should now be in data and ref directories
-            is_success, fail_reason = get_hists("{0}/data/{1}".format(os.path.abspath(os.pardir), args["user_id"]), "{0}/ref/{1}".format(os.path.abspath(os.pardir), args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists("{0}/data/{1}".format(write_to, args["user_id"]), "{0}/ref/{1}".format(write_to, args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:
@@ -98,12 +101,7 @@ def handle_args(args):
 def process_query(args):
     t0 = time.time()
 
-    samples = ["Cosmics", "SingleMuon"]
-
-    if args["sample"] in samples:
-        is_success, fail_reason = handle_args(args)
-    else:
-        return get_response(t0, "fail", "Sample not supported", args,  "Query failed")
+    is_success, fail_reason = handle_args(args)
     
     if is_success and fail_reason == None:
         return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
@@ -115,6 +113,10 @@ if __name__ == "__main__":
     # print process_query(["0th_indix_is_this_file.py", "SingleMuon", "300811", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO", "301531", "/SingleMuon/Run2017C-PromptReco-v3/DQMIO"])
     # test = {"type":"retrieve_data","sample":"SingleMuon", "ref_info":"307063", "data_info":"307082", "user_id":str(1519083858797)}
     # print(process_query(test))
+    # test2 = {"type":"retrieve_ref","sample":"SingleMuon", "ref_info":"307063", "data_info":"307082", "user_id":str(1519083858797)}
+    # print(process_query(test2))
+    # test3 = {"type":"process","sample":"SingleMuon", "ref_info":"307063", "data_info":"307082", "user_id":str(1519083858797)}
+    # print(process_query(test3))
 
     args = json.loads(sys.argv[1])
     print(process_query(args))
