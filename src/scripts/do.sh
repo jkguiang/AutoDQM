@@ -9,23 +9,25 @@
 cd /cvmfs/cms.cern.ch/slc6_amd64_gcc530/cms/cmssw/CMSSW_9_2_8; eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`; cd ~-
 
 pardir="$(dirname "$PWD")"
+parpardir="$(dirname "$pardir")"
+main_dir=parpardir/data
 if [[ "$1" == "retrieve_data" || "$1" == "retrieve_ref" || "$1" == "process" ]] ; then
     if [[ "$1" == "retrieve_data" ]] ; then
         shift
-        if [[ -e $pardir/data/$1 ]] ; then
-            rm $pardir/data/$1/*
+        if [[ -e $main_dir/data/$1 ]] ; then
+            rm $main_dir/data/$1/*
         else
-            mkdir $pardir/data/$1
-            chmod 755 -R $pardir/data/$1
+            mkdir $main_dir/data/$1
+            chmod 755 -R $main_dir/data/$1
         fi
     fi
     if [[ "$1" == "retrieve_ref" ]] ; then
         shift
-        if [[ -e $pardir/ref/$1 ]] ; then
-            rm $pardir/ref/$1/*
+        if [[ -e $main_dir/ref/$1 ]] ; then
+            rm $main_dir/ref/$1/*
         else
-            mkdir $pardir/ref/$1
-            chmod 755 -R $pardir/ref/$1
+            mkdir $main_dir/ref/$1
+            chmod 755 -R $main_dir/ref/$1
         fi
     fi
     if [[ "$1" == "process" ]] ; then
