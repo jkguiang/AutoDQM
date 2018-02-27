@@ -83,7 +83,7 @@ def build_db():
         print("Downloading files...")
         for i in tqdm(range(0, limit)):
             run = runs[i]
-            is_success, fail_reason = fetch.fetch(str(run), "")
+            is_success, fail_reason = fetch.fetch(str(run), sample, "")
             if not is_success:
                 print("ERROR: {0}".format(fail_reason))
                 return
