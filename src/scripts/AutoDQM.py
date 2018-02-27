@@ -34,6 +34,7 @@ def fill_vars(hist):
     ks_cut = hist["ks_cut"]
     min_entries = hist["min_entries"]
     always_draw = hist["always_draw"]
+    norm_type = hist["norm_type"]
     return
 
 # Parsing Functions -------
@@ -64,7 +65,10 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         return is_good, chi2, max_pull, is_outlier
 
     # Normalize f_hist
-    f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
+    if norm_type == "row":
+        normalize_rows(f_hist, r_hist)
+    else:
+        f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
 
     for x in range(1, r_hist.GetNbinsX()+1):
         for y in range(1, r_hist.GetNbinsY()+1):
