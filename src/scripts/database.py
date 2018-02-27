@@ -7,6 +7,8 @@ import fetch
 from tqdm import tqdm 
 
 cmd = sys.argv[1] # commands: build->(get samples, populate database), map->(populate/update database map)
+
+# Path to directory containing all data
 main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
 # populate/update database map
@@ -17,7 +19,7 @@ def map_db():
     for sample in samples:
         db_map["files"][sample] = {}
 
-        db_path = "{0}/database/Run{1}/{2}".format(os.getcwd(), year, sample)
+        db_path = "{0}/data/database/Run{1}/{2}".format(main_dir, year, sample)
         database = os.listdir(db_path)
 
         newest = 0
@@ -67,16 +69,16 @@ def build_db():
                 continue
 
     # Load configs
-    with open("{0}/configs.json".format(main_dir) as config_file:
+    with open("{0}/data/configs.json".format(main_dir)) as config_file:
         config = json.load(config_file)
-    sample = config["sample"]
+    samples = config["samples"]
     year = config["year"]
 
     print("Building database...")
     files_found = 0
     for sample in tqdm(samples):
         print("Retrieving list of runs...")
-        runs = fetch.get_runs(str(year), sample)
+        runs = fetch.get_runs(limit, str(year), sample)
         print("\n\n\nRetrieved list of runs. There are {0} files available for download.".format(len(runs)))
         print("Downloading files...")
         for i in tqdm(range(0, limit)):
