@@ -75,12 +75,13 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 
             # Bin 1 data
             bin1 = f_hist.GetBinContent(x, y)
-            bin1err = f_hist.GetBinError(x, y)
 
             # Bin 2 data
             bin2 = r_hist.GetBinContent(x, y)
-            bin2err = r_hist.GetBinError(x, y)
 
+            # Proper Poisson error
+            bin1err, bin2err = get_errors(bin1, bin2)
+            
             # Count bins for chi2 calculation
             nBins += 1
 
@@ -246,6 +247,36 @@ def pull(bin1, binerr1, bin2, binerr2):
     pull = ((bin1 - bin2))/((binerr1**2 + binerr2**2)**(0.5))
 
     return pull
+
+def get_errors(bin1, bin2):
+
+    '''
+        bin1 = data
+        bin2 = reference
+
+    '''
+    
+    alpha = 1-0.6827
+
+    if bin1 == 0:
+        m_error1 = 0
+    else:
+        m_error1 = ROOT.Math.gamma_quantile(alpha/2, bin1, 1)
+        p_error1 = ROOT.Math.gamma_quantile_c(alpha/2, bin1+1, 1)
+    if bin2 == 0:
+        m_error2 = 0
+    else:
+        m_error2 = ROOT.Math.gamma_quantile(alpha/2, bin2, 1)
+        p_error2 = ROOT.Math.gamma_quantile_c(alpha/2, bin2+1, 1)
+
+    if bin1 > bin2:
+        bin1err = bin1 - m_error1
+        bin2err = p_error2 - bin2
+    else:
+        bin2err = bin2 - m_error2
+        bin1err = p_error1 - bin1
+
+    return bin1err, bin2err
 
 # End Analysis Functions ------
 
