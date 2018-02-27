@@ -101,7 +101,7 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def get_runs(year, sample):
+def get_runs(limit, year, sample):
 
     # Progress bar
     from tqdm import tqdm
@@ -132,7 +132,9 @@ def get_runs(year, sample):
             run = split_link.split("_")[2]
             run = run.split("R000")[-1]
             runs.append(int(run))
-
+            if len(runs) == limit:
+                return sorted(runs, reverse=True)
+        
     return sorted(runs, reverse=True)
 
 # Check to ensure config file is properly set up, compile into smaller root file with only subsystem-related histograms
@@ -202,7 +204,7 @@ def compile(run, config, targ_dir, f, new_f):
 
     # Update config with new name_out's
     config["hists"] = hists
-    with open("{0}/configs.json".format(os.getcwd()), "w") as fhout:
+    with open("{0}/data/configs.json".format(main_dir), "w") as fhout:
         json.dump(config, fhout, sort_keys = True, indent = 4, separators = (',', ':'))
 
     f.Close()
@@ -214,13 +216,16 @@ def fetch(run, sample, targ_dir):
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
+    # Path to directory containing all data
+    main_dir = os.path.dirname(os.path.dirname(main_dir))
+
     # Load configs
-    with open("{0}/configs.json".format(os.getcwd())) as config_file:
+    with open("{0}/data/configs.json".format(main_dir)) as config_file:
         config = json.load(config_file)
     year = config["year"]
 
     # Get list of files already in database
-    db_dir = "{0}/database/Run{1}/{2}".format(os.getcwd(), year, sample)
+    db_dir = "{0}/data/database/Run{1}/{2}".format(main_dir, year, sample)
     dbase = os.listdir(db_dir)
 
     # Download file if not already in database
@@ -270,4 +275,4 @@ def fetch(run, sample, targ_dir):
 
 if __name__=='__main__':
     # fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
-    get_runs(year="2017", sample="SingleMuon")
+    print(get_runs(limit=20, year="2017", sample="SingleMuon"))
