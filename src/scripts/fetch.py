@@ -217,7 +217,7 @@ def fetch(run, sample, targ_dir):
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Path to directory containing all data
-    main_dir = os.path.dirname(os.path.dirname(main_dir))
+    main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
     # Load configs
     with open("{0}/data/configs.json".format(main_dir)) as config_file:
