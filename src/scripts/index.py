@@ -13,7 +13,7 @@ import AutoDQM
 times = {}
 cur_dir = os.getcwd()
 
-# Path to directory containing all data
+# Path to root directory
 main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
 # Recursively find unique name for function call
@@ -46,11 +46,54 @@ def compile_hists(new_file):
     f = ROOT.TFile.Open(new_file)
     hists = {}
 
-    h_list = ROOT.gDirectory.GetListOfKeys()
+    # Load config
+    with open("{0}/configs.json".format(os.getcwd())) as config_file:
+        config = json.load(config_file)
+    h_list = config["hists"]
+    main_gdir = config["main_gdir"]
 
-    for h in h_list:
-        hists[h.GetName()] = h.ReadObj()
-        hists[h.GetName()].SetDirectory(0)
+    for h_obj in h_list:
+        # Get name of hist in root file
+        h = h_obj["path"].split("/")[-1]
+        # Get parent directory of hist
+        gdir = h_obj["path"].split(h)[0]
+        # Get configured name of hist if any
+        name_out = h_obj["name_out"]
+
+        # Get keys of directory (for wildcard)
+        keys = f.GetDirectory("{0}{1}".format(main_gdir, gdir))
+        h_map = []
+        # Populate map of hists for wildcard search
+        for key in keys.GetListOfKeys():
+            h_map.append(key.GetName())
+
+        # Wildcard search
+        if "*" in h:
+            # Check entire directory for files matching wildcard
+            for name in h_map:
+                if h.split("*")[0] in name:
+                    # Retrieve hist
+                    new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, name))
+                    if new_hist:
+                        # Rename hist if output name given
+                        if name_out:
+                            new_hist.SetName(name_out)
+                        hists[new_hist.GetName()] = new_hist
+                    else:
+                        continue
+        # Normal search
+        else:
+            # Retrieve hist
+            new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, h))
+            if new_hist:
+                if new_hist:
+                    # Rename hist if output name given
+                    if name_out:
+                        new_hist.SetName(name_out)
+                    hists[new_hist.GetName()] = new_hist
+                else:
+                    continue
+
 
     f.Close()
 
