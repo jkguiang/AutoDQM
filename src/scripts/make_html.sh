@@ -1,7 +1,7 @@
 #!/bin/sh
 pardir="$(dirname "$PWD")"
 parpardir="$(dirname "$pardir")"
-main_dir=parpardir/data
+main_dir=$parpardir/data
 
 #Takes all .pdf's from pdf_dir and converts them to .png's at png_dir
 pdf_to_png(){
