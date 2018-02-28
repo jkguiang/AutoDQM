@@ -137,79 +137,6 @@ def get_runs(limit, year, sample):
         
     return sorted(runs, reverse=True)
 
-# Check to ensure config file is properly set up, compile into smaller root file with only subsystem-related histograms
-def compile(run, config, targ_dir, f, new_f):
-
-    # Load configs
-    main_gdir = config["main_gdir"].format(run)
-    hists = config["hists"]
-
-    # Loop over all histograms, compile into smaller root file
-    for hist in hists:
-        # Clear new_hist variable - loop checks for existence of new_hist to determine success
-        new_hist = None
-
-        # Get output name for histogram (if "" or None, name of hist is not changed)
-        name_out = hist["name_out"]
-
-        # Get name of hist
-        h = hist["path"].split("/")[-1]
-        # Get path to hist
-        gdir = hist["path"].split(h)[0]
-
-        # Reset current directory to f
-        f.cd()
-
-        # Generate map of histograms for wildcard searches:
-        # Get keys of directory
-        keys = f.GetDirectory("{0}{1}".format(main_gdir, gdir))
-        h_map = []
-        # Populate map
-        for key in keys.GetListOfKeys():
-            h_map.append(key.GetName())
-
-        # Wildcard search
-        if "*" in h:
-            # Check entire directory for files matching wildcard
-            for name in h_map:
-                if h.split("*")[0] in name:
-                    new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, name))
-                    if new_hist:
-                        # Rename hist if output name given
-                        if name_out:
-                            new_hist.SetName(name_out)
-                        else:
-                            hist["name_out"] = new_hist.GetName()
-                        new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "update")
-                        new_f.cd()
-                        new_hist.Write()
-                        new_f.Close()
-                    else:
-                        return False, "File not found: {0}".format(hist)
-        # Normal search
-        else:
-            new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, h))
-            if new_hist:
-                # Rename hist if output name given
-                if name_out:
-                    new_hist.SetName(name_out)
-                else:
-                    hist["name_out"] = new_hist.GetName()
-                new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "update")
-                new_f.cd()
-                new_hist.Write()
-                new_f.Close()
-            else:
-                return False, "File not found: {0}".format(hist)
-
-    # Update config with new name_out's
-    config["hists"] = hists
-    with open("{0}/data/configs.json".format(main_dir), "w") as fhout:
-        json.dump(config, fhout, sort_keys = True, indent = 4, separators = (',', ':'))
-
-    f.Close()
-    return True, None
-
 def fetch(run, sample, targ_dir):
 
     # Silence ROOT warnings
@@ -254,25 +181,8 @@ def fetch(run, sample, targ_dir):
         if not found:
             return False, "File not found: {0}".format(run)
 
-        #Retrieve downloaded file from database
-        f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
-
-    # Retrieve file from database
-    else:
-        f = ROOT.TFile.Open("{0}/{1}.root".format(db_dir, run))
-
-    # Compile root file into smaller root file ONLY if user passes in a target directory
-    if targ_dir:
-        # Create new .root file to be compiled, recreate if it alread exists
-        new_f = ROOT.TFile("{0}/{1}.root".format(targ_dir, run), "recreate")
-        new_f.Close()
-
-        # Check configs.json to make sure all histogram objects exist, compile into smaller .root file
-        return(compile(run, config, targ_dir, f, new_f))
-    else:
-        f.Close()
         return True, None
 
 if __name__=='__main__':
     # fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
-    print(get_runs(limit=20, year="2017", sample="SingleMuon"))
+    print(get_runs(limit=5, year="2017", sample="SingleMuon"))
