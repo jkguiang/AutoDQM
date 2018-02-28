@@ -58,8 +58,6 @@
                                     <label for="sample_list">Name</label>
                                     <select class="form-control" id="sample_list">
                                         <option value="none">Select Sample</option>
-                                        <option value="SingleMuon">SingleMuon</option>
-                                        <option value="Cosmics">Cosmics</option>
                                     </select>
                                 </div>
                             </div>
