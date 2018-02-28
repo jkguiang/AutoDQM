@@ -10,7 +10,7 @@ cd /cvmfs/cms.cern.ch/slc6_amd64_gcc530/cms/cmssw/CMSSW_9_2_8; eval `/cvmfs/cms.
 
 pardir="$(dirname "$PWD")"
 parpardir="$(dirname "$pardir")"
-main_dir=parpardir/data
+main_dir=$parpardir/data
 if [[ "$1" == "retrieve_data" || "$1" == "retrieve_ref" || "$1" == "process" ]] ; then
     if [[ "$1" == "retrieve_data" ]] ; then
         shift
@@ -41,13 +41,13 @@ elif [[ "$1" == "search" ]] ; then
     shift
     python search.py "$*"
 elif [[ "$1" == "refresh" ]] ; then
-    if ! [[ -e db_map.json ]] ; then
-        touch db_map.json
+    if ! [[ -e $main_dir/db_map.json ]] ; then
+        touch $main_dir/db_map.json
     fi
     shift
     shift
     python database.py map
-    chmod 755 db_map.json
+    chmod 755 $main_dir/db_map.json
 else
     echo 'Invalid command.'
     exit 1
