@@ -74,23 +74,35 @@ def build_db():
     samples = config["samples"]
     year = config["year"]
 
+    # Build directory structure
+    db_dir = "{0}/data/database/run{1}".format(main_dir, year)
+    if not os.path.isdir(db_dir)
+    os.mkdir(db_dir, 0755)
+
     print("Building database...")
     files_found = 0
     for sample in tqdm(samples):
-        print("Retrieving list of runs...")
+        # Make directory for sample
+        sample_dir = "{0}/data/database/Run{1}/{0}".format(main_dir, sample)
+        os.mkdir(sample_dir)
+
+        # Get list of runs
+        tqdm.write("Retrieving list of runs...")
         runs = fetch.get_runs(limit, str(year), sample)
-        print("\n\n\nRetrieved list of runs. There are {0} files available for download.".format(len(runs)))
-        print("Downloading files...")
+        tqdm.write("Retrieved list of runs.")
+
+        # Fetch runs
+        tqdm.write("Downloading files...")
         for i in tqdm(range(0, limit)):
             run = runs[i]
-            is_success, fail_reason = fetch.fetch(str(run), sample, "")
+            is_success, fail_reason = fetch.fetch(str(run), sample)
             if not is_success:
-                print("ERROR: {0}".format(fail_reason))
+                tqdm.write("ERROR: {0}".format(fail_reason))
                 return
             else:
                 files_found += 1
 
-        print("\n\nFinished combing {0}. Found: {1}/{2}".format(sample, files_found, limit))
+        tqdm.write("Finished combing {0}. Found: {1}/{2}".format(sample, files_found, limit))
     print("Finished building database.")
     return
 
