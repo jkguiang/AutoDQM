@@ -16,6 +16,13 @@ cur_dir = os.getcwd()
 # Path to root directory
 main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
+# Load config
+with open("{0}/data/configs.json".format(main_dir)) as config_file:
+    config = json.load(config_file)
+h_list = config["hists"]
+year = config["year"]
+main_gdir = config["main_gdir"]
+
 # Recursively find unique name for function call
 def get_name(name, counter):
     new_name = name + str(counter)
@@ -41,18 +48,14 @@ def get_response(t0, status, fail_reason, query, payload):
 
 
 @timer
-def compile_hists(new_file):
+def compile_hists(new_file, run):
 
     f = ROOT.TFile.Open(new_file)
     hists = {}
 
-    # Load config
-    with open("{0}/configs.json".format(os.getcwd())) as config_file:
-        config = json.load(config_file)
-    h_list = config["hists"]
-    main_gdir = config["main_gdir"]
-
     for h_obj in h_list:
+        # Clear new_hist variable - loop checks for existence of new_hist to determine success
+        new_hist = None
         # Get name of hist in root file
         h = h_obj["path"].split("/")[-1]
         # Get parent directory of hist
@@ -61,7 +64,7 @@ def compile_hists(new_file):
         name_out = h_obj["name_out"]
 
         # Get keys of directory (for wildcard)
-        keys = f.GetDirectory("{0}{1}".format(main_gdir, gdir))
+        keys = f.GetDirectory("{0}{1}".format(main_gdir.format(run), gdir))
         h_map = []
         # Populate map of hists for wildcard search
         for key in keys.GetListOfKeys():
@@ -104,9 +107,10 @@ def check(is_success, fail_reason):
     else: return None
 
 @timer
-def get_hists(fdir, rdir, data_id, ref_id, user_id):
-    f_hists = compile_hists("{0}/{1}.root".format(fdir, data_id))
-    r_hists = compile_hists("{0}/{1}.root".format(rdir, ref_id))
+#OLD: def get_hists(fdir, rdir, data_id, ref_id, user_id):
+def get_hists(db_dir, data_id, ref_id, user_id):
+    f_hists = compile_hists("{0}/{1}.root".format(db_dir, data_id), data_id)
+    r_hists = compile_hists("{0}/{1}.root".format(db_dir, ref_id), ref_id)
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "setup", user_id])
 
@@ -122,22 +126,23 @@ def handle_args(args):
     is_success = False
     fail_reason = None
 
-    try:
-        if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"], "{0}/data/{1}".format(main_dir, args["user_id"]))
-            check(is_success, fail_reason)
-        elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"], "{0}/ref/{1}".format(main_dir, args["user_id"]))
-            check(is_success, fail_reason)
+    # try:
+    if args["type"] == "retrieve_data":
+        is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"])
+        check(is_success, fail_reason)
+    elif args["type"] == "retrieve_ref":
+        is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"])
+        check(is_success, fail_reason)
 
-        elif args["type"] == "process":
-            # Root files should now be in data and ref directories
-            is_success, fail_reason = get_hists("{0}/data/{1}".format(main_dir, args["user_id"]), "{0}/ref/{1}".format(main_dir, args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
-            check(is_success, 'get_hists')
+    elif args["type"] == "process":
+        # Root files should now be in data and ref directories
+        # is_success, fail_reason = get_hists("{0}/data/{1}".format(main_dir, args["user_id"]), "{0}/ref/{1}".format(main_dir, args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
+        is_success, fail_reason = get_hists("{0}/data/database/Run{1}/{2}".format(main_dir, year, args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
+        check(is_success, 'get_hists')
 
-    except Exception as error:
-        fail_reason = str(error)
-        return is_success, fail_reason
+    # except Exception as error:
+    #     fail_reason = str(error)
+    #     return is_success, fail_reason
 
     return is_success, fail_reason
 
