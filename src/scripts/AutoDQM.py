@@ -3,8 +3,11 @@ import os
 import sys
 import json
 
+# Path to directory containing all data
+main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
+
 # Load configs
-with open("{0}/configs.json".format(os.getcwd())) as config_file:
+with open("{0}/data/configs.json".format(main_dir)) as config_file:
     config = json.load(config_file)
 hists = config["hists"]
 # Global variables to be filled by fill_vars
@@ -14,9 +17,6 @@ pull_cut = None
 ks_cut = None 
 min_entries = None
 always_draw = None
-
-# Path to directory containing all data
-main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
 def fill_vars(hist):
     # Retrieve global variables
@@ -286,7 +286,6 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
-
 
     max_1D = 0
     max_2D = 0
