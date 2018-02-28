@@ -137,7 +137,7 @@ def get_runs(limit, year, sample):
         
     return sorted(runs, reverse=True)
 
-def fetch(run, sample, targ_dir):
+def fetch(run, sample):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -180,8 +180,13 @@ def fetch(run, sample, targ_dir):
 
         if not found:
             return False, "File not found: {0}".format(run)
-
+        
         return True, None
+
+    # Return if already in database
+    else:
+        return True, None
+
 
 if __name__=='__main__':
     # fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
