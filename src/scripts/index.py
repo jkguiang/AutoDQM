@@ -76,30 +76,30 @@ def compile_hists(new_file, run):
             for name in h_map:
                 if h.split("*")[0] in name:
                     # Retrieve hist
-                    new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, name))
+                    new_hist = f.Get("{0}{1}{2}".format(main_gdir.format(run), gdir, name))
                     if new_hist:
                         # Rename hist if output name given
                         if name_out:
                             new_hist.SetName(name_out)
                         hists[new_hist.GetName()] = new_hist
+                        hists[new_hist.GetName()].SetDirectory(0)
                     else:
                         continue
         # Normal search
         else:
             # Retrieve hist
-            new_hist = f.Get("{0}{1}{2}".format(main_gdir, gdir, h))
+            new_hist = f.Get("{0}{1}{2}".format(main_gdir.format(run), gdir, h))
             if new_hist:
                 if new_hist:
                     # Rename hist if output name given
                     if name_out:
                         new_hist.SetName(name_out)
                     hists[new_hist.GetName()] = new_hist
+                    hists[new_hist.GetName()].SetDirectory(0)
                 else:
                     continue
 
-
     f.Close()
-
     return hists
 
 def check(is_success, fail_reason):
@@ -107,7 +107,6 @@ def check(is_success, fail_reason):
     else: return None
 
 @timer
-#OLD: def get_hists(fdir, rdir, data_id, ref_id, user_id):
 def get_hists(db_dir, data_id, ref_id, user_id):
     f_hists = compile_hists("{0}/{1}.root".format(db_dir, data_id), data_id)
     r_hists = compile_hists("{0}/{1}.root".format(db_dir, ref_id), ref_id)
@@ -126,23 +125,21 @@ def handle_args(args):
     is_success = False
     fail_reason = None
 
-    # try:
-    if args["type"] == "retrieve_data":
-        is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"])
-        check(is_success, fail_reason)
-    elif args["type"] == "retrieve_ref":
-        is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"])
-        check(is_success, fail_reason)
+    try:
+        if args["type"] == "retrieve_data":
+            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"])
+            check(is_success, fail_reason)
+        elif args["type"] == "retrieve_ref":
+            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"])
+            check(is_success, fail_reason)
 
-    elif args["type"] == "process":
-        # Root files should now be in data and ref directories
-        # is_success, fail_reason = get_hists("{0}/data/{1}".format(main_dir, args["user_id"]), "{0}/ref/{1}".format(main_dir, args["user_id"]), args["data_info"], args["ref_info"], args["user_id"])
-        is_success, fail_reason = get_hists("{0}/data/database/Run{1}/{2}".format(main_dir, year, args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
-        check(is_success, 'get_hists')
+        elif args["type"] == "process":
+            is_success, fail_reason = get_hists("{0}/data/database/Run{1}/{2}".format(main_dir, year, args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
+            check(is_success, 'get_hists')
 
-    # except Exception as error:
-    #     fail_reason = str(error)
-    #     return is_success, fail_reason
+    except Exception as error:
+        fail_reason = str(error)
+        return is_success, fail_reason
 
     return is_success, fail_reason
 
