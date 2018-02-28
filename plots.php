@@ -77,9 +77,9 @@
 
                 $cwd = getcwd();
 
-                $pdf_path = ("src/pdfs/" . $user_id . "/");
-                $png_path = ("src/pngs/" . $user_id . "/");
-                $txt_path = ("src/txts/" . $user_id . "/");
+                $pdf_path = ("data/pdfs/" . $user_id . "/");
+                $png_path = ("data/pngs/" . $user_id . "/");
+                $txt_path = ("data/txts/" . $user_id . "/");
 
                 $pdfs = scandir($cwd . "/" . $pdf_path);
                 $pngs = scandir($cwd . "/" . $png_path);
