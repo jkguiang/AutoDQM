@@ -301,11 +301,13 @@ def get_errors(bin1, bin2):
 
     if bin1 == 0:
         m_error1 = 0
+        p_error1 = ROOT.Math.gamma_quantile_c(alpha/2, bin1+1, 1)
     else:
         m_error1 = ROOT.Math.gamma_quantile(alpha/2, bin1, 1)
         p_error1 = ROOT.Math.gamma_quantile_c(alpha/2, bin1+1, 1)
     if bin2 == 0:
         m_error2 = 0
+        p_error2 = ROOT.Math.gamma_quantile_c(alpha/2, bin2+1, 1)
     else:
         m_error2 = ROOT.Math.gamma_quantile(alpha/2, bin2, 1)
         p_error2 = ROOT.Math.gamma_quantile_c(alpha/2, bin2+1, 1)
