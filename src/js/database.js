@@ -233,6 +233,16 @@ $(function() {
     });
 
     // Drop menu
+    // Populate sample list with values from configs.json
+    $.getJSON("data/configs.json", function(json) {
+        samples = json["samples"];
+        for ( var i = 0; i < samples.length; i++ ) {
+            $("#sample_list").append($("<option>", {
+                value: i,
+                text: samples[i]
+            }));
+        }
+    });
     $("#sample_list").val("none");
     $("#sample_list").on('change', function() {
         // Store current sample (global variable)
