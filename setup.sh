@@ -1,7 +1,7 @@
 main_dir=${PWD}/data
 
 # Build required directories
-req_dirs=( ${main_dir}/data ${main_dir}/ref ${main_dir}/pdfs ${main_dir}/pngs ${main_dir}/txts ${main_dir}/temp ${main_dir}/database )
+req_dirs=( ${main_dir}/pdfs ${main_dir}/pngs ${main_dir}/txts ${main_dir}/database )
 for dir in "${req_dirs[@]}" ; do
     if ! [[ -e $dir ]] ; then
         mkdir $dir

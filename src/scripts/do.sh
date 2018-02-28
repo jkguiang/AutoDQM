@@ -12,27 +12,6 @@ pardir="$(dirname "$PWD")"
 parpardir="$(dirname "$pardir")"
 main_dir=$parpardir/data
 if [[ "$1" == "retrieve_data" || "$1" == "retrieve_ref" || "$1" == "process" ]] ; then
-    if [[ "$1" == "retrieve_data" ]] ; then
-        shift
-        if [[ -e $main_dir/data/$1 ]] ; then
-            rm $main_dir/data/$1/*
-        else
-            mkdir $main_dir/data/$1
-            chmod 755 -R $main_dir/data/$1
-        fi
-    fi
-    if [[ "$1" == "retrieve_ref" ]] ; then
-        shift
-        if [[ -e $main_dir/ref/$1 ]] ; then
-            rm $main_dir/ref/$1/*
-        else
-            mkdir $main_dir/ref/$1
-            chmod 755 -R $main_dir/ref/$1
-        fi
-    fi
-    if [[ "$1" == "process" ]] ; then
-        shift
-    fi
     shift
     python index.py "$*"
 
