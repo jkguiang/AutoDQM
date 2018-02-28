@@ -17,6 +17,7 @@ pull_cut = None
 ks_cut = None 
 min_entries = None
 always_draw = None
+norm_type = None
 
 def fill_vars(hist):
     # Retrieve global variables
@@ -26,6 +27,7 @@ def fill_vars(hist):
     global ks_cut
     global min_entries
     global always_draw
+    global norm_type
 
     # Fill global variables from config
     chi2_cut = hist["chi2_cut"]
@@ -130,10 +132,10 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(main_dir, targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/data/pdfs/{1}/{2}_D{3}R{4}.pdf".format(main_dir, targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(main_dir, targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/data/txts/{1}/{2}_D{3}R{4}.txt".format(main_dir, targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Max Pull Value: {0}\n".format(max_pull),
                             "Chi^2: {0}\n".format(chi2),
@@ -222,10 +224,10 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/pdfs/{1}/{2}_D{3}R{4}.pdf".format(main_dir, targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/data/pdfs/{1}/{2}_D{3}R{4}.pdf".format(main_dir, targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/txts/{1}/{2}_D{3}R{4}.txt".format(main_dir, targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/data/txts/{1}/{2}_D{3}R{4}.txt".format(main_dir, targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Data Entries: {0}\n".format(int(f_hist.GetEntries())), 
                             "Reference Entries: {0}\n".format(int(r_hist.GetEntries()))])
@@ -236,6 +238,45 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 # End Comparison Plots
 
 # Analysis Functions ------
+def normalize_rows(f_hist, r_hist):
+
+    for y in range(1, r_hist.GetNbinsY()+1):
+
+        # Stores sum of row elements
+        rrow = 0
+        frow = 0
+
+        # Sum over row elements
+        for x in range(1, r_hist.GetNbinsX()+1):
+
+            # Bin data
+            rbin = r_hist.GetBinContent(x, y)
+            fbin = f_hist.GetBinContent(x, y)
+            
+            rrow += rbin
+            frow += fbin
+
+        # Scaling factors
+        # Prevent divide-by-zero error
+        if frow == 0:
+            frow = 1
+        sf = float(rrow)/frow
+        # Prevent scaling everything to zero
+        if sf == 0:
+            sf = 1
+
+        # Normalization
+        for x in range(1, f_hist.GetNbinsX()+1):
+            # Bin data
+            fbin = f_hist.GetBinContent(x, y)
+            fbin_err = f_hist.GetBinError(x, y)
+
+            # Normalize bin
+            f_hist.SetBinContent(x, y, (fbin * sf))
+            f_hist.SetBinError(x, y, (fbin_err * sf))
+
+    return
+
 def pull(bin1, binerr1, bin2, binerr2):
 
     '''
@@ -330,13 +371,13 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     ks_1D.GetYaxis().SetTitle("Entries")
 
     ks_1D.Draw("hist")
-    C.SaveAs("{0}/pdfs/{1}/ks_1D.pdf".format(main_dir, targ_dir))
+    C.SaveAs("{0}/data/pdfs/{1}/ks_1D.pdf".format(main_dir, targ_dir))
 
     chi2_2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_2D.GetYaxis().SetTitle("Entries")
 
     chi2_2D.Draw("hist")
-    C.SaveAs("{0}/pdfs/{1}/chi2_2D.pdf".format(main_dir, targ_dir))
+    C.SaveAs("{0}/data/pdfs/{1}/chi2_2D.pdf".format(main_dir, targ_dir))
 
     return
 
