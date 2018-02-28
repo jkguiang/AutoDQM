@@ -238,7 +238,7 @@ $(function() {
         samples = json["samples"];
         for ( var i = 0; i < samples.length; i++ ) {
             $("#sample_list").append($("<option>", {
-                value: i,
+                value: samples[i],
                 text: samples[i]
             }));
         }
