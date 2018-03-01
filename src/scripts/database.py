@@ -83,7 +83,7 @@ def build_db():
     files_found = 0
     for sample in tqdm(samples):
         # Make directory for sample
-        sample_dir = "{0}/data/database/Run{1}/{0}".format(main_dir, year, sample)
+        sample_dir = "{0}/data/database/Run{1}/{2}".format(main_dir, year, sample)
         if not os.path.isdir(sample_dir):
             os.mkdir(sample_dir)
 
