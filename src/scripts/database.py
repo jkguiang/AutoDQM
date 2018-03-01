@@ -76,15 +76,16 @@ def build_db():
 
     # Build directory structure
     db_dir = "{0}/data/database/run{1}".format(main_dir, year)
-    if not os.path.isdir(db_dir)
-    os.mkdir(db_dir, 0755)
+    if not os.path.isdir(db_dir):
+        os.mkdir(db_dir, 0755)
 
     print("Building database...")
     files_found = 0
     for sample in tqdm(samples):
         # Make directory for sample
         sample_dir = "{0}/data/database/Run{1}/{0}".format(main_dir, sample)
-        os.mkdir(sample_dir)
+        if not os.path.isdir(sample_dir):
+            os.mkdir(sample_dir)
 
         # Get list of runs
         tqdm.write("Retrieving list of runs...")
