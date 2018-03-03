@@ -10,19 +10,6 @@ for dir in "${req_dirs[@]}" ; do
     fi
 done
 
-# Build database
-db=${main_dir}/database
-new_db=$false
-db_dirs=( ${db}/Run2017 ${db}/Run2017/SingleMuon ${db}/Run2017/Cosmics )
-for dir in "${db_dirs[@]}" ; do
-    if ! [[ -e $dir ]] ; then
-        new_db=$true
-        mkdir $dir
-        chmod -R 755 $dir
-	echo "Created $dir"
-    fi
-done
-
 cd ${PWD}/src/scripts
 
 if [[ ${new_db} == $true ]] ; then
