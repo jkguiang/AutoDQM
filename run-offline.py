@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from subprocess import call
 from json import dumps
 import os
@@ -11,7 +14,7 @@ def autodqm_offline(sample, data_run, ref_run):
         'sample': 'SingleMuon',
         'data_info': data_run,
         'ref_info': ref_run,
-        'user_id': 'offline',
+        'user_id': 'offline'
     }
 
     # Change to source directory
@@ -66,7 +69,5 @@ if __name__ == '__main__':
     copy_files('./data/pdfs/offline/', args.output + '/pdfs')
     copy_files('./data/pngs/offline/', args.output + '/pngs')
     copy_files('./data/txts/offline/', args.output + '/txts')
-    
+
     print("Results are available in the {0}".format(args.output))
-
-
