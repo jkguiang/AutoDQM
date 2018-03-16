@@ -29,14 +29,15 @@ def fill_vars(hist):
     global always_draw
     global norm_type
 
-    # Fill global variables from config
-    chi2_cut = hist["chi2_cut"]
-    pull_cap = hist["pull_cap"]
-    pull_cut = hist["pull_cut"]
-    ks_cut = hist["ks_cut"]
-    min_entries = hist["min_entries"]
-    always_draw = hist["always_draw"]
-    norm_type = hist["norm_type"]
+    # Fill global variables from config or with defaults
+    chi2_cut = hist.get("chi2_cut", 500)
+    pull_cap = hist.get("pull_cap", 25)
+    pull_cut = hist.get("pull_cut", 20)
+    ks_cut = hist.get("ks_cut", 0.09)
+    min_entries = hist.get("min_entries", 100000)
+    always_draw = hist.get("always_draw", False)
+    norm_type = hist.get("norm_type", 'all')
+
     return
 
 # Parsing Functions -------

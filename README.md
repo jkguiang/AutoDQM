@@ -56,3 +56,14 @@ Clone this repository and move its contents to a public html directory, then run
 1. Select one of the automatically updated data sets
 2. Use the radio menu to channel selection into either the data or reference form
 3. Click the "Submit" button
+
+## Using AutoDQM Offline
+
+The `./run-offline.py` script can retrieve run data files and process them without needing a web server. Run `./run-offline.py --help` for all the options.
+
+1. Clone this repository into a machine with grid access
+2. Set up AutoDQM with `./setup.sh`
+3. Establish a voms proxy with `voms-proxy-init`
+4. Use `./run-offline.py` to process data with AutoDQM
+
+
