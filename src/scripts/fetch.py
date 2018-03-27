@@ -58,10 +58,6 @@ class HTMLParserRuns(HTMLParser):
         self.links = []
         self.timestamps = []
 
-def get_proxy_file():
-    cert_file = '/tmp/x509up_u%s' % str(os.getuid())
-    return cert_file
-
 def hsv_to_rgb(h, s, v):
     if s == 0.0: v*=255; return [v, v, v]
     i = int(h*6.)
@@ -73,27 +69,31 @@ def hsv_to_rgb(h, s, v):
     elif i == 4: return [t, p, v]
     elif i == 5: return [v, p, q]
 
+def get_cert_curl():
+    c = pycurl.Curl()
+    # cms voms member host certificate to authenticate adqm to cmsweb.cern.ch, defaults to voms-proxy-init certificate
+    c.setopt(pycurl.SSLCERT, os.getenv('ADQM_SSLCERT', '/tmp/x509up_u%s' % str(os.getuid())))
+    # cms voms member host certificate key
+    if 'ADQM_SSLKEY' in os.environ:
+        c.setopt(pycurl.SSLKEY, os.getenv('ADQM_SSLKEY'))
+    # cern root ca to verify cmsweb.cern.ch
+    if 'ADQM_CERNCA' in os.environ:
+        c.setopt(pycurl.CAINFO, os.getenv('ADQM_CERNCA'))
+    return c
+
 def get_url_with_cert(url):
     b = StringIO.StringIO() 
-    c = pycurl.Curl() 
-    cert = get_proxy_file()
+    c = get_cert_curl() 
     c.setopt(pycurl.WRITEFUNCTION, b.write) 
-    c.setopt(pycurl.CAPATH, '/etc/grid-security/certificates') 
-    c.unsetopt(pycurl.CAINFO)
-    c.setopt(pycurl.SSLCERT, cert)
     c.setopt(pycurl.URL, url) 
     c.perform() 
     content = b.getvalue()
     return content
 
 def get_file_with_cert(url, fname_out):
-    c = pycurl.Curl() 
-    cert = get_proxy_file()
-    c.setopt(pycurl.CAPATH, '/etc/grid-security/certificates') 
+    c = get_cert_curl() 
     c.setopt(pycurl.URL, url)
-    c.setopt(pycurl.SSLCERT, cert)
     c.setopt(pycurl.FOLLOWLOCATION, 1)
-    c.unsetopt(pycurl.CAINFO)
     c.setopt(pycurl.NOPROGRESS, 1)
     c.setopt(pycurl.MAXREDIRS, 5)
     c.setopt(pycurl.NOSIGNAL, 1)
