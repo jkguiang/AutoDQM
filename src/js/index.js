@@ -1,46 +1,19 @@
 
 // Global variables
 var t0 = 0;
-var cur_sample = "none"; /* So script knows what sample is selected */
-var data_info = ""; /* To be sent with query */
-var ref_info = ""; /* To be sent with query */
-var prefix = ""; /* Sample name that is placed in front of dataset name */
-
-// Form functions
-function updt_sample() {
-
-    if (cur_sample == "SingleMuon" || cur_sample == "Cosmics") {
-        data_info = document.getElementById(cur_sample + "_dataInput").value;
-        ref_info = document.getElementById(cur_sample + "_refInput").value;
-        prefix = cur_sample;
-    }
-    check_input();
-}
 
 function check_input() {
-    var passed = true;
+    var filled =
+        $("#select-series").val() != "" &&
+        $("#select-sample").val() != "" &&
+        $("#select-data-run").val() != "" &&
+        $("#select-ref-run").val() != "";
 
-    // Sample form filled
-    if (cur_sample == "SingleMuon" || cur_sample == "Cosmics") {
-        if  (document.getElementById(cur_sample + "_dataInput").value != "" && document.getElementById(cur_sample + "_refInput").value != "") {
-            $("#sample_chk").attr('class', 'list-group-item list-group-item-success')
-        }
-
-        else {
-            $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
-            passed = false;
-        }
-    }
-    if (cur_sample == "none") {
-        $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
-        passed = false;
-    }
-
-    // Toggle submit button
-    if (passed) {
+    if(filled) {
+        $("#sample_chk").attr('class', 'list-group-item list-group-item-success');
         $("#submit").removeAttr('disabled');
-    }
-    else {
+    } else {
+        $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
         $("#submit").attr('disabled', 'disabled');
     }
 }
@@ -54,7 +27,7 @@ function pass_object(new_object) {
 }
 
 function handle_response(response) {
-    console.log(response); 
+    console.log(response);
     console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
     try {
         // Handle output from main.py
@@ -68,14 +41,12 @@ function handle_response(response) {
             $("#internal_err").text(resp["fail_reason"]);
             $("#submit").show();
             $("#internal_err").show();
-        }                            
+        }
 
         else {
-            if (cur_sample == "SingleMuon" || cur_sample == "Cosmics") {
-                localStorage["data"] = response["query"]["data_info"];
-                localStorage["ref"] = response["query"]["ref_info"];
-                localStorage["user_id"] = response["query"]["user_id"];
-            }
+            localStorage["data"] = response["query"]["data_info"];
+            localStorage["ref"] = response["query"]["ref_info"];
+            localStorage["user_id"] = response["query"]["user_id"];
             reduced_resp = [localStorage["data"], localStorage["ref"], localStorage["user_id"]];
             pass_object(reduced_resp);
             $("#finished").show();
@@ -86,7 +57,7 @@ function handle_response(response) {
         console.log(response["responseText"]);
         var resp_txt = response["responseText"];
         var err_msg = "";
-        
+
         console.log(resp_txt.indexOf("504"));
         if (resp_txt.indexOf("504") <= -1) {
             err_msg = "Error: Gateway timed out. Could not reach server."
@@ -108,7 +79,7 @@ function handle_response(response) {
 }
 
 function handle_processes(response) {
-    console.log(response); 
+    console.log(response);
     console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
 
     try {
@@ -125,7 +96,7 @@ function handle_processes(response) {
             $("#internal_err").text(resp["fail_reason"]);
             $("#submit").show();
             $("#internal_err").show();
-        }                            
+        }
 
         else if (response["query"]["type"] == "retrieve_data") {
             console.log("data retrieved");
@@ -198,14 +169,10 @@ function get_search(external_query) {
     if (new_query["sample"] == "SingleMuon") {
         $("#SingleMuon_dataInput").val(new_query["data_info"]);
         $("#SingleMuon_refInput").val(new_query["ref_info"]);
-        prefix = "SingleMuon";
-    
     }
     if (new_query["sample"] == "Cosmics") {
         $("#Cosmics_dataInput").val(new_query["data_info"]);
         $("#Cosmics_refInput").val(new_query["ref_info"]);
-        prefix = "Cosmics";
-    
     }
     check_input();
     updt_sample();
@@ -222,7 +189,7 @@ function get_search(external_query) {
 // Main function
 $(function() {
     console.log(localStorage);
-    
+
     // Initital hides
     $("#load").hide();
     $("#load_msg").hide();
@@ -240,8 +207,6 @@ $(function() {
         $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"], localStorage["user_id"]]));
     }
 
-    // If user refreshes after a search has failed, ensures that all form info will be properly stored
-    check_input();
 
     // Prevent 'enter' key from submitting forms (gives 404 error with full data set name form)
     $(window).keydown(function(event) {
@@ -251,40 +216,19 @@ $(function() {
         }
     });
 
-    // Select menu functions
-    // Populate sample list with values from configs.json
-    $.getJSON("data/configs.json", function(json) {
-        samples = json["samples"];
-        for ( var i = 0; i < samples.length; i++ ) {
-            $("#sample_list").append($("<option>", {
-                value: samples[i],
-                text: samples[i]
-            }));
-        }
+    $('select').selectize({
+        create: true,
+        createOnBlur: true,
+        onChange: check_input
     });
-    $("#sample_list").val("none");
-    $("#sample_list").on('change', function() {
-        // Store current sample (global variable)
-        cur_sample = this.value;
-        prefix = this.value;
 
-        // Reset fields
-        if (cur_sample != "none"){
-            $("#" + cur_sample)[0].reset();
-            updt_sample();
-        }
-
-        // Show proper input for selected sample
-        var opts = document.getElementById("sample_list").options;
-        for ( var i = 0; i < opts.length; i++ ) {
-            if (opts[i].value == this.value) {
-                $("#" + this.value).show();
-            }
-            else {
-                $("#" + opts[i].value).hide();
-            }
-        }
-    });
+    $("#select-series").selectize();
+    $("#select-sample").selectize();
+    $("#select-data-run").selectize();
+    $("#select-ref-run").selectize();
+    
+    // If user refreshes after a search has failed, ensures that all form info will be properly stored
+    check_input();
 
     // Main query handler
     $("#submit").click(function(){
@@ -295,10 +239,11 @@ $(function() {
         $("#internal_err").hide();
         var query = {
             "type": "retrieve_data",
-            "sample": cur_sample,
-            "data_info": data_info,
-            "ref_info": ref_info,
-            "user_id": Date.now(), 
+            "series": $("#select-series").val(),
+            "sample": $("#select-sample").val(),
+            "data_info": $("#select-data-run").val(),
+            "ref_info": $("#select-ref-run").val(),
+            "user_id": Date.now(),
         };
         submit(query);
     });

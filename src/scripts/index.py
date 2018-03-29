@@ -4,6 +4,8 @@ import json
 import time
 import ROOT
 import subprocess
+import traceback
+
 
 import fetch
 import search
@@ -21,7 +23,6 @@ main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 with open("{0}/data/configs.json".format(main_dir)) as config_file:
     config = json.load(config_file)
 conf_list = config["hists"]
-year = config["year"]
 main_gdir = config["main_gdir"]
 
 # Recursively find unique name for function call
@@ -43,9 +44,9 @@ def timer(func):
         return result
     return wrapper
 
-def get_response(t0, status, fail_reason, query, payload):
+def get_response(t0, status, fail_reason, tb, query, payload):
     duration = time.time() - t0
-    return json.dumps( { "query": query, "start": t0, "duration":duration, "response": { "status": status, "fail_reason": str(fail_reason), "payload": times } } )
+    return json.dumps( { "query": query, "start": t0, "duration":duration, "response": { "status": status, "fail_reason": str(fail_reason), "traceback": str(tb), "payload": times } } )
 
 
 @timer
@@ -118,7 +119,6 @@ def get_hists(db_dir, data_id, ref_id, user_id):
 
     return True, None
 
-import traceback
 def handle_args(args):
 
     # Values for tracking script's progress
@@ -127,31 +127,31 @@ def handle_args(args):
 
     try:
         if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["data_info"], args["sample"])
+            is_success, fail_reason = fetch.fetch(args["series"], args["sample"], args["data_info"])
             check(is_success, fail_reason)
         elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["ref_info"], args["sample"])
+            is_success, fail_reason = fetch.fetch(args["series"], args["sample"], args["ref_info"])
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
-            is_success, fail_reason = get_hists("{0}/data/database/Run{1}/{2}".format(main_dir, year, args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists("{0}/data/database/{1}/{2}".format(main_dir, args["series"], args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:
         fail_reason = str(error)
-        return is_success, traceback.format_exc()#fail_reason
+        return is_success, fail_reason, traceback.format_exc()
 
-    return is_success, fail_reason
+    return is_success, fail_reason, None
 
 def process_query(args):
     t0 = time.time()
 
-    is_success, fail_reason = handle_args(args)
+    is_success, fail_reason, tb = handle_args(args)
     
     if is_success and fail_reason == None:
-        return get_response(t0, "success", fail_reason, args,  "Query proccessed successfully")
+        return get_response(t0, "success", fail_reason, tb, args,  "Query proccessed successfully")
     else:
-        return get_response(t0, "fail", fail_reason, args,  "Query failed")
+        return get_response(t0, "fail", fail_reason, tb, args,  "Query failed")
 
 if __name__ == "__main__":
     # print(process_query(["0th_index_is__this_file.py","/RelValZMM_14/CMSSW_9_1_1_patch1-PU25ns_91X_upgrade2023_realistic_v3_D17PU140-v1/DQMIO", "/RelValZMM_14/CMSSW_9_3_0_pre3-PU25ns_92X_upgrade2023_realistic_v2_D17PU140-v2/DQMIO", "RelVal", "ZMM_14", "ZMM_14"]))

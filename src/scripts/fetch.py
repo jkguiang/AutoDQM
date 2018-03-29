@@ -101,7 +101,7 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def get_runs(limit, year, sample):
+def get_runs(limit, series, sample):
 
     # Progress bar
     from tqdm import tqdm
@@ -110,7 +110,7 @@ def get_runs(limit, year, sample):
     runs = []
 
     # Get HTML content from DQM GUI
-    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run{0}/{1}/".format(year, sample))
+    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
     parser = HTMLParserRuns()
     parser.feed(content)
     allRuns = parser.get_run_linktimestamps()
@@ -137,7 +137,7 @@ def get_runs(limit, year, sample):
         
     return sorted(runs, reverse=True)
 
-def fetch(run, sample):
+def fetch(series, sample, run):
 
     # Silence ROOT warnings
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -146,18 +146,15 @@ def fetch(run, sample):
     # Path to directory containing all data
     main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
-    # Load configs
-    with open("{0}/data/configs.json".format(main_dir)) as config_file:
-        config = json.load(config_file)
-    year = config["year"]
-
     # Get list of files already in database
-    db_dir = "{0}/data/database/Run{1}/{2}".format(main_dir, year, sample)
+    db_dir = "{0}/data/database/{1}/{2}".format(main_dir, series, sample)
+    if not os.path.exists(db_dir):
+        os.makedirs(db_dir)
     dbase = os.listdir(db_dir)
 
     # Download file if not already in database
     if "{0}.root".format(run) not in dbase:
-        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run{0}/{1}/".format(year, sample))
+        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
         parser = HTMLParserRuns()
         parser.feed(content)
         allRuns = parser.get_run_linktimestamps()
@@ -189,5 +186,6 @@ def fetch(run, sample):
 
 
 if __name__=='__main__':
+    pass
     # fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
-    print(get_runs(limit=5, year="2017", sample="SingleMuon"))
+    # print(get_runs(limit=5, year="2017", sample="SingleMuon"))
