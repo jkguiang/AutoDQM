@@ -19,12 +19,6 @@ cur_dir = os.getcwd()
 # Path to root directory
 main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
-# Load config
-with open("{0}/data/configs.json".format(main_dir)) as config_file:
-    config = json.load(config_file)
-conf_list = config["hists"]
-main_gdir = config["main_gdir"]
-
 # Recursively find unique name for function call
 def get_name(name, counter):
     new_name = name + str(counter)
@@ -50,7 +44,12 @@ def get_response(t0, status, fail_reason, tb, query, payload):
 
 
 @timer
-def compile_hists(data_fname, ref_fname, data_run, ref_run):
+def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
+    # Load config
+    with open("{0}/data/configs.json".format(main_dir)) as config_file:
+        config = json.load(config_file)
+    conf_list = config[subsystem]["hists"]
+    main_gdir = config[subsystem]["main_gdir"]
 
     data_file = ROOT.TFile.Open(data_fname)
     ref_file = ROOT.TFile.Open(ref_fname)
@@ -83,7 +82,7 @@ def compile_hists(data_fname, ref_fname, data_run, ref_run):
                     ref_hist.SetDirectory(0)
                     hPair = HistPair(data_hist, ref_hist, hconf)
                     # Add an index if there will be multiple hists with the same name_out
-                    if hconf["name_out"]: hPair.name_out += "_{0}".format(count)
+                    if "name_out" in hconf: hPair.name_out += "_{0}".format(count)
                     histPairs.append(hPair)
                     count += 1
         # Normal search
@@ -106,10 +105,10 @@ def check(is_success, fail_reason):
     else: return None
 
 @timer
-def get_hists(db_dir, data_id, ref_id, user_id):
+def get_hists(subsystem, db_dir, data_id, ref_id, user_id):
     data_fname = "{0}/{1}.root".format(db_dir, data_id)
     ref_fname = "{0}/{1}.root".format(db_dir, ref_id)
-    histPairs = compile_hists(data_fname, ref_fname, data_id, ref_id)
+    histPairs = compile_hists(subsystem, data_fname, ref_fname, data_id, ref_id)
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "setup", user_id])
 
@@ -134,7 +133,7 @@ def handle_args(args):
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
-            is_success, fail_reason = get_hists("{0}/data/database/{1}/{2}".format(main_dir, args["series"], args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists(args["subsystem"], "{0}/data/database/{1}/{2}".format(main_dir, args["series"], args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:

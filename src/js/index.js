@@ -6,6 +6,7 @@ function check_input() {
     var filled =
         $("#select-series").val() != "" &&
         $("#select-sample").val() != "" &&
+        $("#select-subsystem").val() != "" &&
         $("#select-data-run").val() != "" &&
         $("#select-ref-run").val() != "";
 
@@ -224,6 +225,7 @@ $(function() {
 
     $("#select-series").selectize();
     $("#select-sample").selectize();
+    $("#select-subsystem").selectize();
     $("#select-data-run").selectize();
     $("#select-ref-run").selectize();
     
@@ -241,6 +243,7 @@ $(function() {
             "type": "retrieve_data",
             "series": $("#select-series").val(),
             "sample": $("#select-sample").val(),
+            "subsystem": $("#select-subsystem").val(),
             "data_info": $("#select-data-run").val(),
             "ref_info": $("#select-ref-run").val(),
             "user_id": Date.now(),
