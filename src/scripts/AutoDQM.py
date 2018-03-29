@@ -6,10 +6,6 @@ import json
 # Path to directory containing all data
 main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
-# Load configs
-with open("{0}/data/configs.json".format(main_dir)) as config_file:
-    config = json.load(config_file)
-hists = config["hists"]
 # Global variables to be filled by fill_vars
 chi2_cut = None
 pull_cap = None
@@ -19,7 +15,7 @@ min_entries = None
 always_draw = None
 norm_type = None
 
-def fill_vars(hist):
+def fill_vars(histPair):
     # Retrieve global variables
     global chi2_cut
     global pull_cap
@@ -29,14 +25,14 @@ def fill_vars(hist):
     global always_draw
     global norm_type
 
-    # Fill global variables from config or with defaults
-    chi2_cut = hist.get("chi2_cut", 500)
-    pull_cap = hist.get("pull_cap", 25)
-    pull_cut = hist.get("pull_cut", 20)
-    ks_cut = hist.get("ks_cut", 0.09)
-    min_entries = hist.get("min_entries", 100000)
-    always_draw = hist.get("always_draw", False)
-    norm_type = hist.get("norm_type", 'all')
+    # Fill global variables from hist or with defaults
+    chi2_cut = histPair.chi2_cut
+    pull_cap = histPair.pull_cap
+    pull_cut = histPair.pull_cut
+    ks_cut = histPair.ks_cut
+    min_entries = histPair.min_entries
+    always_draw = histPair.always_draw
+    norm_type = histPair.norm_type
 
     return
 
@@ -165,9 +161,8 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     
     # Reject empty histograms
     if f_hist.GetEntries() == 0 or f_hist.GetEntries() < min_entries:
-        if name not in hists:
-            is_good = False
-            return is_good, ks, is_outlier
+        is_good = False
+        return is_good, ks, is_outlier
 
     # Normalize f_hist
     f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
@@ -325,7 +320,7 @@ def get_errors(bin1, bin2):
 # End Analysis Functions ------
 
 # AutoDQM
-def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
+def autodqm(hists, data_id, ref_id, targ_dir):
 
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -341,25 +336,20 @@ def autodqm(f_hists, r_hists, data_id, ref_id, targ_dir):
     outliers = 0
     skip = 0
 
-    hists = config["hists"]
+    # Main loop over histogram config objects in input 
+    for histPair in hists:
+        fill_vars(histPair)
 
-    # Main loop over histograms in config file
-    for hist in hists:
-        name = hist["name_out"]
-        fill_vars(hist)
-        if not (name in r_hists): continue
-        if type(f_hists[name]) != type(r_hists[name]): continue
-
-        if type(f_hists[name]) == ROOT.TH1F:
-            is_good, ks, is_outlier = draw_same(f_hists[name], r_hists[name], name, data_id, ref_id, targ_dir)
+        if type(histPair.data) == ROOT.TH1F:
+            is_good, ks, is_outlier = draw_same(histPair.data, histPair.ref, histPair.name_out, data_id, ref_id, targ_dir)
             if is_good:
                 ks_1D.Fill(ks)
                 if ks > max_1D:
                     max_1D = ks
             if is_outlier:
                 outliers += 1
-        elif type(f_hists[name]) == ROOT.TH2F:
-            is_good, chi2, max_pull, is_outlier = scan_2D(f_hists[name], r_hists[name], name, data_id, ref_id, targ_dir)
+        elif type(histPair.data) == ROOT.TH2F:
+            is_good, chi2, max_pull, is_outlier = scan_2D(histPair.data, histPair.ref, histPair.name_out, data_id, ref_id, targ_dir)
             if is_good:
                 chi2_2D.Fill(chi2)
                 if chi2 > max_2D:

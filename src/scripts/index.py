@@ -8,6 +8,7 @@ import subprocess
 import fetch
 import search
 import AutoDQM
+from HistPair import HistPair
 
 # Global dict for holding all run times
 times = {}
@@ -19,7 +20,7 @@ main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 # Load config
 with open("{0}/data/configs.json".format(main_dir)) as config_file:
     config = json.load(config_file)
-h_list = config["hists"]
+conf_list = config["hists"]
 year = config["year"]
 main_gdir = config["main_gdir"]
 
@@ -48,59 +49,56 @@ def get_response(t0, status, fail_reason, query, payload):
 
 
 @timer
-def compile_hists(new_file, run):
+def compile_hists(data_fname, ref_fname, data_run, ref_run):
 
-    f = ROOT.TFile.Open(new_file)
-    hists = {}
+    data_file = ROOT.TFile.Open(data_fname)
+    ref_file = ROOT.TFile.Open(ref_fname)
+    histPairs = []
 
-    for h_obj in h_list:
-        # Clear new_hist variable - loop checks for existence of new_hist to determine success
-        new_hist = None
+    for hconf in conf_list:
         # Get name of hist in root file
-        h = h_obj["path"].split("/")[-1]
+        h = str(hconf["path"].split("/")[-1])
         # Get parent directory of hist
-        gdir = h_obj["path"].split(h)[0]
-        # Get configured name of hist if any
-        name_out = h_obj["name_out"]
+        gdir = str(hconf["path"].split(h)[0])
 
         # Get keys of directory (for wildcard)
-        keys = f.GetDirectory("{0}{1}".format(main_gdir.format(run), gdir))
-        h_map = []
-        # Populate map of hists for wildcard search
-        for key in keys.GetListOfKeys():
-            h_map.append(key.GetName())
+        data_dir = data_file.GetDirectory(
+                "{0}{1}".format(main_gdir.format(data_run), gdir))
+        ref_dir = ref_file.GetDirectory(
+                "{0}{1}".format(main_gdir.format(ref_run), gdir))
+
+        data_keys = data_dir.GetListOfKeys()
+        ref_keys = ref_dir.GetListOfKeys()
 
         # Wildcard search
         if "*" in h:
             # Check entire directory for files matching wildcard
-            for name in h_map:
-                if h.split("*")[0] in name:
-                    # Retrieve hist
-                    new_hist = f.Get("{0}{1}{2}".format(main_gdir.format(run), gdir, name))
-                    if new_hist:
-                        # Rename hist if output name given
-                        if name_out:
-                            new_hist.SetName(name_out)
-                        hists[new_hist.GetName()] = new_hist
-                        hists[new_hist.GetName()].SetDirectory(0)
-                    else:
-                        continue
+            count = 0
+            for name in [key.GetName() for key in data_keys]:
+                if h.split("*")[0] in name and ref_keys.Contains(name):
+                    data_hist = data_dir.Get(name)
+                    ref_hist = ref_dir.Get(name)
+                    data_hist.SetDirectory(0)
+                    ref_hist.SetDirectory(0)
+                    hPair = HistPair(data_hist, ref_hist, hconf)
+                    # Add an index if there will be multiple hists with the same name_out
+                    if hconf["name_out"]: hPair.name_out += "_{0}".format(count)
+                    histPairs.append(hPair)
+                    count += 1
         # Normal search
         else:
-            # Retrieve hist
-            new_hist = f.Get("{0}{1}{2}".format(main_gdir.format(run), gdir, h))
-            if new_hist:
-                if new_hist:
-                    # Rename hist if output name given
-                    if name_out:
-                        new_hist.SetName(name_out)
-                    hists[new_hist.GetName()] = new_hist
-                    hists[new_hist.GetName()].SetDirectory(0)
-                else:
-                    continue
+            if data_keys.Contains(h) and ref_keys.Contains(h):
+                data_hist = data_dir.Get(h)
+                ref_hist = ref_dir.Get(h)
+                data_hist.SetDirectory(0)
+                ref_hist.SetDirectory(0)
+                hPair = HistPair(data_hist, ref_hist, hconf)
+                histPairs.append(hPair)
+    
 
-    f.Close()
-    return hists
+    data_file.Close()
+    ref_file.Close()
+    return histPairs
 
 def check(is_success, fail_reason):
     if not is_success: raise Exception('Error: {0}'.format(fail_reason))
@@ -108,17 +106,19 @@ def check(is_success, fail_reason):
 
 @timer
 def get_hists(db_dir, data_id, ref_id, user_id):
-    f_hists = compile_hists("{0}/{1}.root".format(db_dir, data_id), data_id)
-    r_hists = compile_hists("{0}/{1}.root".format(db_dir, ref_id), ref_id)
+    data_fname = "{0}/{1}.root".format(db_dir, data_id)
+    ref_fname = "{0}/{1}.root".format(db_dir, ref_id)
+    histPairs = compile_hists(data_fname, ref_fname, data_id, ref_id)
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "setup", user_id])
 
-    AutoDQM.autodqm(f_hists, r_hists, data_id, ref_id, user_id)
+    AutoDQM.autodqm(histPairs, data_id, ref_id, user_id)
 
     subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "updt", user_id])
 
     return True, None
 
+import traceback
 def handle_args(args):
 
     # Values for tracking script's progress
@@ -139,7 +139,7 @@ def handle_args(args):
 
     except Exception as error:
         fail_reason = str(error)
-        return is_success, fail_reason
+        return is_success, traceback.format_exc()#fail_reason
 
     return is_success, fail_reason
 
