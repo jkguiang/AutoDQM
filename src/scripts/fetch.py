@@ -34,8 +34,7 @@ class HTMLParserRuns(HTMLParser):
 
     def get_run_links(self):
         new_links = []
-        for link in self.links:
-            # if "/000" not in link: continue
+        for link in self.links[1:]: # First link is Up and should be ignored
             new_links.append(self.BASE_URL + link)
         return new_links
 
