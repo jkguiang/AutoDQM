@@ -2,8 +2,8 @@
 import cgi
 import json
 import commands
+from subprocess import check_output
 
-query_type = "" # This stores query type, MUST be passed first to do.sh
 
 def inputToDict(form):
     new_dict = {}
@@ -11,12 +11,25 @@ def inputToDict(form):
         new_dict[str(k)] = str(form[k].value)
     return new_dict
 
-form = cgi.FieldStorage()
-print "Content-type: application/json"
-print "Access-Control-Allow-Origin: *\n\n"
-inp = inputToDict(form)
 
-args = ("./do.sh {0} {1} '{2}'".format(inp["type"], inp["user_id"], str(json.dumps(inp))))
+if __name__ == "__main__":
+    form = cgi.FieldStorage()
+    inp = inputToDict(form)
+    reqType = inp["type"]
 
-stat, out = commands.getstatusoutput(args)
-print out
+    if reqType == "retrieve_data" or reqType == "retrieve_ref" or reqType == "process":
+        out = check_output(["python", "index.py", json.dumps(inp)])
+    elif reqType == "search":
+        out = check_output(["python", "search.py", json.dumps(inp)])
+    elif reqType == "refresh":
+        out = check_output(["python", "database.py", "map"])
+    else:
+        out = json.dumps({
+            "response": {
+                "status": "fail",
+                "fail_reason": "Request type not found: {0}".format(reqType)
+            }})
+
+    print "Content-type: application/json"
+    print "Access-Control-Allow-Origin: *\n\n"
+    print out
