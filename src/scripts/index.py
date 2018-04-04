@@ -14,10 +14,6 @@ from HistPair import HistPair
 
 # Global dict for holding all run times
 times = {}
-cur_dir = os.getcwd()
-
-# Path to root directory
-main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 
 # Recursively find unique name for function call
 def get_name(name, counter):
@@ -46,7 +42,7 @@ def get_response(t0, status, fail_reason, tb, query, payload):
 @timer
 def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
     # Load config
-    with open("{0}/data/configs.json".format(main_dir)) as config_file:
+    with open(os.getenv('ADQM_CONFIG')) as config_file:
         config = json.load(config_file)
     conf_list = config[subsystem]["hists"]
     main_gdir = config[subsystem]["main_gdir"]
@@ -110,11 +106,14 @@ def get_hists(subsystem, db_dir, data_id, ref_id, user_id):
     ref_fname = "{0}/{1}.root".format(db_dir, ref_id)
     histPairs = compile_hists(subsystem, data_fname, ref_fname, data_id, ref_id)
 
-    subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "setup", user_id])
+    tmp_dir =  os.getenv('ADQM_TMP') + user_id + '/'
+    AutoDQM.autodqm(histPairs, data_id, ref_id, tmp_dir)
 
-    AutoDQM.autodqm(histPairs, data_id, ref_id, user_id)
-
-    subprocess.check_call(["{0}/make_html.sh".format(cur_dir), "updt", user_id])
+    # Convert pdfs produced by AutoDQM to small pngs
+    if not os.path.exists(tmp_dir + 'pngs'):
+        os.makedirs(tmp_dir + 'pngs')
+    for pdf in os.listdir(tmp_dir + 'pdfs'):
+        subprocess.check_output(['convert', '-density', '50', '-trim', '-fuzz', '1%', str(tmp_dir + 'pdfs/' + pdf), str(tmp_dir + 'pngs/' + pdf.split('.')[0] + '.png')])
 
     return True, None
 
@@ -133,7 +132,7 @@ def handle_args(args):
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
-            is_success, fail_reason = get_hists(args["subsystem"], "{0}/data/database/{1}/{2}".format(main_dir, args["series"], args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
+            is_success, fail_reason = get_hists(args["subsystem"], "{0}/{1}/{2}".format(os.getenv('ADQM_DB'), args["series"], args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
             check(is_success, 'get_hists')
 
     except Exception as error:

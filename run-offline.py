@@ -58,6 +58,15 @@ if __name__ == '__main__':
                         help="output directory")
     args = parser.parse_args()
 
+    if 'ADQM_CONFIG' not in os.environ:
+        os.environ['ADQM_CONFIG'] = './configs.json'
+    if 'ADQM_DB' not in os.environ:
+        os.environ['ADQM_DB'] = './db/'
+    if 'ADQM_TMP' not in os.environ:
+        os.environ['ADQM_TMP'] = './tmp/'
+    if 'ADQM_SSLCERT' not in os.environ:
+        os.envrion['ADQM_SSLCERT'] = '/tmp/x509up_u%s' % str(os.getuid())
+
     autodqm_offline(args.sample, args.data, args.ref)
 
     # Prepare and move files into output directory

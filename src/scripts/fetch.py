@@ -71,7 +71,7 @@ def hsv_to_rgb(h, s, v):
 def get_cert_curl():
     c = pycurl.Curl()
     # cms voms member host certificate to authenticate adqm to cmsweb.cern.ch, defaults to voms-proxy-init certificate
-    c.setopt(pycurl.SSLCERT, os.getenv('ADQM_SSLCERT', '/tmp/x509up_u%s' % str(os.getuid())))
+    c.setopt(pycurl.SSLCERT, os.getenv('ADQM_SSLCERT'))
     # cms voms member host certificate key
     if 'ADQM_SSLKEY' in os.environ:
         c.setopt(pycurl.SSLKEY, os.getenv('ADQM_SSLKEY'))
@@ -143,10 +143,12 @@ def fetch(series, sample, run):
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
     # Path to directory containing all data
-    main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
+    db = os.getenv('ADQM_DB')
+    if not os.path.exists(db):
+        os.makedirs(db)
 
     # Get list of files already in database
-    db_dir = "{0}/data/database/{1}/{2}".format(main_dir, series, sample)
+    db_dir = "{0}/{1}/{2}".format(db, series, sample)
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
     dbase = os.listdir(db_dir)
@@ -175,7 +177,7 @@ def fetch(series, sample, run):
                         get_file_with_cert(new_link[0], "{0}/{1}.root".format(db_dir, run))
 
         if not found:
-            return False, "File not found: {0}".format(run)
+            return False, "Series: {0}, sample: {1}, run: {2} not found on offline DQM".format(series, sample, run)
         
         return True, None
 

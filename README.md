@@ -36,8 +36,7 @@ AutoPlotter: http://github.com/jkguiang/AutoPlotter
 Clone this repository and move its contents to a public html directory, then run `./setup.sh` to set up AutoDQM's directories.
 
 ###### Main Page:
-1. Select sample name
-    - Currently supported samples: SingleMuon, Cosmics
+1. Select series and sample
 2. Enter data and reference information
 3. Click submit.
     - After process is complete, you will be automatically redirected to the "plots" page
@@ -65,5 +64,14 @@ The `./run-offline.py` script can retrieve run data files and process them witho
 2. Set up AutoDQM with `./setup.sh`
 3. Establish a voms proxy with `voms-proxy-init`
 4. Use `./run-offline.py` to process data with AutoDQM
+
+## Environment Variables
+
+- `ADQM_CONFIG` location of the configuration file to use
+- `ADQM_DB` location to store downloaded root files from offline DQM
+- `ADQM_TMP` location to store generated temporary pdfs, pngs, etc
+- `ADQM_SSLCERT` location of CMS VO authorized public key certificate to use in querying offline DQM
+- `ADQM_SSLKEY` location of CMS VO authorized private ky to use in querying offline DQM
+- `ADQM_CACERT` location of a CERN Grid CA certificate chain, if needed
 
 

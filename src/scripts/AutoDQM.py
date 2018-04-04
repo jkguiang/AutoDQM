@@ -3,9 +3,6 @@ import os
 import sys
 import json
 
-# Path to directory containing all data
-main_dir = os.path.dirname(os.path.dirname(os.getcwd()))
-
 # Global variables to be filled by fill_vars
 chi2_cut = None
 pull_cap = None
@@ -129,10 +126,10 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/data/pdfs/{1}/{2}_D{3}R{4}.pdf".format(main_dir, targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/pdfs/{1}_D{2}R{3}.pdf".format(targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/data/txts/{1}/{2}_D{3}R{4}.txt".format(main_dir, targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/txts/{1}_D{2}R{3}.txt".format(targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Max Pull Value: {0}\n".format(max_pull),
                             "Chi^2: {0}\n".format(chi2),
@@ -220,10 +217,10 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         data_text.Draw()
         ref_text.Draw()
 
-        c.SaveAs("{0}/data/pdfs/{1}/{2}_D{3}R{4}.pdf".format(main_dir, targ_dir, name, data_id, ref_id))
+        c.SaveAs("{0}/pdfs/{1}_D{2}R{3}.pdf".format(targ_dir, name, data_id, ref_id))
 
         # Write text file
-        new_txt = open("{0}/data/txts/{1}/{2}_D{3}R{4}.txt".format(main_dir, targ_dir, name, data_id, ref_id), "w")
+        new_txt = open("{0}/txts/{1}_D{2}R{3}.txt".format(targ_dir, name, data_id, ref_id), "w")
         new_txt.writelines(["Run: {0}\n".format(data_id), 
                             "Data Entries: {0}\n".format(int(f_hist.GetEntries())), 
                             "Reference Entries: {0}\n".format(int(r_hist.GetEntries()))])
@@ -322,6 +319,12 @@ def get_errors(bin1, bin2):
 # AutoDQM
 def autodqm(hists, data_id, ref_id, targ_dir):
 
+    if not os.path.exists(targ_dir):
+        os.makedirs(targ_dir)
+    for d in  ['pdfs', 'txts']:
+        if not os.path.exists(targ_dir + d):
+            os.makedirs(targ_dir + d)
+
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
@@ -364,13 +367,13 @@ def autodqm(hists, data_id, ref_id, targ_dir):
     ks_1D.GetYaxis().SetTitle("Entries")
 
     ks_1D.Draw("hist")
-    C.SaveAs("{0}/data/pdfs/{1}/ks_1D.pdf".format(main_dir, targ_dir))
+    C.SaveAs("{0}/pdfs/ks_1D.pdf".format(targ_dir))
 
     chi2_2D.GetXaxis().SetTitle("#Chi^{2}")
     chi2_2D.GetYaxis().SetTitle("Entries")
 
     chi2_2D.Draw("hist")
-    C.SaveAs("{0}/data/pdfs/{1}/chi2_2D.pdf".format(main_dir, targ_dir))
+    C.SaveAs("{0}/pdfs/chi2_2D.pdf".format(targ_dir))
 
     return
 

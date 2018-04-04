@@ -75,11 +75,11 @@
 
             if ($user_id != "") {
 
-                $cwd = getcwd();
+                $cwd = getenv("ADQM_TMP");
 
-                $pdf_path = ("data/pdfs/" . $user_id . "/");
-                $png_path = ("data/pngs/" . $user_id . "/");
-                $txt_path = ("data/txts/" . $user_id . "/");
+                $pdf_path = ($user_id . "/pdfs/");
+                $png_path = ($user_id . "/pngs/");
+                $txt_path = ($user_id . "/txts/");
 
                 $pdfs = scandir($cwd . "/" . $pdf_path);
                 $pngs = scandir($cwd . "/" . $png_path);
@@ -95,11 +95,11 @@
                     if ($pngs[$i] == '.' || $pngs[$i] == '..') continue;
                     list($width, $height) = getimagesize($cwd . "/" . $png_path . "/" . $pngs[$i]);
                     if ($png_name[0] != $txt_name[0]) {
-                        newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i], "None", $width, $height);
+                        newImage("tmp/" . $png_path . $pngs[$i], "tmp/" . $pdf_path . $pdfs[$i], "None", $width, $height);
                         $txt_offset++;
                         continue;
                     }
-                    newImage($png_path . $pngs[$i], $pdf_path . $pdfs[$i], $txt_path . $txts[$i - $txt_offset], $width, $height);
+                    newImage("tmp/" . $png_path . $pngs[$i], "tmp/" . $pdf_path . $pdfs[$i], "tmp/" . $txt_path . $txts[$i - $txt_offset], $width, $height);
                 }
 
             }
