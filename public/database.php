@@ -72,7 +72,7 @@
                 </script>
 
                 <!-- load jquery after php runs -->
-                <script src="src/js/database.js"></script>
+                <script src="js/database.js"></script>
 
         </head>
 

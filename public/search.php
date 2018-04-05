@@ -10,7 +10,7 @@
                 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
                 <!-- My Code -->
-                <script src="src/js/search.js"></script>
+                <script src="js/search.js"></script>
                 
                 <!-- CSS -->
                 <style>

@@ -234,7 +234,7 @@ $(function() {
 
     // Drop menu
     // Populate sample list with values from configs.json
-    $.getJSON("data/configs.json", function(json) {
+    $.getJSON("configs.json", function(json) {
         samples = json["samples"];
         for ( var i = 0; i < samples.length; i++ ) {
             $("#sample_list").append($("<option>", {

@@ -17,7 +17,7 @@
             <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 
             <!-- My Code -->
-            <script src="src/js/index.js"></script>                
+            <script src="js/index.js"></script>                
 
             <!-- CSS -->
             <style>

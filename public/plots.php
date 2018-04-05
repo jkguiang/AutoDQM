@@ -112,7 +112,7 @@
         </script>
 
         <!-- load jquery after php runs -->
-        <script src="src/js/plots.js"></script>
+        <script src="js/plots.js"></script>
 
     </head>
 
