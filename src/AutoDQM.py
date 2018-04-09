@@ -58,7 +58,6 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     # Reject empty histograms
     if f_hist.GetEntries() == 0 or f_hist.GetEntries() < min_entries:
         is_good = False
-        return is_good, chi2, max_pull, is_outlier
 
     # Normalize f_hist
     if norm_type == "row":
@@ -108,7 +107,7 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     chi2 = (chi2/nBins)
 
     # Chi2 Cut
-    if chi2 > chi2_cut or abs(max_pull) > pull_cut or always_draw:
+    if (is_good and (chi2 > chi2_cut or abs(max_pull) > pull_cut)) or always_draw:
         # Used in outliers count
         if not always_draw:
             is_outlier = True
@@ -159,7 +158,6 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     # Reject empty histograms
     if f_hist.GetEntries() == 0 or f_hist.GetEntries() < min_entries:
         is_good = False
-        return is_good, ks, is_outlier
 
     # Normalize f_hist
     f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
@@ -169,9 +167,10 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
 
     ks = f_hist.KolmogorovTest(r_hist, "M")
 
-    if ks > ks_cut or always_draw:
+    if (is_good and ks > ks_cut) or always_draw:
         # Used in outliers count
-        is_outlier = True
+        if not always_draw:
+            is_outlier = True
 
         # Stat boxes only for hists that are always drawn
         if always_draw:
