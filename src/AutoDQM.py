@@ -160,7 +160,8 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         is_good = False
 
     # Normalize f_hist
-    f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
+    if f_hist.GetEntries() > 0:
+        f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
 
     # Ensure plot accounts for maximum value
     r_hist.SetMaximum(max(f_hist.GetMaximum(), r_hist.GetMaximum())*1.1)
