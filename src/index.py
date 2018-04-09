@@ -63,9 +63,9 @@ def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
         data_dir = data_file.GetDirectory(data_dirname)
         ref_dir = ref_file.GetDirectory(ref_dirname)
 
-        if !data_dir:
+        if not data_dir:
             raise Exception("Subsystem dir {0} not found in data root file".format(data_dirname))
-        if !ref_dir:
+        if not ref_dir:
             raise Exception("Subsystem gdir {0} not found in ref root file".format(ref_dirname))
 
         data_keys = data_dir.GetListOfKeys()
