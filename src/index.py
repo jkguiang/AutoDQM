@@ -57,11 +57,16 @@ def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
         # Get parent directory of hist
         gdir = str(hconf["path"].split(h)[0])
 
+        data_dirname = "{0}{1}".format(main_gdir.format(data_run), gdir)
+        ref_dirname =  "{0}{1}".format(main_gdir.format(ref_run), gdir)
         # Get keys of directory (for wildcard)
-        data_dir = data_file.GetDirectory(
-                "{0}{1}".format(main_gdir.format(data_run), gdir))
-        ref_dir = ref_file.GetDirectory(
-                "{0}{1}".format(main_gdir.format(ref_run), gdir))
+        data_dir = data_file.GetDirectory(data_dirname)
+        ref_dir = ref_file.GetDirectory(ref_dirname)
+
+        if !data_dir:
+            raise Exception("Subsystem dir {0} not found in data root file".format(data_dirname))
+        if !ref_dir:
+            raise Exception("Subsystem gdir {0} not found in ref root file".format(ref_dirname))
 
         data_keys = data_dir.GetListOfKeys()
         ref_keys = ref_dir.GetListOfKeys()
