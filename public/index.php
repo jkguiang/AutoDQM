@@ -61,13 +61,11 @@
                                 <div class="form-group">
                                     <label for="select-series">Series</label>
                                     <select class="form-control" id="select-series">
-                                        <option value="Run2017">Run2017</option>
-                                        <option value="Commissioning2018">Commissioning2018</option>
+                                        <option value="" disabled selected hidden>Select a series...<option>
                                     </select>
                                     <label for="select-sample">Sample</label>
                                     <select class="form-control" id="select-sample">
-                                        <option value="SingleMuon">SingleMuon</option>
-                                        <option value="Cosmics">Cosmics</option>
+                                        <option value="" disabled selected hidden>Select a sample...<option>
                                     </select>
                                     <label for="select-subsystem">Subsystem</label>
                                     <select class="form-control" id="select-subsystem">

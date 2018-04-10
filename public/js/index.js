@@ -217,18 +217,114 @@ $(function() {
         }
     });
 
-    $('select').selectize({
+
+        var seReq, saReq, suReq, rReq;
+    var select_series, $select_series;
+    var select_sample, $select_sample;
+    var select_subsystem, $select_subsystem;
+    var select_data_run, $select_data_run;
+    var select_ref_run, $select_ref_run;
+
+    $select_series = $("#select-series").selectize({
         create: true,
         createOnBlur: true,
-        onChange: check_input
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name',
+        preload: true,
+        load: function(query, callback) {
+            seReq && seReq.abort();
+            seReq = $.getJSON("cgi-bin/handler.py",
+                {type: "getSeries"},
+                function(res) {
+                    callback(res.response.series);
+                });
+        },
+        onChange: function(value) {
+            if (!value.length) {
+                [select_sample, select_data_run, select_ref_run]
+                    .forEach(s => s.disable())
+                [select_sample, select_data_run, select_ref_run]
+                    .forEach(s => s.clearOptions())
+                return;
+            }
+            select_sample.enable();
+            select_sample.clearOptions();
+            select_sample.load(function(callback) {
+                saReq && saReq.abort();
+                saReq = $.getJSON("cgi-bin/handler.py",
+                    {type: "getSamples", series: value},
+                    function(res) {
+                        console.log(res);
+                        callback(res.response.samples);
+                    });
+            });
+            check_input();
+        }
+    });
+    $select_sample = $("#select-sample").selectize({
+        create: true,
+        createOnBlur: true,
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name',
+        onChange: function(value) {
+            if (!value.length) {
+                [select_data_run, select_ref_run]
+                    .forEach(s => s.disable())
+                [select_data_run, select_ref_run]
+                    .forEach(s => s.clearOptions())
+                return;
+            }
+            select_data_run.enable();
+            select_ref_run.enable();
+            select_data_run.clearOptions();
+            select_ref_run.clearOptions();
+
+            rReq && rReq.abort();
+            rReq = $.getJSON("cgi-bin/handler.py",
+                {type: "getRuns", series: $select_series.val(), sample: value},
+                function(res) {
+                    console.log(res);
+                    select_data_run.load(c => c(res.response.runs));
+                    select_ref_run.load(c => c(res.response.runs));
+                });
+            check_input();
+        }
     });
 
-    $("#select-series").selectize();
-    $("#select-sample").selectize();
-    $("#select-subsystem").selectize();
-    $("#select-data-run").selectize();
-    $("#select-ref-run").selectize();
-    
+    $select_subsystem = $("#select-subsystem").selectize({
+        create: true,
+        createOnBlur: true,
+        onChange: check_input,
+    });
+    $select_data_run = $("#select-data-run").selectize({
+        create: true,
+        createOnBlur: true,
+        onChange: check_input,
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name'
+    });
+    $select_ref_run = $("#select-ref-run").selectize({
+        create: true,
+        createOnBlur: true,
+        onChange: check_input,
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name'
+    });
+
+    select_series = $select_series[0].selectize;
+    select_sample = $select_sample[0].selectize;
+    select_subsystem = $select_subsystem[0].selectize;
+    select_data_run = $select_data_run[0].selectize;
+    select_ref_run = $select_ref_run[0].selectize;
+
+    select_sample.disable();
+    select_data_run.disable();
+    select_ref_run.disable();
+
     // If user refreshes after a search has failed, ensures that all form info will be properly stored
     check_input();
 

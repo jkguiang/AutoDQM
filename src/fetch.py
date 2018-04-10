@@ -6,56 +6,70 @@ import urllib2
 import json
 import datetime
 from HTMLParser import HTMLParser
-
+from urlparse import urljoin
 import ROOT
+from json import dumps
 
-
-class HTMLParserRuns(HTMLParser):
+class DQMParser(HTMLParser):
     """
     parses pages with formatting like
     https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/Run2017/StreamExpress/0003019xx/
-    >>> parser = HTMLParserRuns()
+    >>> parser = DQMParser()
     >>> parser.feed(content)
     >>> pprint.pprint(parser.get_run_linktimestamps())
     """
-    links = []
-    timestamps = []
+        
     BASE_URL = "https://cmsweb.cern.ch"
-    cur_tag = None
+    
+    def __init__(self):
+        HTMLParser.__init__(self)
+        
+        self.rows = []
+        
+        self.in_tr = False
+        self.in_td = False
+        self.in_a = False
+
+        self.name = None
+        self.link = None
+        self.timestamp = None
+    
     def handle_starttag(self, tag, attrs):
-        self.cur_tag = tag
-        if tag == "a":
-            self.links.append(dict(attrs)["href"])
+        if tag == 'tr':
+            self.in_tr = True
+        elif tag == 'td':
+            self.in_td = True
+        elif tag == "a":
+            self.in_a = True
+            if self.in_tr and self.in_td:
+                self.link = urljoin(self.BASE_URL, dict(attrs)["href"])
 
     def handle_data(self, data):
-        if self.cur_tag == "td":
-            if "UTC" in data:
-                self.timestamps.append(datetime.datetime.strptime(data.strip(), "%Y-%m-%d %H:%M:%S %Z"))
+        if self.in_tr and self.in_td and self.in_a:
+            self.name = data
+        elif self.in_tr and self.in_td and "UTC" in data:
+            self.timestamp = datetime.datetime.strptime(data.strip(), "%Y-%m-%d %H:%M:%S %Z")
+    
+    def handle_endtag(self, tag):
+        if tag == 'tr':
+            self.in_tr = False
+            self.add_row()
+        elif tag == 'td':
+            self.in_td = False
+        elif tag == "a":
+            self.in_a = False
 
-    def get_run_links(self):
-        new_links = []
-        for link in self.links[1:]: # First link is Up and should be ignored
-            new_links.append(self.BASE_URL + link)
-        return new_links
+    def add_row(self):
+        if self.name and self.link and self.timestamp:
+            if self.name[-1] == '/': self.name = self.name[:-1]
+            self.rows.append({"name": self.name, "url": self.link, "timestamp": self.timestamp})
+            self.name = self.link = self.timestamp = None
+        else: 
+            raise Exception("Malformed row found, name: {0}, link: {1}, timestamp: {2}".format(self.name, self.link, self.timestamp))
 
-    def get_run_timestamps(self):
-        return self.timestamps
+    def get_rows(self):
+        return self.rows
 
-    def get_run_linktimestamps(self):
-        """
-        return list of pairs of (link to run, UTC timestamp)
-        Note that timestamp should be compared to datetime.datetime.utcnow() to see 
-        if the folder has been updated
-        """
-        new_pairs = []
-        for link,ts in zip(self.get_run_links(), self.get_run_timestamps()):
-            if ".root" in link and "DQMIO" not in link: continue
-            new_pairs.append([link,ts])
-        return new_pairs
-
-    def clear(self):
-        self.links = []
-        self.timestamps = []
 
 def hsv_to_rgb(h, s, v):
     if s == 0.0: v*=255; return [v, v, v]
@@ -100,41 +114,34 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
-def get_runs(limit, series, sample):
+def clean_run_fname(fname):
+    return fname.split('_')[2][4:]
 
-    # Progress bar
-    from tqdm import tqdm
-
-    # List to store all run numbers
-    runs = []
-
-    # Get HTML content from DQM GUI
-    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
-    parser = HTMLParserRuns()
+def get_series():
+    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/")
+    parser = DQMParser()
     parser.feed(content)
-    allRuns = parser.get_run_linktimestamps()
-    curdate = datetime.datetime.utcnow()
+    return parser.get_rows()
 
-    # Parse each dqm link, get run number
-    for run_link in tqdm(allRuns):
-        old_link = run_link[0]
-        new_content = get_url_with_cert(run_link[0])
-        new_parser = HTMLParserRuns()
-        new_parser.clear()
-        new_parser.feed(new_content)
-        parsed = new_parser.get_run_linktimestamps()
+def get_samples(series):
+    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/".format(series))
+    parser = DQMParser()
+    parser.feed(content)
+    return parser.get_rows()
 
-        for new_link in tqdm(parsed):
-            split_link = new_link[0].split(old_link)[-1]
-            if ".root" not in split_link:
-                continue
-            run = split_link.split("_")[2]
-            run = run.split("R000")[-1]
-            runs.append(int(run))
-            if len(runs) == limit:
-                return sorted(runs, reverse=True)
-        
-    return sorted(runs, reverse=True)
+def get_runs(series, sample):
+    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
+    parser = DQMParser()
+    parser.feed(content)
+    runDirs = parser.get_rows()
+    runs = []
+    for runDir in (get_url_with_cert(rD['url']) for rD in runDirs):
+        parser = DQMParser()
+        parser.feed(runDir)
+        runs += parser.get_rows()
+    for run in runs:
+        run['name'] = clean_run_fname(run['name'])
+    return runs
 
 def fetch(series, sample, run):
 
@@ -155,26 +162,11 @@ def fetch(series, sample, run):
 
     # Download file if not already in database
     if "{0}.root".format(run) not in dbase:
-        content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
-        parser = HTMLParserRuns()
-        parser.feed(content)
-        allRuns = parser.get_run_linktimestamps()
-        curdate = datetime.datetime.utcnow()
-
-        # Retrieve run if exists
-        found = False
-        for run_link in allRuns:
-            if run[:4] in run_link[0]:
-                new_content = get_url_with_cert(run_link[0])
-                new_parser = HTMLParserRuns()
-                new_parser.clear()
-                new_parser.feed(new_content)
-                parsed = new_parser.get_run_linktimestamps()
-
-                for new_link in parsed:
-                    if run in new_link[0]:
-                        found = True
-                        get_file_with_cert(new_link[0], "{0}/{1}.root".format(db_dir, run))
+        runRows = get_runs(series, sample)
+        for r in runRows:
+            if str(run) == r["name"]:
+                found = True
+                get_file_with_cert(r["url"], "{0}/{1}.root".format(db_dir, run))
 
         if not found:
             return False, "Series: {0}, sample: {1}, run: {2} not found on offline DQM".format(series, sample, run)

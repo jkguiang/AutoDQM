@@ -3,7 +3,8 @@ import cgi
 import json
 import commands
 from subprocess import check_output
-
+from fetch import get_series, get_samples, get_runs
+import traceback
 
 def inputToDict(form):
     new_dict = {}
@@ -15,19 +16,45 @@ def inputToDict(form):
 if __name__ == "__main__":
     form = cgi.FieldStorage()
     inp = inputToDict(form)
-    reqType = inp["type"]
 
-    if reqType == "retrieve_data" or reqType == "retrieve_ref" or reqType == "process":
-        out = check_output(["python", "index.py", json.dumps(inp)])
-    elif reqType == "search":
-        out = check_output(["python", "search.py", json.dumps(inp)])
-    elif reqType == "refresh":
-        out = check_output(["python", "database.py", "map"])
-    else:
+    try:
+        reqType = inp["type"]
+
+        if reqType == "retrieve_data" or reqType == "retrieve_ref" or reqType == "process":
+            out = check_output(["python", "index.py", json.dumps(inp)])
+        elif reqType == "search":
+            out = check_output(["python", "search.py", json.dumps(inp)])
+        elif reqType == "refresh":
+            out = check_output(["python", "database.py", "map"])
+        elif reqType == "getSeries":
+            out = json.dumps({
+                "response": {
+                    "status": "success",
+                    "fail_reason": "",
+                    "series": get_series()}
+            }, default=str)
+        elif reqType == "getSamples":
+            out = json.dumps({
+                "response": {
+                    "status": "success",
+                    "fail_reason": "",
+                    "samples": get_samples(inp["series"])}
+            }, default=str)
+        elif reqType == "getRuns":
+            out = json.dumps({
+                "response": {
+                    "status": "success",
+                    "fail_reason": "",
+                    "runs": get_runs(inp["series"], inp["sample"])}
+            }, default=str)
+        else:
+            raise Exception("Request type not found: {0}".format(reqType))
+    except Exception as e:
         out = json.dumps({
             "response": {
                 "status": "fail",
-                "fail_reason": "Request type not found: {0}".format(reqType)
+                "fail_reason": str(e),
+                "traceback": str(traceback.format_exc())
             }})
 
     print "Content-type: application/json"
