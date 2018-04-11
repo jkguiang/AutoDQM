@@ -162,6 +162,7 @@ def fetch(series, sample, run):
 
     # Download file if not already in database
     if "{0}.root".format(run) not in dbase:
+        found = False
         runRows = get_runs(series, sample)
         for r in runRows:
             if str(run) == r["name"]:
