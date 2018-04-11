@@ -20,6 +20,7 @@
             <script src="js/index.js"></script>                
 
             <!-- CSS -->
+            <link rel="stylesheet" href="styles/select-loading.css"></link>
             <style>
                 .container-wide {
                     padding: 0 50px !important;

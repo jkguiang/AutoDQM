@@ -218,7 +218,8 @@ $(function() {
     });
 
 
-        var seReq, saReq, suReq, rReq;
+    var dataCB, refCB;
+    var seReq, saReq, suReq, rReq;
     var select_series, $select_series;
     var select_sample, $select_sample;
     var select_subsystem, $select_subsystem;
@@ -241,21 +242,27 @@ $(function() {
                 });
         },
         onChange: function(value) {
+            // Clear the sample and run inputs and their ongoing requests
+            [select_sample, select_data_run, select_ref_run]
+                .forEach(s => {
+                    s.clear(true);
+                    s.clearOptions();
+                });
+            [saReq, rReq].forEach(r =>r && r.abort());
+            [dataCB, refCB].forEach(c => c && c())
+
+            // If no value is selected, disable sample and run inputs
             if (!value.length) {
                 [select_sample, select_data_run, select_ref_run]
-                    .forEach(s => s.disable())
-                [select_sample, select_data_run, select_ref_run]
-                    .forEach(s => s.clearOptions())
+                    .forEach(s => s.disable());
                 return;
             }
             select_sample.enable();
-            select_sample.clearOptions();
             select_sample.load(function(callback) {
                 saReq && saReq.abort();
                 saReq = $.getJSON("cgi-bin/handler.py",
                     {type: "getSamples", series: value},
                     function(res) {
-                        console.log(res);
                         callback(res.response.samples);
                     });
             });
@@ -269,25 +276,36 @@ $(function() {
         labelField: 'name',
         searchField: 'name',
         onChange: function(value) {
+
+            // Clear the run inputs and their ongoing requests
+            [select_data_run, select_ref_run]
+                .forEach(s => {
+                    s.clear(true);
+                    s.clearOptions();
+                });
+            [rReq].forEach(r =>r && r.abort());
+            [dataCB, refCB].forEach(c => c && c())
+
+            // If no value is selected, disable run inputs
             if (!value.length) {
-                [select_data_run, select_ref_run]
-                    .forEach(s => s.disable())
-                [select_data_run, select_ref_run]
-                    .forEach(s => s.clearOptions())
+                [select_sample, select_data_run, select_ref_run]
+                    .forEach(s => s.disable());
                 return;
             }
             select_data_run.enable();
             select_ref_run.enable();
-            select_data_run.clearOptions();
-            select_ref_run.clearOptions();
+
+            // This is a tricky bit of scope manipulation for no real good reason
+            // Ensures the loading class is applied to the inputs for *style*
+            select_data_run.load(c => dataCB = c);
+            select_ref_run.load(c => refCB = c);
 
             rReq && rReq.abort();
             rReq = $.getJSON("cgi-bin/handler.py",
                 {type: "getRuns", series: $select_series.val(), sample: value},
                 function(res) {
-                    console.log(res);
-                    select_data_run.load(c => c(res.response.runs));
-                    select_ref_run.load(c => c(res.response.runs));
+                    dataCB(res.response.runs);
+                    refCB(res.response.runs);
                 });
             check_input();
         }
