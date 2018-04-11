@@ -5,8 +5,6 @@ import time
 import ROOT
 import subprocess
 import traceback
-
-
 import fetch
 import search
 import AutoDQM

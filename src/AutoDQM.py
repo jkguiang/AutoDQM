@@ -63,7 +63,8 @@ def scan_2D(f_hist, r_hist, name, data_id, ref_id, targ_dir):
     if norm_type == "row":
         normalize_rows(f_hist, r_hist)
     else:
-        f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
+        if f_hist.GetEntries() > 0:
+            f_hist.Scale(r_hist.GetEntries()/f_hist.GetEntries())
 
     for x in range(1, r_hist.GetNbinsX()+1):
         for y in range(1, r_hist.GetNbinsY()+1):
@@ -253,7 +254,10 @@ def normalize_rows(f_hist, r_hist):
         # Prevent divide-by-zero error
         if frow == 0:
             frow = 1
-        sf = float(rrow)/frow
+        if frow > 0:
+            sf = float(rrow)/frow
+        else:
+            sf = 1
         # Prevent scaling everything to zero
         if sf == 0:
             sf = 1
