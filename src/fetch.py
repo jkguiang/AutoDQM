@@ -9,6 +9,7 @@ from HTMLParser import HTMLParser
 from urlparse import urljoin
 import ROOT
 from json import dumps
+from multiprocessing import Pool
 
 class DQMParser(HTMLParser):
     """
@@ -62,7 +63,7 @@ class DQMParser(HTMLParser):
     def add_row(self):
         if self.name and self.link and self.timestamp:
             if self.name[-1] == '/': self.name = self.name[:-1]
-            self.rows.append({"name": self.name, "url": self.link, "timestamp": self.timestamp})
+            self.rows.append({"name": self.name, "url": self.link, "timestamp": self.timestamp.isoformat()})
             self.name = self.link = self.timestamp = None
         else: 
             raise Exception("Malformed row found, name: {0}, link: {1}, timestamp: {2}".format(self.name, self.link, self.timestamp))
@@ -83,6 +84,8 @@ def hsv_to_rgb(h, s, v):
     elif i == 5: return [v, p, q]
 
 def get_cert_curl():
+    # This envvar allows for multiprocessed curl requests with cert
+    os.environ['NSS_STRICT_NOFORK'] = 'DISABLED'
     c = pycurl.Curl()
     # cms voms member host certificate to authenticate adqm to cmsweb.cern.ch, defaults to voms-proxy-init certificate
     c.setopt(pycurl.SSLCERT, os.getenv('ADQM_SSLCERT'))
@@ -114,31 +117,59 @@ def get_file_with_cert(url, fname_out):
         c.setopt(c.WRITEFUNCTION, fhout.write)
         c.perform()
 
+# Grabs a DQM directory page and parses it into a list of row dicts
+def get_page(url):
+    content = get_url_with_cert(url)
+    parser = DQMParser()
+    parser.feed(content)
+    return parser.get_rows()
+
+def hash_page(url, timestamp):
+    return str(hash(url + timestamp))[1:]
+
+# Grabs a DQM directory page from the cache if the url and timestamp match
+# Otherwise grabs the page and adds it to the cache
+def get_cache(url, timestamp):
+    cache_dir = os.environ['ADQM_TMP'] + 'dqm_cache/'
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+        
+    hashed = hash_page(url, timestamp)
+    if not hashed in os.listdir(cache_dir):
+        with open(cache_dir + hashed, 'w') as f:
+            json.dump(get_page(url), f)
+        
+    with open(cache_dir + hashed) as f:
+        return json.load(f)
+
 def clean_run_fname(fname):
     return fname.split('_')[2][4:]
 
 def get_series():
-    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/")
-    parser = DQMParser()
-    parser.feed(content)
-    return parser.get_rows()
+    return get_page("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/") 
 
 def get_samples(series):
-    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/".format(series))
-    parser = DQMParser()
-    parser.feed(content)
-    return parser.get_rows()
+    return get_page("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/".format(series))
+
+# Bit of a hack to supply a function to Pool.map
+# Could be changed by switching Pool libraries
+# Unfortunate that native Pool doesn't support lambdas
+class GetRunDir(object):
+    def __init__(self, runDirs):
+        self.runDirs = runDirs
+    def __call__(self, i):
+        return get_cache(self.runDirs[i]['url'], self.runDirs[i]['timestamp'])
 
 def get_runs(series, sample):
-    content = get_url_with_cert("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
-    parser = DQMParser()
-    parser.feed(content)
-    runDirs = parser.get_rows()
+    runDirs = get_page("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
     runs = []
-    for runDir in (get_url_with_cert(rD['url']) for rD in runDirs):
-        parser = DQMParser()
-        parser.feed(runDir)
-        runs += parser.get_rows()
+    
+    # Setup a pool to parallize getting run directories, 64 is mostly arbitrary
+    pool = Pool(64)
+    run_arrs = pool.map(GetRunDir(runDirs), range(len(runDirs)))
+
+    # Flatten results of pool
+    runs = [r for run_arr in run_arrs for r in run_arr]
     for run in runs:
         run['name'] = clean_run_fname(run['name'])
     return runs
