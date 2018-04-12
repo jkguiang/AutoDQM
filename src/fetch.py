@@ -170,6 +170,9 @@ def get_runs(series, sample):
 
     # Flatten results of pool
     runs = [r for run_arr in run_arrs for r in run_arr]
+
+    # Filter out non DQMIO runs
+    runs = [r for r in runs if 'DQMIO' in r['name']]
     for run in runs:
         run['name'] = clean_run_fname(run['name'])
     return runs
