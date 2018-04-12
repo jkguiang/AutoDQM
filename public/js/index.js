@@ -288,7 +288,7 @@ $(function() {
 
             // If no value is selected, disable run inputs
             if (!value.length) {
-                [select_sample, select_data_run, select_ref_run]
+                [select_data_run, select_ref_run]
                     .forEach(s => s.disable());
                 return;
             }
