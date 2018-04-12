@@ -101,14 +101,14 @@ def get_url_with_cert(url):
     b = StringIO.StringIO() 
     c = get_cert_curl() 
     c.setopt(pycurl.WRITEFUNCTION, b.write) 
-    c.setopt(pycurl.URL, url) 
+    c.setopt(pycurl.URL, str(url)) 
     c.perform() 
     content = b.getvalue()
     return content
 
 def get_file_with_cert(url, fname_out):
     c = get_cert_curl() 
-    c.setopt(pycurl.URL, url)
+    c.setopt(pycurl.URL, str(url))
     c.setopt(pycurl.FOLLOWLOCATION, 1)
     c.setopt(pycurl.NOPROGRESS, 1)
     c.setopt(pycurl.MAXREDIRS, 5)
