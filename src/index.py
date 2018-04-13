@@ -77,13 +77,17 @@ def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
                 if h.split("*")[0] in name and ref_keys.Contains(name):
                     data_hist = data_dir.Get(name)
                     ref_hist = ref_dir.Get(name)
-                    data_hist.SetDirectory(0)
-                    ref_hist.SetDirectory(0)
-                    hPair = HistPair(data_hist, ref_hist, hconf)
-                    # Add an index if there will be multiple hists with the same name_out
-                    if "name_out" in hconf: hPair.name_out += "_{0}".format(count)
-                    histPairs.append(hPair)
-                    count += 1
+                
+                    # Check that the objects are histograms. TODO: should check if TH1 or TH2, not TH1F or TH2F
+                    if (type(data_hist) == ROOT.TH1F or type(data_hist) == ROOT.TH2F) and \
+                        (type(ref_hist) == ROOT.TH1F or type(ref_hist) == ROOT.TH2F):
+                        data_hist.SetDirectory(0)
+                        ref_hist.SetDirectory(0)
+                        hPair = HistPair(data_hist, ref_hist, hconf)
+                        # Add an index if there will be multiple hists with the same name_out
+                        if "name_out" in hconf: hPair.name_out += "_{0}".format(count)
+                        histPairs.append(hPair)
+                        count += 1
         # Normal search
         else:
             if data_keys.Contains(h) and ref_keys.Contains(h):
