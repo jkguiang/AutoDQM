@@ -1,0 +1,20 @@
+version: '3.6'
+services:
+  web:
+    build: .
+    image: autodqm
+    ports:
+      - "80:80"
+    volumes:
+      - adqm-db:/db
+      - .:/code
+    secrets:
+      - cmsvo-cert.pem
+      - cmsvo-cert.key
+volumes:
+  adqm-db:
+secrets:
+  cmsvo-cert.pem:
+    external: true
+  cmsvo-cert.key:
+    external: true

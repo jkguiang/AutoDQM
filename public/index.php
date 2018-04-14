@@ -8,14 +8,19 @@
 
             <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+            
+            <!-- Selectize libraries -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/css/selectize.bootstrap3.min.css"></link>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/js/standalone/selectize.min.js"></script>
 
             <!-- Tab Icon -->
             <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 
             <!-- My Code -->
-            <script src="src/js/index.js"></script>                
+            <script src="js/index.js"></script>                
 
             <!-- CSS -->
+            <link rel="stylesheet" href="styles/select-loading.css"></link>
             <style>
                 .container-wide {
                     padding: 0 50px !important;
@@ -55,34 +60,31 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="form-group">
-                                    <label for="sample_list">Name</label>
-                                    <select class="form-control" id="sample_list">
-                                        <option value="none">Select Sample</option>
+                                    <label for="select-series">Series</label>
+                                    <select class="form-control" id="select-series">
+                                        <option value="" disabled selected hidden>Select a series...<option>
+                                    </select>
+                                    <label for="select-sample">Sample</label>
+                                    <select class="form-control" id="select-sample">
+                                        <option value="" disabled selected hidden>Select a sample...<option>
+                                    </select>
+                                    <label for="select-subsystem">Subsystem</label>
+                                    <select class="form-control" id="select-subsystem">
+                                        <option value="CSC">CSC</option>
+                                        <option value="EMTF">EMTF</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <!-- Cosnics Run Entry -->
-                                <div class="form-group row">
-                                    <form id="Cosmics" action="/" method="post" role="form">
-                                        <div class="form-group">
-                                            <label for="Cosmics_dataInput">Data Run Number</label>
-                                            <input type="text" class="form-control" id="Cosmics_dataInput" onkeyup="updt_sample()" placeholder="e.g. 300811">
-                                            <hr style="margin:0px; height:10px; visibility:hidden;" />
-                                            <label for="Cosmics_refInput">Reference Run Number</label>
-                                            <input type="text" class="form-control" id="Cosmics_refInput" onkeyup="updt_sample()" placeholder="e.g. 301531">
-                                        </div>
-                                    </form>
-                                <!-- SingleMuon Run Entry -->
-                                    <form id="SingleMuon" action="/" method="post" role="form">
-                                        <div class="form-group">
-                                            <label for="SingleMuon_dataInput">Data Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_dataInput" onkeyup="updt_sample()" placeholder="e.g. 300811">
-                                            <hr style="margin:0px; height:10px; visibility:hidden;" />
-                                            <label for="SingleMuon_refInput">Reference Run Number</label>
-                                            <input type="text" class="form-control" id="SingleMuon_refInput" onkeyup="updt_sample()" placeholder="e.g. 301531">
-                                        </div>
-                                    </form>
+                                <div class="form-group">
+                                    <label for="select-data-run">Data Run</label>
+                                    <select class="form-control" id="select-data-run">
+                                        <option value="" disabled selected hidden>Input a data run...<option>
+                                    </select>
+                                    <label for="select-ref-run">Reference Run</label>
+                                    <select class="form-control" id="select-ref-run">
+                                        <option value="" disabled selected hidden>Input a reference run...<option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

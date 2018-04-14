@@ -1,0 +1,73 @@
+{
+  "CSC": {
+    "main_gdir":"DQMData/Run {0}/CSC/Run summary/CSCOfflineMonitor/",
+    "hists":[
+      {
+        "ks_cut":0.0,
+        "path":"Occupancy/hORecHits"
+      },
+      {
+        "ks_cut":0.0,
+        "path":"Occupancy/hOSegments"
+      },
+      {
+        "ks_cut":0.0,
+        "path":"Occupancy/hOStrips"
+      },
+      {
+        "ks_cut":0.0,
+        "path":"Occupancy/hOWires"
+      },
+      {
+        "ks_cut":0.0,
+        "path":"recHits/hRHGlobal*"
+      },
+      {
+        "always_draw":true,
+        "path":"recHits/hRHnrechits"
+      },
+      {
+        "path":"Digis/hWireTBin_*"
+      },
+      {
+        "always_draw":true,
+        "path":"Digis/hStripNFired"
+      },
+      {
+        "always_draw":true,
+        "path":"Digis/hWirenGroupsTotal"
+      },
+      {
+        "path":"Segments/hSnhits*"
+      },
+      {
+        "always_draw":true,
+        "path":"Segments/hSnSegments"
+      },
+      {
+        "always_draw":true,
+        "path":"Segments/hSnhits"
+      }
+    ]
+  },
+  "EMTF": {
+    "main_gdir":"DQMData/Run {0}/L1T/Run summary/L1TStage2EMTF/",
+    "hists":[
+      {
+        "path":"CSCInput/csc*"
+      },
+      {
+        "path":"RPCInput/rpc*"
+      },
+      {
+        "path":"cscDQMOccupancy",
+        "norm_type": "row",
+        "always_draw": true
+      },
+      {
+        "path":"Timing/cscLCTTiming*",
+        "norm_type": "row"
+      }
+    ]
+  }
+}
