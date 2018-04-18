@@ -47,7 +47,6 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
                 <li role="presentation"><a href="search.php">Search</a></li>
-                <li role="presentation"><a href="database.php">Database</a></li>
                 <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul>
 
