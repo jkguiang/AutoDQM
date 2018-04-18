@@ -177,6 +177,8 @@ def draw_same(f_hist, r_hist, name, data_id, ref_id, targ_dir):
         # Stat boxes only for hists that are always drawn
         if always_draw:
             ROOT.gStyle.SetOptStat(1)
+            r_hist.SetStats(True)
+            f_hist.SetStats(True)
         else:
             ROOT.gStyle.SetOptStat(0)
 
