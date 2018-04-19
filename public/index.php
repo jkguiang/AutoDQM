@@ -69,8 +69,7 @@
                                     </select>
                                     <label for="select-subsystem">Subsystem</label>
                                     <select class="form-control" id="select-subsystem">
-                                        <option value="CSC">CSC</option>
-                                        <option value="EMTF">EMTF</option>
+                                        <option value="" disabled selected hidden>Select a subsystem...<option>
                                     </select>
                                 </div>
                             </div>

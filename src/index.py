@@ -36,6 +36,10 @@ def get_response(t0, status, fail_reason, tb, query, payload):
     duration = time.time() - t0
     return json.dumps( { "query": query, "start": t0, "duration":duration, "response": { "status": status, "fail_reason": str(fail_reason), "traceback": str(tb), "payload": times } } )
 
+def get_subsystems():
+    with open(os.getenv('ADQM_CONFIG')) as config_file:
+        config = json.load(config_file)
+    return [{"name": s} for s in config]
 
 @timer
 def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):

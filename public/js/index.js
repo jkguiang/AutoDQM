@@ -314,8 +314,21 @@ $(function() {
     $select_subsystem = $("#select-subsystem").selectize({
         create: true,
         createOnBlur: true,
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name',
         onChange: check_input,
+        preload: true,
+        load: function(query, callback) {
+            suReq && suReq.abort();
+            suReq = $.getJSON("cgi-bin/handler.py",
+                {type: "getSubsystems"},
+                function(res) {
+                    callback(res.response.subsystems);
+                });
+        }
     });
+
     $select_data_run = $("#select-data-run").selectize({
         create: true,
         createOnBlur: true,

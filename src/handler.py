@@ -4,6 +4,7 @@ import json
 import commands
 from subprocess import check_output
 from fetch import get_series, get_samples, get_runs
+from index import get_subsystems
 import traceback
 
 def inputToDict(form):
@@ -46,6 +47,13 @@ if __name__ == "__main__":
                     "status": "success",
                     "fail_reason": "",
                     "runs": get_runs(inp["series"], inp["sample"])}
+            }, default=str)
+        elif reqType == "getSubsystems":
+            out = json.dumps({
+                "response": {
+                    "status": "success",
+                    "fail_reason": "",
+                    "subsystems": get_subsystems()}
             }, default=str)
         else:
             raise Exception("Request type not found: {0}".format(reqType))
