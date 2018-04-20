@@ -233,6 +233,7 @@ $(function() {
     $suSelect = $("#select-subsystem").selectize(Object.assign({
         preload: true,
         load: function(query, callback) {
+            this.settings.load = null; // prevent reloading on user input
             $.getJSON('cgi-bin/handler.py',
                 {type: "getSubsystems"},
                 function(res) {
@@ -251,6 +252,7 @@ $(function() {
         $seSelect = $(`#${colType}-select-series`).selectize(Object.assign({
             preload: true,
             load: function(query, callback) {
+                this.settings.load = null; // prevent reloading on user input
                 seReq && seReq.abort();
                 seReq = $.getJSON("cgi-bin/handler.py",
                     {type: "getSeries"},
