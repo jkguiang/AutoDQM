@@ -13,12 +13,14 @@ import shutil
 def autodqm_offline(series, sample, subsystem, data_run, ref_run):
     # Setup parameters
     params = {
-        'series': series,
-        'sample': sample,
+        'user_id': 'offline',
         'subsystem': subsystem,
-        'data_info': data_run,
-        'ref_info': ref_run,
-        'user_id': 'offline'
+        'data_series': series,
+        'data_sample': sample,
+        'data_run': data_run,
+        'ref_series': series,
+        'ref_sample': sample,
+        'ref_run': ref_run
     }
 
     # Change to source directory

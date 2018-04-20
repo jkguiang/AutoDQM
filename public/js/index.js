@@ -4,11 +4,13 @@ var t0 = 0;
 
 function check_input() {
     var filled =
-        $("#select-series").val() != "" &&
-        $("#select-sample").val() != "" &&
         $("#select-subsystem").val() != "" &&
-        $("#select-data-run").val() != "" &&
-        $("#select-ref-run").val() != "";
+        $("#data-select-series").val() != "" &&
+        $("#data-select-sample").val() != "" &&
+        $("#data-select-run").val() != "" &&
+        $("#ref-select-series").val() != "" &&
+        $("#ref-select-sample").val() != "" &&
+        $("#ref-select-run").val() != "";
 
     if(filled) {
         $("#sample_chk").attr('class', 'list-group-item list-group-item-success');
@@ -217,146 +219,112 @@ $(function() {
         }
     });
 
-
-    var dataCB, refCB;
-    var seReq, saReq, suReq, rReq;
-    var select_series, $select_series;
-    var select_sample, $select_sample;
-    var select_subsystem, $select_subsystem;
-    var select_data_run, $select_data_run;
-    var select_ref_run, $select_ref_run;
-
-    $select_series = $("#select-series").selectize({
+    var selectizeDefaults = {
         create: true,
         createOnBlur: true,
         valueField: 'name',
         labelField: 'name',
         searchField: 'name',
+    }
+
+    var suReq;
+    var suSelect, $suSelect;
+
+    $suSelect = $("#select-subsystem").selectize(Object.assign({
         preload: true,
         load: function(query, callback) {
-            seReq && seReq.abort();
-            seReq = $.getJSON("cgi-bin/handler.py",
-                {type: "getSeries"},
-                function(res) {
-                    callback(res.response.series);
-                });
-        },
-        onChange: function(value) {
-            // Clear the sample and run inputs and their ongoing requests
-            [select_sample, select_data_run, select_ref_run]
-                .forEach(s => {
-                    s.clear(true);
-                    s.clearOptions();
-                });
-            [saReq, rReq].forEach(r =>r && r.abort());
-            [dataCB, refCB].forEach(c => c && c())
-
-            // If no value is selected, disable sample and run inputs
-            if (!value.length) {
-                [select_sample, select_data_run, select_ref_run]
-                    .forEach(s => s.disable());
-                return;
-            }
-            select_sample.enable();
-            select_sample.load(function(callback) {
-                saReq && saReq.abort();
-                saReq = $.getJSON("cgi-bin/handler.py",
-                    {type: "getSamples", series: value},
-                    function(res) {
-                        callback(res.response.samples);
-                    });
-            });
-            check_input();
-        }
-    });
-    $select_sample = $("#select-sample").selectize({
-        create: true,
-        createOnBlur: true,
-        valueField: 'name',
-        labelField: 'name',
-        searchField: 'name',
-        onChange: function(value) {
-
-            // Clear the run inputs and their ongoing requests
-            [select_data_run, select_ref_run]
-                .forEach(s => {
-                    s.clear(true);
-                    s.clearOptions();
-                });
-            [rReq].forEach(r =>r && r.abort());
-            [dataCB, refCB].forEach(c => c && c())
-
-            // If no value is selected, disable run inputs
-            if (!value.length) {
-                [select_data_run, select_ref_run]
-                    .forEach(s => s.disable());
-                return;
-            }
-            select_data_run.enable();
-            select_ref_run.enable();
-
-            // This is a tricky bit of scope manipulation for no real good reason
-            // Ensures the loading class is applied to the inputs for *style*
-            select_data_run.load(c => dataCB = c);
-            select_ref_run.load(c => refCB = c);
-
-            rReq && rReq.abort();
-            rReq = $.getJSON("cgi-bin/handler.py",
-                {type: "getRuns", series: $select_series.val(), sample: value},
-                function(res) {
-                    dataCB(res.response.runs);
-                    refCB(res.response.runs);
-                });
-            check_input();
-        }
-    });
-
-    $select_subsystem = $("#select-subsystem").selectize({
-        create: true,
-        createOnBlur: true,
-        valueField: 'name',
-        labelField: 'name',
-        searchField: 'name',
-        onChange: check_input,
-        preload: true,
-        load: function(query, callback) {
-            suReq && suReq.abort();
-            suReq = $.getJSON("cgi-bin/handler.py",
+            $.getJSON('cgi-bin/handler.py',
                 {type: "getSubsystems"},
                 function(res) {
                     callback(res.response.subsystems);
+                })},
+    }, selectizeDefaults));
+
+    var colTypes = ["data", "ref"];
+    for (var i in colTypes) {
+        let colType = colTypes[i];
+        let seReq, saReq, rReq;
+        let seSelect, $seSelect;
+        let saSelect, $saSelect;
+        let rSelect, $rSelect;
+
+        $seSelect = $(`#${colType}-select-series`).selectize(Object.assign({
+            preload: true,
+            load: function(query, callback) {
+                seReq && seReq.abort();
+                seReq = $.getJSON("cgi-bin/handler.py",
+                    {type: "getSeries"},
+                    function(res) {
+                        callback(res.response.series);
+                    })},
+            onChange: function(value) {
+                // Clear the sample and run inputs and their ongoing requests
+                [saSelect, rSelect].forEach(s => {
+                    s.clear(true);
+                    s.clearOptions();
                 });
-        }
-    });
+                [saReq, rReq].forEach(r =>r && r.abort());
 
-    $select_data_run = $("#select-data-run").selectize({
-        create: true,
-        createOnBlur: true,
-        onChange: check_input,
-        valueField: 'name',
-        labelField: 'name',
-        searchField: 'name'
-    });
-    $select_ref_run = $("#select-ref-run").selectize({
-        create: true,
-        createOnBlur: true,
-        onChange: check_input,
-        valueField: 'name',
-        labelField: 'name',
-        searchField: 'name'
-    });
+                // If no value is selected, disable sample and run inputs
+                if (!value.length) {
+                    [saSelect, rSelect].forEach(s => s.disable());
+                    return;
+                }
 
-    select_series = $select_series[0].selectize;
-    select_sample = $select_sample[0].selectize;
-    select_subsystem = $select_subsystem[0].selectize;
-    select_data_run = $select_data_run[0].selectize;
-    select_ref_run = $select_ref_run[0].selectize;
+                // Enable the sample selector and request its values
+                saSelect.enable();
+                saSelect.load(function(callback) {
+                    saReq && saReq.abort();
+                    saReq = $.getJSON("cgi-bin/handler.py",
+                        {type: "getSamples", series: value},
+                        function(res) {
+                            callback(res.response.samples);
+                        });
+                });
+                check_input();
+            }
+        }, selectizeDefaults));
 
-    select_sample.disable();
-    select_data_run.disable();
-    select_ref_run.disable();
+        $saSelect = $(`#${colType}-select-sample`).selectize(Object.assign({
+            onChange: function(value) {
+                // Clear the run inputs and their ongoing requests
+                [rSelect].forEach(s => {
+                    s.clear(true);
+                    s.clearOptions();
+                });
+                [rReq].forEach(r =>r && r.abort());
 
-    // If user refreshes after a search has failed, ensures that all form info will be properly stored
+                // If no value is selected, disable run inputs
+                if (!value.length) {
+                    [rSelect].forEach(s => s.disable());
+                    return;
+                }
+                rSelect.enable();
+
+                rSelect.load(function(callback) {
+                    rReq && rReq.abort();
+                    rReq = $.getJSON("cgi-bin/handler.py",
+                        {type: "getRuns", series: $seSelect.val(), sample: value},
+                        function(res) {
+                            callback(res.response.runs);
+                        });
+                });
+                check_input();
+            }
+        }, selectizeDefaults));
+
+        $rSelect = $(`#${colType}-select-run`).selectize(Object.assign({
+            onChange: check_input,
+        }, selectizeDefaults));
+
+        seSelect = $seSelect[0].selectize;
+        saSelect = $saSelect[0].selectize;
+        rSelect = $rSelect[0].selectize;
+
+        saSelect.disable();
+        rSelect.disable();
+    }
+
     check_input();
 
     // Main query handler
@@ -368,11 +336,13 @@ $(function() {
         $("#internal_err").hide();
         var query = {
             "type": "retrieve_data",
-            "series": $("#select-series").val(),
-            "sample": $("#select-sample").val(),
             "subsystem": $("#select-subsystem").val(),
-            "data_info": $("#select-data-run").val(),
-            "ref_info": $("#select-ref-run").val(),
+            "data_series": $("#data-select-series").val(),
+            "data_sample": $("#data-select-sample").val(),
+            "data_run": $("#data-select-run").val(),
+            "ref_series": $("#ref-select-series").val(),
+            "ref_sample": $("#ref-select-sample").val(),
+            "ref_run": $("#ref-select-run").val(),
             "user_id": Date.now(),
         };
         submit(query);
