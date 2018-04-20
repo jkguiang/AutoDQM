@@ -244,6 +244,8 @@ $(function() {
     var colTypes = ["data", "ref"];
     for (var i in colTypes) {
         let colType = colTypes[i];
+        let otherColType = colTypes[(i + 1) % 2];
+
         let seReq, saReq, rReq;
         let seSelect, $seSelect;
         let saSelect, $saSelect;
@@ -256,61 +258,51 @@ $(function() {
                 seReq && seReq.abort();
                 seReq = $.getJSON("cgi-bin/handler.py",
                     {type: "getSeries"},
-                    function(res) {
-                        callback(res.response.series);
-                    })},
+                    res => callback(res.response.series))
+            },
             onChange: function(value) {
-                // Clear the sample and run inputs and their ongoing requests
-                [saSelect, rSelect].forEach(s => {
-                    s.clear(true);
-                    s.clearOptions();
-                });
+                // Clear the sample and run options and their ongoing requests
+                [saSelect, rSelect].forEach(s => s.clearOptions());
                 [saReq, rReq].forEach(r =>r && r.abort());
 
-                // If no value is selected, disable sample and run inputs
-                if (!value.length) {
-                    [saSelect, rSelect].forEach(s => s.disable());
-                    return;
-                }
+                if(value != "") {
+                    // Set the other input to the same value if it's empty
+                    let other = $(`#${otherColType}-select-series`);
+                    if(other.val() == "") {
+                        other[0].selectize.setValue(value, false);
+                    }
 
-                // Enable the sample selector and request its values
-                saSelect.enable();
-                saSelect.load(function(callback) {
-                    saReq && saReq.abort();
-                    saReq = $.getJSON("cgi-bin/handler.py",
-                        {type: "getSamples", series: value},
-                        function(res) {
-                            callback(res.response.samples);
-                        });
-                });
+                    // Enable the sample selector and request its values
+                    saSelect.load(function(callback) {
+                        saReq && saReq.abort();
+                        saReq = $.getJSON("cgi-bin/handler.py",
+                            {type: "getSamples", series: value},
+                            res => callback(res.response.samples))});
+                }
                 check_input();
             }
         }, selectizeDefaults));
 
         $saSelect = $(`#${colType}-select-sample`).selectize(Object.assign({
             onChange: function(value) {
-                // Clear the run inputs and their ongoing requests
-                [rSelect].forEach(s => {
-                    s.clear(true);
-                    s.clearOptions();
-                });
+                // Clear the run options and their ongoing requests
+                [rSelect].forEach(s => s.clearOptions());
                 [rReq].forEach(r =>r && r.abort());
 
-                // If no value is selected, disable run inputs
-                if (!value.length) {
-                    [rSelect].forEach(s => s.disable());
-                    return;
+                if(value != "") {
+                    // Set the other input to the same value if it's empty
+                    let other = $(`#${otherColType}-select-sample`);
+                    if(other.val() == "") {
+                        other[0].selectize.setValue(value, false);
+                    }
+                    
+                    // Enable the run selector and request its values
+                    rSelect.load(function(callback) {
+                        rReq && rReq.abort();
+                        rReq = $.getJSON("cgi-bin/handler.py",
+                            {type: "getRuns", series: $seSelect.val(), sample: value},
+                            res => callback(res.response.runs))});
                 }
-                rSelect.enable();
-
-                rSelect.load(function(callback) {
-                    rReq && rReq.abort();
-                    rReq = $.getJSON("cgi-bin/handler.py",
-                        {type: "getRuns", series: $seSelect.val(), sample: value},
-                        function(res) {
-                            callback(res.response.runs);
-                        });
-                });
                 check_input();
             }
         }, selectizeDefaults));
@@ -322,9 +314,6 @@ $(function() {
         seSelect = $seSelect[0].selectize;
         saSelect = $saSelect[0].selectize;
         rSelect = $rSelect[0].selectize;
-
-        saSelect.disable();
-        rSelect.disable();
     }
 
     check_input();
@@ -355,6 +344,5 @@ $(function() {
         get_search(localStorage["external_query"]);
         localStorage.removeItem("external_query");
     }
-
 });
 
