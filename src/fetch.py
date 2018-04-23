@@ -135,12 +135,14 @@ def get_cache(url, timestamp):
         os.makedirs(cache_dir)
         
     hashed = hash_page(url, timestamp)
-    if not hashed in os.listdir(cache_dir):
+    try:
+        with open(cache_dir + hashed) as f:
+            page = json.load(f)
+    except:
+        page = get_page(url)
         with open(cache_dir + hashed, 'w') as f:
-            json.dump(get_page(url), f)
-        
-    with open(cache_dir + hashed) as f:
-        return json.load(f)
+            json.dump(page, f)
+    return page
 
 def clean_run_fname(fname):
     return fname.split('_')[2][4:]
