@@ -47,8 +47,8 @@ function handle_response(response) {
         }
 
         else {
-            localStorage["data"] = response["query"]["data_info"];
-            localStorage["ref"] = response["query"]["ref_info"];
+            localStorage["data"] = response["query"]["data_run"];
+            localStorage["ref"] = response["query"]["ref_run"];
             localStorage["user_id"] = response["query"]["user_id"];
             reduced_resp = [localStorage["data"], localStorage["ref"], localStorage["user_id"]];
             pass_object(reduced_resp);
