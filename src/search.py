@@ -1,55 +1,10 @@
-import os
 import sys
 import ast
 import json
-import traceback
-import glob
 import time
-import pycurl 
-import StringIO 
-import datetime
 
-import commands
-
-def get(cmd, returnStatus=False):
-    status, out = commands.getstatusoutput(cmd)
-    if returnStatus: return status, out
-    else: return out
-
-def cmd(cmd, returnStatus=False):
-    status, out = commands.getstatusoutput(cmd)
-    if returnStatus: return status, out
-    else: return out
-
-def proxy_hours_left():
-    try:
-        info = get("voms-proxy-info")
-        hours = int(info.split("timeleft")[-1].strip().split(":")[1])
-    except: hours = 0
-    return hours
-
-def proxy_renew():
-    # http://www.t2.ucsd.edu/tastwiki/bin/view/CMS/LongLivedProxy
-    cert_file = "/home/users/{0}/.globus/proxy_for_{0}.file".format(get("whoami").strip())
-    if os.path.exists(cert_file): cmd("voms-proxy-init -q -voms cms -hours 120 -valid=120:0 -cert=%s" % cert_file)
-    else: cmd("voms-proxy-init -hours 9876543:0 -out=%s" % cert_file)
-
-def get_proxy_file():
-    cert_file = '/tmp/x509up_u%s' % str(os.getuid()) # TODO: check that this is the same as `voms-proxy-info -path`
-    return cert_file
-
-def get_url_with_cert(url, return_raw=False):
-    # get json from a dbs url (API ref is at https://cmsweb.cern.ch/dbs/prod/global/DBSReader/)
-    b = StringIO.StringIO() 
-    c = pycurl.Curl() 
-    cert = get_proxy_file()
-    c.setopt(pycurl.WRITEFUNCTION, b.write) 
-    c.setopt(pycurl.CAPATH, '/etc/grid-security/certificates') 
-    c.unsetopt(pycurl.CAINFO)
-    c.setopt(pycurl.SSLCERT, cert)
-    c.setopt(pycurl.URL, url) 
-    c.perform() 
-    s = b.getvalue()
+def get_page(url, return_raw=False):
+    s = cerncert.get_url_with_cert(url)
     if return_raw: return s
     s = s.replace("null","None")
     ret = ast.literal_eval(s)
@@ -63,7 +18,7 @@ def get_dbs_instance(dataset):
 def dataset_event_count(dataset):
     # get event count and other information from dataset
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/filesummaries?dataset=%s&validFileOnly=1" % (get_dbs_instance(dataset),dataset)
-    ret = get_url_with_cert(url)
+    ret = get_page(url)
     if len(ret) > 0:
         if ret[0]:
             return { "nevents": ret[0]['num_event'], "filesizeGB": round(ret[0]['file_size']/1.9e9,2), "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
@@ -76,7 +31,7 @@ def list_of_datasets(wildcardeddataset, short=False):
     _, pd, proc, tier = wildcardeddataset.split("/")
     # url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?primary_ds_name=%s&processed_ds_name=%s&data_tier_name=%s&detail=0" % (get_dbs_instance(wildcardeddataset),pd,proc,tier)
-    ret = get_url_with_cert(url)
+    ret = get_page(url)
     if len(ret) > 0:
         vals = []
 
@@ -105,7 +60,7 @@ def get_dataset_files(dataset, run_num=None,lumi_list=[]):
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=1&detail=1" % (get_dbs_instance(dataset),dataset)
     if run_num and lumi_list:
         url += "&run_num=%i&lumi_list=[%s]" % (run_num, ",".join(map(str,lumi_list)))
-    ret = get_url_with_cert(url)
+    ret = get_page(url)
     files = []
     for f in ret:
         files.append( [f['logical_file_name'], f['event_count'], f['file_size']/1.0e9, f['last_modification_date']] )
@@ -113,7 +68,7 @@ def get_dataset_files(dataset, run_num=None,lumi_list=[]):
 
 def get_dataset_runs(dataset):
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/runs?dataset=%s" % (get_dbs_instance(dataset),dataset)
-    return get_url_with_cert(url)[0]["run_num"]
+    return get_page(url)[0]["run_num"]
 
 def filelist_to_dict(files, short=False, num=10):
     newfiles = []
