@@ -1,4 +1,3 @@
-
 // Global variables
 var t0 = 0;
 
@@ -12,7 +11,7 @@ function check_input() {
         $("#ref-select-sample").val() != "" &&
         $("#ref-select-run").val() != "";
 
-    if(filled) {
+    if (filled) {
         $("#sample_chk").attr('class', 'list-group-item list-group-item-success');
         $("#submit").removeAttr('disabled');
     } else {
@@ -44,9 +43,7 @@ function handle_response(response) {
             $("#internal_err").text(resp["fail_reason"]);
             $("#submit").show();
             $("#internal_err").show();
-        }
-
-        else {
+        } else {
             localStorage["data"] = response["query"]["data_run"];
             localStorage["ref"] = response["query"]["ref_run"];
             localStorage["user_id"] = response["query"]["user_id"];
@@ -54,8 +51,7 @@ function handle_response(response) {
             pass_object(reduced_resp);
             $("#finished").show();
         }
-    }
-    catch(TypeError) {
+    } catch (TypeError) {
         // Handle crashes, system error, timeouts, etc.
         console.log(response["responseText"]);
         var resp_txt = response["responseText"];
@@ -64,8 +60,7 @@ function handle_response(response) {
         console.log(resp_txt.indexOf("504"));
         if (resp_txt.indexOf("504") <= -1) {
             err_msg = "Error: Gateway timed out. Could not reach server."
-        }
-        else {
+        } else {
             err_msg = "Error: An internal error occured."
         }
 
@@ -73,8 +68,7 @@ function handle_response(response) {
 
         $("#submit").show();
         $("#internal_err").show();
-    }
-    finally {
+    } finally {
         $("#load").hide();
         $("#load_msg").text("Loading...");
         $("#load_msg").hide();
@@ -99,26 +93,23 @@ function handle_processes(response) {
             $("#internal_err").text(resp["fail_reason"]);
             $("#submit").show();
             $("#internal_err").show();
-        }
-
-        else if (response["query"]["type"] == "retrieve_data") {
+        } else if (response["query"]["type"] == "retrieve_data") {
             console.log("data retrieved");
             $("#load_msg").text("Loading reference...")
             response["query"]["type"] = "retrieve_ref";
             submit(response["query"]);
-        }
-
-        else if (response["query"]["type"] == "retrieve_ref") {
+        } else if (response["query"]["type"] == "retrieve_ref") {
             console.log("processing")
             response["query"]["type"] = "process";
             $("#load_msg").text("Processing...")
-            $.ajaxSetup({timeout:0});
+            $.ajaxSetup({
+                timeout: 0
+            });
             $.get("cgi-bin/handler.py", response["query"])
                 .done(function(response) {})
                 .always(handle_response);
         }
-    }
-    catch(TypeError) {
+    } catch (TypeError) {
         // Handle crashes, system error, timeouts, etc.
         console.log(response["responseText"]);
         var resp = response["responseText"];
@@ -127,8 +118,7 @@ function handle_processes(response) {
         console.log(resp.indexOf("504"));
         if (resp.indexOf("504") > -1) {
             err_msg = "Error: Gateway timed out. Could not reach server."
-        }
-        else {
+        } else {
             err_msg = "Error: An internal error occured."
         }
 
@@ -154,7 +144,9 @@ function submit(query) {
     t0 = Math.floor(Date.now() / 1000);
     console.log(t0);
 
-    $.ajaxSetup({timeout:0}); // Set timeout to 5 minutes
+    $.ajaxSetup({
+        timeout: 0
+    }); // Set timeout to 5 minutes
     $.get("cgi-bin/handler.py", query)
         .done(function(response) {})
         .always(handle_processes);
@@ -234,11 +226,13 @@ $(function() {
         preload: true,
         load: function(query, callback) {
             this.settings.load = null; // prevent reloading on user input
-            $.getJSON('cgi-bin/handler.py',
-                {type: "getSubsystems"},
+            $.getJSON('cgi-bin/handler.py', {
+                    type: "getSubsystems"
+                },
                 function(res) {
                     callback(res.response.subsystems);
-                })},
+                })
+        },
     }, selectizeDefaults));
 
     var colTypes = ["data", "ref"];
@@ -256,28 +250,34 @@ $(function() {
             load: function(query, callback) {
                 this.settings.load = null; // prevent reloading on user input
                 seReq && seReq.abort();
-                seReq = $.getJSON("cgi-bin/handler.py",
-                    {type: "getSeries"},
-                    res => callback(res.response.series))
+                seReq = $.getJSON("cgi-bin/handler.py", {
+                            type: "getSeries"
+                        },
+                        res => callback(res.response.series))
+                    .fail(res => console.log("Series could not be loaded", res));
             },
             onChange: function(value) {
                 // Clear the sample and run options and their ongoing requests
                 [saSelect, rSelect].forEach(s => s.clearOptions());
-                [saReq, rReq].forEach(r =>r && r.abort());
+                [saReq, rReq].forEach(r => r && r.abort());
 
-                if(value != "") {
+                if (value != "") {
                     // Set the other input to the same value if it's empty
                     let other = $(`#${otherColType}-select-series`);
-                    if(other.val() == "") {
+                    if (other.val() == "") {
                         other[0].selectize.setValue(value, false);
                     }
 
                     // Enable the sample selector and request its values
                     saSelect.load(function(callback) {
                         saReq && saReq.abort();
-                        saReq = $.getJSON("cgi-bin/handler.py",
-                            {type: "getSamples", series: value},
-                            res => callback(res.response.samples))});
+                        saReq = $.getJSON("cgi-bin/handler.py", {
+                                    type: "getSamples",
+                                    series: value
+                                },
+                                res => callback(res.response.samples))
+                            .fail(res => console.log("Samples could not be loaded", res));
+                    });
                 }
                 check_input();
             }
@@ -287,21 +287,26 @@ $(function() {
             onChange: function(value) {
                 // Clear the run options and their ongoing requests
                 [rSelect].forEach(s => s.clearOptions());
-                [rReq].forEach(r =>r && r.abort());
+                [rReq].forEach(r => r && r.abort());
 
-                if(value != "") {
+                if (value != "") {
                     // Set the other input to the same value if it's empty
                     let other = $(`#${otherColType}-select-sample`);
-                    if(other.val() == "") {
+                    if (other.val() == "") {
                         other[0].selectize.setValue(value, false);
                     }
-                    
+
                     // Enable the run selector and request its values
                     rSelect.load(function(callback) {
                         rReq && rReq.abort();
-                        rReq = $.getJSON("cgi-bin/handler.py",
-                            {type: "getRuns", series: $seSelect.val(), sample: value},
-                            res => callback(res.response.runs))});
+                        rReq = $.getJSON("cgi-bin/handler.py", {
+                                    type: "getRuns",
+                                    series: $seSelect.val(),
+                                    sample: value
+                                },
+                                res => callback(res.response.runs))
+                            .fail(res => console.log("Runs could not be loaded", res));
+                    });
                 }
                 check_input();
             }
@@ -319,7 +324,7 @@ $(function() {
     check_input();
 
     // Main query handler
-    $("#submit").click(function(){
+    $("#submit").click(function() {
         $("#load").hide();
         $("#load_msg").text("Loading data...")
         $("#finished").hide();
@@ -345,4 +350,3 @@ $(function() {
         localStorage.removeItem("external_query");
     }
 });
-
