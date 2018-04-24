@@ -224,6 +224,7 @@ $(function() {
 
     $suSelect = $("#select-subsystem").selectize(Object.assign({
         preload: true,
+        onChange: check_input,
         load: function(query, callback) {
             this.settings.load = null; // prevent reloading on user input
             $.getJSON('cgi-bin/handler.py', {
