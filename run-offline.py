@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from subprocess import call
-from json import dumps
 import os
 import argparse
 import shutil
+from glob import glob
+from subprocess import call
+from json import dumps
+
 
 # Retrieves data and reference root files, then runs AutoDQM on them
-
-
 def autodqm_offline(series, sample, subsystem, data_run, ref_run):
     # Setup parameters
     params = {
@@ -28,7 +28,6 @@ def autodqm_offline(series, sample, subsystem, data_run, ref_run):
     do_cmd = './do.sh'
 
     # Run data retrieval and AutoDQM processing
-
     print("\nRetrieving data root files")
     params['type'] = 'retrieve_data'
     call(['python', 'index.py', dumps(params)])
@@ -49,12 +48,18 @@ def make_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+
 # Copies files from one directory to another
-
-
 def copy_files(fromDir, toDir):
     for f in os.listdir(fromDir):
         shutil.copy(fromDir + f, toDir)
+
+
+# Find the first file that matches the given pattern
+def find_file(pattern):
+    pattern = os.path.expandvars(pattern)
+    pattern = os.path.expanduser(pattern)
+    return next((f for f in glob(pattern)), None)
 
 
 if __name__ == '__main__':
@@ -81,12 +86,14 @@ if __name__ == '__main__':
     if 'ADQM_TMP' not in os.environ:
         os.environ['ADQM_TMP'] = os.path.abspath('./tmp/')
     if 'ADQM_SSLCERT' not in os.environ:
-        os.environ['ADQM_SSLCERT'] = '/tmp/x509up_u%s' % str(os.getuid())
+        os.environ['ADQM_SSLCERT'] = find_file('~/.globus/usercert.*')
+        os.environ['ADQM_SSLKEY'] = find_file('~/.globus/userkey.*')
 
     make_dir(os.environ['ADQM_DB'])
     make_dir(os.environ['ADQM_TMP'])
 
-    autodqm_offline(args.series, args.sample, args.subsystem, args.data, args.ref)
+    autodqm_offline(args.series, args.sample,
+                    args.subsystem, args.data, args.ref)
 
     # Prepare and move files into output directory
     make_dir(args.output)
