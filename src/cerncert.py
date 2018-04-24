@@ -1,3 +1,6 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
 import os
 import pycurl
 import StringIO
@@ -7,10 +10,10 @@ def get_cert_curl():
     # NSS_STRICT_NOFORK=DISABLED allows for multiprocessed curl requests with cert
     os.environ['NSS_STRICT_NOFORK'] = 'DISABLED'
     c = pycurl.Curl()
-    
+
     # cms voms member host certificate to authenticate adqm to cmsweb.cern.ch
     c.setopt(pycurl.SSLCERT, os.getenv('ADQM_SSLCERT'))
-    
+
     # cms voms member host certificate key
     if 'ADQM_SSLKEY' in os.environ:
         c.setopt(pycurl.SSLKEY, os.getenv('ADQM_SSLKEY'))
