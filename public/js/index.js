@@ -47,7 +47,10 @@ function handle_response(response) {
             localStorage["data"] = response["query"]["data_run"];
             localStorage["ref"] = response["query"]["ref_run"];
             localStorage["user_id"] = response["query"]["user_id"];
-            reduced_resp = [localStorage["data"], localStorage["ref"], localStorage["user_id"]];
+            localStorage["series"] = response["query"]["series"];
+            localStorage["sample"] = response["query"]["sample"];
+            localStorage["subsystem"] = response["query"]["subsystem"];
+            reduced_resp = [localStorage["data"], localStorage["ref"], localStorage["user_id"], localStorage["series"], localStorage["sample"], localStorage["subsystem"]];
             pass_object(reduced_resp);
             $("#finished").show();
         }
@@ -152,25 +155,10 @@ function submit(query) {
         .always(handle_processes);
 }
 
-function get_search(external_query) {
+function get_external(external_query) {
     // Use json to get object from stringified search query
     new_query = JSON.parse(external_query);
-    $("#sample_list").val(new_query["sample"]);
-    $("#" + new_query["sample"]).show();
-    $("#data_sample").text("/" + new_query["sample"] + "/");
-    $("#ref_sample").text("/" + new_query["sample"] + "/");
-
-    cur_sample = new_query["sample"];
-    if (new_query["sample"] == "SingleMuon") {
-        $("#SingleMuon_dataInput").val(new_query["data_info"]);
-        $("#SingleMuon_refInput").val(new_query["ref_info"]);
-    }
-    if (new_query["sample"] == "Cosmics") {
-        $("#Cosmics_dataInput").val(new_query["data_info"]);
-        $("#Cosmics_refInput").val(new_query["ref_info"]);
-    }
     check_input();
-    updt_sample();
 
     $("#load").hide();
     $("#load_msg").hide();
@@ -199,7 +187,7 @@ $(function() {
 
     // Update plots link if search stored in local storage
     if (localStorage.hasOwnProperty("data")) {
-        $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"], localStorage["user_id"]]));
+        $("#plots_url").attr('href', window.location.href + "plots.php?query=" + encodeURIComponent([localStorage["data"], localStorage["ref"], localStorage["user_id"], localStorage["series"], localStorage["sample"], localStorage["subsystem"]]));
     }
 
 
@@ -345,9 +333,19 @@ $(function() {
         submit(query);
     });
 
-    // Update form if query passed from search page
+    // External query handler
     if (localStorage.hasOwnProperty("external_query")) {
-        get_search(localStorage["external_query"]);
+        // Disable form
+        select_series.disable();
+        select_sample.disable();
+        select_subsystem.disable();
+        select_data_run.disable();
+        select_ref_run.disable();
+
+        // Submit external query
+        console.log("External query detected:");
+        console.log(localStorage["external_query"]);
+        get_external(localStorage["external_query"]);
         localStorage.removeItem("external_query");
     }
 });

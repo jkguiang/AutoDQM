@@ -1,7 +1,9 @@
 
 var indexMap = {"thumbnails":{"width": 0, "height": 0}, "search":""};
 var page_loads = 0;
+var next_runNum, prev_runNum;
 response = {};
+run_list = [];
 
 // Fetch object pased from index
 function fetch_object() {
@@ -14,6 +16,11 @@ function fetch_object() {
     }
     response["query"] = unescape(response["query"]).split(",");
     console.log(response);
+}
+// Pass query to main submit page
+function submit(query) {
+    localStorage["external_query"] = JSON.stringify(query);
+    document.location.href="./";
 }
 
 $(function() {
@@ -28,16 +35,25 @@ function load_page(php_out) {
     fill_sections(data);
     if (page_loads == 1) {
         try {
+            // Fetch query info from URL
             fetch_object();
             localStorage["data"] = response["query"][0];
             localStorage["ref"] = response["query"][1];
             localStorage["user_id"] = response["query"][2];
+            localStorage["series"] = response["query"][3];
+            localStorage["sample"] = response["query"][4];
+            localStorage["subsystem"] = response["query"][5];
             console.log(localStorage);
-            $("#data_title").text(response["query"][0]);
-            $("#ref_title").text(response["query"][1]);
-            $("#title_wells").show();
+            // Fill information table
+            $("#data_text").text(response["query"][0]);
+            $("#ref_text").text(response["query"][1]);
+            $("#series_text").text(response["query"][3]);
+            $("#sample_text").text(response["query"][4]);
+            $("#subsys_text").text(response["query"][5]);
+            $("#info_table").show();
+            // Hide table if no query in localStorage
             if (response["query"][0] == "" || response["query"][1] == "") {
-                $("#title_wells").hide();
+                $("#info_table").hide();
             }
         }
         catch(TypeError) {
@@ -48,9 +64,7 @@ function load_page(php_out) {
             }
             else {
                 $("#title_wells").hide();
-            }
-        }
-    }
+            } } }
     $('[id^=img_]').mouseenter(
         function() {
             // Dynamic Well Preview
@@ -68,6 +82,53 @@ function load_page(php_out) {
         } 
     );
 
+    // Buttons for submitting same query with next or previous run
+    // Grab next and previous runs for button functionality
+    var rReq;
+    rReq = $.getJSON("cgi-bin/handler.py",
+        {type: "getRuns", series: localStorage["series"], sample: localStorage["sample"]},
+        function(res) {
+            $("#next_run").attr('disabled', 'disabled');
+            $("#prev_run").attr('disabled', 'disabled');
+            console.log("response:");
+            var runLink_list = (res["response"]["runs"]);
+            // Grab run numbers from list of html links ripped from online GUI
+            var run_num;
+            for (var i = 0; i < runLink_list.length; i++) {
+                run_num = Number(runLink_list[i]["name"]);
+                run_list.push(run_num);
+            }
+            run_list.sort();
+            next_runNum = run_list[run_list.indexOf(Number(localStorage["data"])) + 1];
+            prev_runNum = run_list[run_list.indexOf(Number(localStorage["data"])) - 1];
+            $("#next_run").removeAttr('disabled');
+            $("#prev_run").removeAttr('disabled');
+        });
+    // Get next and previous runs
+    $("#next_run").click(function(){
+        var query = {
+            "type": "retrieve_data",
+            "series": localStorage["series"],
+            "sample": localStorage["sample"],
+            "subsystem": localStorage["subsystem"],
+            "data_info": next_runNum.toString(),
+            "ref_info": localStorage["ref"],
+            "user_id": Date.now(),
+        };
+        submit(query);
+    });
+    $("#prev_run").click(function(){
+        var query = {
+            "type": "retrieve_data",
+            "series": localStorage["series"],
+            "sample": localStorage["sample"],
+            "subsystem": localStorage["subsystem"],
+            "data_info": prev_runNum.toString(),
+            "ref_info": localStorage["ref"],
+            "user_id": Date.now(),
+        };
+        submit(query);
+    });
 }
 
 function make_json(php_out) {
@@ -195,7 +256,6 @@ function fill_grid(data) {
         else {
             html_name = data[i]["name"];
         }
-
 
         $("#grid_" + counter).append("<a href="+data[i]["pdf_path"]+"><h4>"+html_name+"</h4></a><a href="+data[i]["pdf_path"]+"><img id=img_"+true_count+" src="+data[i]["png_path"]+" width="+data[i]["width"]+" height="+data[i]["height"]+"></a>");
         true_count++;

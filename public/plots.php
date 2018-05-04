@@ -155,13 +155,57 @@
                 <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
                     <div class="row">
                         <div class="col-sm-2"></div>
-                        <div class="col-sm-8" id="title_wells">
-                            <label for="data_well">Data</label>
+                        <div class="col-sm-6" id="info_table">
+                            <!--<label for="data_well">Data</label>
                             <div class="alert alert-success" id="data_well"><p id="data_title"></p></div>
                             <label for="ref_well">Reference</label>
                             <div class="alert alert-info" id="ref_well"><p id="ref_title" ></p></div>
-                            <hr>
+                            -->
+                            <table class="table table-striped" id="info_table">
+                                <thead>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-success">
+                                        <th scope="row">Data</th>
+                                        <td id="data_cell"><p id="data_text"></p></td>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <th scope="row">Reference</th>
+                                        <td id="ref_cell"><p id="ref_text"></p></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Series</th>
+                                        <td id="series_cell"><p id="series_text"></p></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Sample</th>
+                                        <td id="sample_cell"><p id="sample_text"></p></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Subsystem</th>
+                                        <td id="subsys_cell"><p id="subsys_text"></p></td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
+                        <div class="col-sm-2"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2"></div>
+                        <div class="col-md-6">
+                            <div class="col-sm-3 text-center">
+                                <button type="button" class="btn btn-primary" id="prev_run">&laquo Prev Run</button>
+                            </div>
+                            <div class="col-sm-6"></div>
+                            <div class="col-sm-3 text-center">
+                                <button type="button" class="btn btn-primary" id="next_run">Next Run &raquo</button>
+                            </div>
+                        </div>
+                        <div class="col-sm-2"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2"></div>
+                        <div class="col-sm-6"><hr></div>
                         <div class="col-sm-2"></div>
                     </div>
                     <!-- Images -->
