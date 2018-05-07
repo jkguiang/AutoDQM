@@ -2,7 +2,6 @@
 var indexMap = {"thumbnails":{"width": 0, "height": 0}, "search":""};
 var page_loads = 0;
 var next_runNum, prev_runNum;
-run_list = [];
 
 // Fetch object pased from index
 function parseQString() {
@@ -82,25 +81,30 @@ function load_page(php_out) {
     // Buttons for submitting same query with next or previous run
     // Grab next and previous runs for button functionality
     var rReq;
+    var run_list;
     let query = JSON.parse(localStorage["recent_query"]);
     rReq = $.getJSON("cgi-bin/handler.py",
         {type: "getRuns", series: query["data_series"], sample: query["data_sample"]},
         function(res) {
             $("#next_run").attr('disabled', 'disabled');
             $("#prev_run").attr('disabled', 'disabled');
+            $("#data-select-run").attr('disabled', 'disabled');
             console.log("response:");
-            var runLink_list = (res["response"]["runs"]);
+            run_list = (res["response"]["runs"]);
             // Grab run numbers from list of html links ripped from online GUI
-            var run_num;
-            for (var i = 0; i < runLink_list.length; i++) {
-                run_num = Number(runLink_list[i]["name"]);
-                run_list.push(run_num);
+            let run_num;
+            let run_numbers = [];
+            for (var i = 0; i < run_list.length; i++) {
+                run_num = Number(run_list[i]["name"]);
+                run_numbers.push(run_num);
             }
-            run_list.sort();
-            next_runNum = run_list[run_list.indexOf(Number(query["data_run"])) + 1];
-            prev_runNum = run_list[run_list.indexOf(Number(query["data_run"])) - 1];
+            run_numbers.sort();
+            next_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) + 1];
+            prev_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) - 1];
             $("#next_run").removeAttr('disabled');
             $("#prev_run").removeAttr('disabled');
+            $("#data-select-run").removeAttr('disabled');
+            $("#data-select-run")[0].selectize.load(cb => cb(run_list));
         });
     // Get next and previous runs
     $("#next_run").click(function(){
@@ -114,6 +118,17 @@ function load_page(php_out) {
         query["data_run"] = prev_runNum.toString();
         query["user_id"] = Date.now();
         submit(query);
+    });
+    $("#data-select-run").selectize({
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name',
+        onChange: run => {
+            let query = JSON.parse(localStorage["recent_query"]);
+            query["data_run"] = run; 
+            query["user_id"] = Date.now();
+            submit(query);
+        },
     });
 }
 

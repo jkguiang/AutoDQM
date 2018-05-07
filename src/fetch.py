@@ -144,6 +144,7 @@ def get_runs(series, sample):
     runs = [r for r in runs if 'DQMIO' in r['name']]
     for run in runs:
         run['name'] = clean_run_fname(run['name'])
+    runs = sorted(runs, key=lambda r: r['name'], reverse=True)
     return runs
 
 def fetch(series, sample, run):

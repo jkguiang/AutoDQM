@@ -9,6 +9,10 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
  
+        <!-- Selectize libraries -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/css/selectize.bootstrap3.min.css"></link>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/js/standalone/selectize.min.js"></script>
+
         <!-- My Code -->
         
         <!-- CSS -->
@@ -195,7 +199,11 @@
                             <div class="col-sm-3 text-center">
                                 <button type="button" class="btn btn-primary" id="prev_run">&laquo Prev Run</button>
                             </div>
-                            <div class="col-sm-6"></div>
+                            <div class="col-sm-6">
+                                <select class="form-control" id="data-select-run">
+                                    <option value="" disabled selected hidden>Select a different data run...<option>
+                                </select>
+                            </div>
                             <div class="col-sm-3 text-center">
                                 <button type="button" class="btn btn-primary" id="next_run">Next Run &raquo</button>
                             </div>
