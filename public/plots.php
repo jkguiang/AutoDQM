@@ -54,8 +54,7 @@
 
         <!-- PHP -->
         <?php
-            $url_array = explode(",", $_REQUEST["query"]);
-            $user_id = $url_array[2];
+            $user_id = $_REQUEST["user_id"];
 
             $images = array();
 

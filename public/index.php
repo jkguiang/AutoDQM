@@ -94,9 +94,9 @@
                                     <select class="form-control" id="ref-select-sample">
                                         <option value="" disabled selected hidden>Select a sample...<option>
                                     </select>
-                                    <label for="ref-select-run">Data Run</label>
+                                    <label for="ref-select-run">Reference Run</label>
                                     <select class="form-control" id="ref-select-run">
-                                        <option value="" disabled selected hidden>Input a data run...<option>
+                                        <option value="" disabled selected hidden>Input a reference run...<option>
                                     </select>
                                 </div>
                             </div>
