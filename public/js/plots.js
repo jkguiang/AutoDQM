@@ -103,6 +103,8 @@ function load_page(php_out) {
             prev_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) - 1];
             $("#next_run").removeAttr('disabled');
             $("#prev_run").removeAttr('disabled');
+            $("#next_run").prop('title', next_runNum);
+            $("#prev_run").prop('title', prev_runNum);
             $("#data-select-run").removeAttr('disabled');
             $("#data-select-run")[0].selectize.load(cb => cb(run_list));
         });
