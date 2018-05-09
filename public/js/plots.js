@@ -2,21 +2,21 @@
 var indexMap = {"thumbnails":{"width": 0, "height": 0}, "search":""};
 var page_loads = 0;
 var next_runNum, prev_runNum;
-response = {};
-run_list = [];
 
 // Fetch object pased from index
-function fetch_object() {
-    var url = document.location.href.split("#")[0],
-        params = url.split('?')[1].split('&'), 
-        tmp;
-    for (var i = 0, l = params.length; i < l; i++) {
-        tmp = params[i].split('=');
-        response[tmp[0]] = tmp[1];
+function parseQString() {
+    let url = document.location.href.split("#")[0];
+    let qString = url.split('?')[1];
+    let params = qString.split('&');
+    let query = {};
+    for (let i = 0; i < params.length; i++) {
+        let tmp = params[i].split('=');
+        query[tmp[0]] = tmp[1];
     }
-    response["query"] = unescape(response["query"]).split(",");
-    console.log(response);
+    if(query == {}) return null;
+    return query;
 }
+
 // Pass query to main submit page
 function submit(query) {
     localStorage["external_query"] = JSON.stringify(query);
@@ -36,30 +36,26 @@ function load_page(php_out) {
     if (page_loads == 1) {
         try {
             // Fetch query info from URL
-            fetch_object();
-            localStorage["data"] = response["query"][0];
-            localStorage["ref"] = response["query"][1];
-            localStorage["user_id"] = response["query"][2];
-            localStorage["series"] = response["query"][3];
-            localStorage["sample"] = response["query"][4];
-            localStorage["subsystem"] = response["query"][5];
+            let query = parseQString();
+            localStorage["recent_query"] = JSON.stringify(query);
             console.log(localStorage);
             // Fill information table
-            $("#data_text").text(response["query"][0]);
-            $("#ref_text").text(response["query"][1]);
-            $("#series_text").text(response["query"][3]);
-            $("#sample_text").text(response["query"][4]);
-            $("#subsys_text").text(response["query"][5]);
+            $("#data_text").text(query["data_run"]);
+            $("#ref_text").text(query["ref_run"]);
+            $("#series_text").text(query["data_series"]);
+            $("#sample_text").text(query["data_sample"]);
+            $("#subsys_text").text(query["subsystem"]);
             $("#info_table").show();
             // Hide table if no query in localStorage
-            if (response["query"][0] == "" || response["query"][1] == "") {
+            if (!query) {
                 $("#info_table").hide();
             }
         }
         catch(TypeError) {
-            if (localStorage.hasOwnProperty("data")) {
-                $("#data_title").text(localStorage["data"]);
-                $("#ref_title").text(localStorage["ref"]);
+            if (localStorage.hasOwnProperty("recent_query")) {
+                let query = JSON.parse(localStorage["recent_query"]);
+                $("#data_title").text(query["data_run"]);
+                $("#ref_title").text(query["ref_run"]);
                 $("#title_wells").show();
             }
             else {
@@ -85,49 +81,56 @@ function load_page(php_out) {
     // Buttons for submitting same query with next or previous run
     // Grab next and previous runs for button functionality
     var rReq;
+    var run_list;
+    let query = JSON.parse(localStorage["recent_query"]);
     rReq = $.getJSON("cgi-bin/handler.py",
-        {type: "getRuns", series: localStorage["series"], sample: localStorage["sample"]},
+        {type: "getRuns", series: query["data_series"], sample: query["data_sample"]},
         function(res) {
             $("#next_run").attr('disabled', 'disabled');
             $("#prev_run").attr('disabled', 'disabled');
+            $("#data-select-run").attr('disabled', 'disabled');
             console.log("response:");
-            var runLink_list = (res["response"]["runs"]);
+            run_list = (res["response"]["runs"]);
             // Grab run numbers from list of html links ripped from online GUI
-            var run_num;
-            for (var i = 0; i < runLink_list.length; i++) {
-                run_num = Number(runLink_list[i]["name"]);
-                run_list.push(run_num);
+            let run_num;
+            let run_numbers = [];
+            for (var i = 0; i < run_list.length; i++) {
+                run_num = Number(run_list[i]["name"]);
+                run_numbers.push(run_num);
             }
-            run_list.sort();
-            next_runNum = run_list[run_list.indexOf(Number(localStorage["data"])) + 1];
-            prev_runNum = run_list[run_list.indexOf(Number(localStorage["data"])) - 1];
+            run_numbers.sort();
+            next_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) + 1];
+            prev_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) - 1];
             $("#next_run").removeAttr('disabled');
             $("#prev_run").removeAttr('disabled');
+            $("#next_run").prop('title', next_runNum);
+            $("#prev_run").prop('title', prev_runNum);
+            $("#data-select-run").removeAttr('disabled');
+            $("#data-select-run")[0].selectize.load(cb => cb(run_list));
         });
     // Get next and previous runs
     $("#next_run").click(function(){
-        var query = {
-            "type": "retrieve_data",
-            "series": localStorage["series"],
-            "sample": localStorage["sample"],
-            "subsystem": localStorage["subsystem"],
-            "data_info": next_runNum.toString(),
-            "ref_info": localStorage["ref"],
-            "user_id": Date.now(),
-        };
+        let query = JSON.parse(localStorage["recent_query"]);
+        query["data_run"] = next_runNum.toString();
+        query["user_id"] = Date.now();
         submit(query);
     });
     $("#prev_run").click(function(){
-        var query = {
-            "type": "retrieve_data",
-            "series": localStorage["series"],
-            "sample": localStorage["sample"],
-            "subsystem": localStorage["subsystem"],
-            "data_info": prev_runNum.toString(),
-            "ref_info": localStorage["ref"],
-            "user_id": Date.now(),
-        };
+        let query = JSON.parse(localStorage["recent_query"]);
+        query["data_run"] = prev_runNum.toString();
+        query["user_id"] = Date.now();
         submit(query);
+    });
+    $("#data-select-run").selectize({
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name',
+        onChange: run => {
+            let query = JSON.parse(localStorage["recent_query"]);
+            query["data_run"] = run; 
+            query["user_id"] = Date.now();
+            submit(query);
+        },
     });
 }
 
