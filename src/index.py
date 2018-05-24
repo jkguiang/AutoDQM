@@ -9,7 +9,6 @@ import ROOT
 import subprocess
 import traceback
 import fetch
-import search
 import AutoDQM
 from HistPair import HistPair
 
