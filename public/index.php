@@ -47,7 +47,6 @@
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
                 <li role="presentation"><a href="search.php">Search</a></li>
-                <li role="presentation"><a href="database.php">Database</a></li>
                 <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
             </ul>
 
@@ -56,33 +55,47 @@
 
                 <div class="row">
                     <div class="col-lg-6">
-                        <div class="row"><h2>Sample</h2><hr></div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="form-group">
+                                    <h3>Subsystem</h3>
+                                    <select class="form-control" id="select-subsystem">
+                                        <option value="" disabled selected hidden>Select a subsystem...<option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-lg-6">
+                                <h3>Data Run</h3>
                                 <div class="form-group">
-                                    <label for="select-series">Series</label>
-                                    <select class="form-control" id="select-series">
+                                    <label for="data-select-series">Series</label>
+                                    <select class="form-control" id="data-select-series">
                                         <option value="" disabled selected hidden>Select a series...<option>
                                     </select>
-                                    <label for="select-sample">Sample</label>
-                                    <select class="form-control" id="select-sample">
+                                    <label for="data-select-sample">Sample</label>
+                                    <select class="form-control" id="data-select-sample">
                                         <option value="" disabled selected hidden>Select a sample...<option>
                                     </select>
-                                    <label for="select-subsystem">Subsystem</label>
-                                    <select class="form-control" id="select-subsystem">
-                                        <option value="CSC">CSC</option>
-                                        <option value="EMTF">EMTF</option>
+                                    <label for="data-select-run">Data Run</label>
+                                    <select class="form-control" id="data-select-run">
+                                        <option value="" disabled selected hidden>Input a data run...<option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-lg-6">
+                                <h3>Reference Run</h3>
                                 <div class="form-group">
-                                    <label for="select-data-run">Data Run</label>
-                                    <select class="form-control" id="select-data-run">
-                                        <option value="" disabled selected hidden>Input a data run...<option>
+                                    <label for="ref-select-series">Series</label>
+                                    <select class="form-control" id="ref-select-series">
+                                        <option value="" disabled selected hidden>Select a series...<option>
                                     </select>
-                                    <label for="select-ref-run">Reference Run</label>
-                                    <select class="form-control" id="select-ref-run">
+                                    <label for="ref-select-sample">Sample</label>
+                                    <select class="form-control" id="ref-select-sample">
+                                        <option value="" disabled selected hidden>Select a sample...<option>
+                                    </select>
+                                    <label for="ref-select-run">Reference Run</label>
+                                    <select class="form-control" id="ref-select-run">
                                         <option value="" disabled selected hidden>Input a reference run...<option>
                                     </select>
                                 </div>

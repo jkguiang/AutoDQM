@@ -4,18 +4,22 @@
     "hists":[
       {
         "ks_cut":0.0,
+        "norm_type": "row",
         "path":"Occupancy/hORecHits"
       },
       {
         "ks_cut":0.0,
+        "norm_type": "row",
         "path":"Occupancy/hOSegments"
       },
       {
         "ks_cut":0.0,
+        "norm_type": "row",
         "path":"Occupancy/hOStrips"
       },
       {
         "ks_cut":0.0,
+        "norm_type": "row",
         "path":"Occupancy/hOWires"
       },
       {
@@ -67,6 +71,24 @@
       {
         "path":"Timing/cscLCTTiming*",
         "norm_type": "row"
+      },
+      {
+        "path":"emtfTrackEta"
+      },
+      {
+        "path":"emtfTrackMode"
+      },
+      {
+        "path":"emtfTrackPhi"
+      },
+      {
+        "path":"emtfTrackPt"
+      },
+      {
+        "path":"emtfTracknHits"
+      },
+      {
+        "path":"emtfnTracks"
       }
     ]
   }

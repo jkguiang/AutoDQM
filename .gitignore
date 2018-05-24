@@ -1,0 +1,12 @@
+
+# Editor artifacts
+*.swp
+
+# Compile artifacts
+*.pyc
+
+# run-offline.py defaults
+offline/
+db/
+tmp/
+

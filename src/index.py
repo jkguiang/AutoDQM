@@ -1,3 +1,6 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 import json
@@ -36,6 +39,10 @@ def get_response(t0, status, fail_reason, tb, query, payload):
     duration = time.time() - t0
     return json.dumps( { "query": query, "start": t0, "duration":duration, "response": { "status": status, "fail_reason": str(fail_reason), "traceback": str(tb), "payload": times } } )
 
+def get_subsystems():
+    with open(os.getenv('ADQM_CONFIG')) as config_file:
+        config = json.load(config_file)
+    return [{"name": s} for s in config]
 
 @timer
 def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
@@ -64,7 +71,7 @@ def compile_hists(subsystem, data_fname, ref_fname, data_run, ref_run):
         if not data_dir:
             raise Exception("Subsystem dir {0} not found in data root file".format(data_dirname))
         if not ref_dir:
-            raise Exception("Subsystem gdir {0} not found in ref root file".format(ref_dirname))
+            raise Exception("Subsystem dir {0} not found in ref root file".format(ref_dirname))
 
         data_keys = data_dir.GetListOfKeys()
         ref_keys = ref_dir.GetListOfKeys()
@@ -108,13 +115,13 @@ def check(is_success, fail_reason):
     else: return None
 
 @timer
-def get_hists(subsystem, db_dir, data_id, ref_id, user_id):
-    data_fname = "{0}/{1}.root".format(db_dir, data_id)
-    ref_fname = "{0}/{1}.root".format(db_dir, ref_id)
-    histPairs = compile_hists(subsystem, data_fname, ref_fname, data_id, ref_id)
+def get_hists(user_id, subsystem, data_info, ref_info):
+    data_fname = "{0}/{1}/{2}/{3}.root".format(os.environ["ADQM_DB"], data_info["series"], data_info["sample"], data_info["run"])
+    ref_fname = "{0}/{1}/{2}/{3}.root".format(os.environ["ADQM_DB"], ref_info["series"], ref_info["sample"], ref_info["run"])
+    histPairs = compile_hists(subsystem, data_fname, ref_fname, data_info["run"], ref_info["run"])
 
     tmp_dir =  os.getenv('ADQM_TMP') + user_id + '/'
-    AutoDQM.autodqm(histPairs, data_id, ref_id, tmp_dir)
+    AutoDQM.autodqm(histPairs, data_info["run"], ref_info["run"], tmp_dir)
 
     # Convert pdfs produced by AutoDQM to small pngs
     if not os.path.exists(tmp_dir + 'pngs'):
@@ -132,15 +139,24 @@ def handle_args(args):
 
     try:
         if args["type"] == "retrieve_data":
-            is_success, fail_reason = fetch.fetch(args["series"], args["sample"], args["data_info"])
+            is_success, fail_reason = fetch.fetch(args["data_series"], args["data_sample"], args["data_run"])
             check(is_success, fail_reason)
         elif args["type"] == "retrieve_ref":
-            is_success, fail_reason = fetch.fetch(args["series"], args["sample"], args["ref_info"])
+            is_success, fail_reason = fetch.fetch(args["ref_series"], args["ref_sample"], args["ref_run"])
             check(is_success, fail_reason)
 
         elif args["type"] == "process":
-            is_success, fail_reason = get_hists(args["subsystem"], "{0}/{1}/{2}".format(os.getenv('ADQM_DB'), args["series"], args["sample"]), args["data_info"], args["ref_info"], args["user_id"])
-            check(is_success, 'get_hists')
+            is_success, fail_reason = get_hists(
+                args["user_id"],
+                args["subsystem"],
+                {"series": args["data_series"],
+                 "sample": args["data_sample"],
+                 "run": args["data_run"]},
+                {"series": args["ref_series"],
+                 "sample": args["ref_sample"],
+                 "run": args["ref_run"]}
+            )
+            check(is_success, 'get_hists');
 
     except Exception as error:
         fail_reason = str(error)
@@ -170,4 +186,3 @@ if __name__ == "__main__":
 
     args = json.loads(sys.argv[1])
     print(process_query(args))
-
