@@ -84,6 +84,12 @@ docker stack rm autodqm
 docker stack deploy --compose-file=./docker-compose.yml autodqm
 ```
 
+If you're using a CC7 image, you may want to disable autoupdate:
+```sh
+sudo systemctl stop yum-autoupdate.service
+sudo systemctl disable yum-autoupdate.service
+```
+
 ## Using AutoDQM Offline
 
 The `./run-offline.py` script can retrieve run data files and process them without needing a web server. Run `./run-offline.py --help` for all the options.
