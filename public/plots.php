@@ -122,7 +122,6 @@
     <body>
         <ul class="nav nav-tabs" id="navbar" role="tablist">
             <li role="presentation"><a href="./">AutoDQM</a></li>
-            <li role="presentation"><a href="search.php">Search</a></li>
             <li role="presentation" class="active"><a href="plots.php">Plots</a></li>
         </ul>
 
