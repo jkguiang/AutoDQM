@@ -6,29 +6,62 @@ import json
 import subprocess
 import ROOT
 import AutoDQM
+from yapsy.PluginManager import PluginManager
 from HistPair import HistPair
 
 
-def process(user_id, subsystem, data_info, ref_info):
+def process(user_id, subsystem, query_info):
     data_fname = "{0}/{1}/{2}/{3}.root".format(
-        os.environ["ADQM_DB"], data_info["series"], data_info["sample"], data_info["run"])
+        os.environ["ADQM_DB"], query_info["data_series"], query_info["data_sample"], query_info["data_run"])
     ref_fname = "{0}/{1}/{2}/{3}.root".format(
-        os.environ["ADQM_DB"], ref_info["series"], ref_info["sample"], ref_info["run"])
+        os.environ["ADQM_DB"], query_info["ref_series"], query_info["ref_sample"], query_info["ref_run"])
 
-    histPairs = compile_histpairs(subsystem, data_fname,
-                                  ref_fname, data_info["run"], ref_info["run"])
+    # Ensure no graphs are drawn to screen and no root messages are sent to terminal
+    ROOT.gROOT.SetBatch(ROOT.kTRUE)
+    ROOT.gErrorIgnoreLevel = ROOT.kWarning
+
+    histpairs = compile_histpairs(subsystem, data_fname,
+                                  ref_fname, query_info["data_run"], query_info["ref_run"])
 
     tmp_dir = os.getenv('ADQM_TMP') + user_id + '/'
-    AutoDQM.autodqm(histPairs, data_info["run"], ref_info["run"], tmp_dir)
+    hist_outputs = []
 
-    # Convert pdfs produced by AutoDQM to small pngs
-    if not os.path.exists(tmp_dir + 'pngs'):
-        os.makedirs(tmp_dir + 'pngs')
-    for pdf in os.listdir(tmp_dir + 'pdfs'):
-        subprocess.check_output(['convert', '-density', '50', '-trim', '-fuzz', '1%', str(
-            tmp_dir + 'pdfs/' + pdf), str(tmp_dir + 'pngs/' + pdf.split('.')[0] + '.png')])
+    comparator_funcs = load_comparators()
+    for hp in histpairs:
+        for comparator in (comparator_funcs[c] for c in hp.comparators):
+            pdf_path = '{}/pdfs/{}.pdf'.format(tmp_dir, hash(hp))
+            json_path = '{}/jsons/{}.json'.format(tmp_dir, hash(hp))
+            png_path = '{}/pngs/{}.png'.format(tmp_dir, hash(hp))
 
-    return True, None
+            if not os.path.isfile(json_path):
+                canvas, show, results_info = comparator(
+                    hp, outfile, **query_info)
+
+                # Make pdf
+                canvas.SaveAs(pdf_path)
+
+                # Make png
+                subprocess.Popen(
+                    ['convert', '-density', '50', '-trim', '-fuzz', '1%', pdf_path, png_path])
+
+                # Make json
+                info = {
+                    'pdf_path': pdf_path,
+                    'json_path': json_path,
+                    'png_path': png_path,
+                    'display': show or hp.config['always_show'],
+                    'config': hp.config,
+                    'results': results_info,
+                }
+                with open(json_path) as jf:
+                    json.dump(info, jf)
+            else:
+                with open(json_path) as jf:
+                    info = json.load(jf)
+
+            hist_outputs.append(info)
+
+    return hist_outputs
 
 
 def compile_histpairs(subsystem, data_fname, ref_fname, data_run, ref_run):
@@ -55,10 +88,10 @@ def compile_histpairs(subsystem, data_fname, ref_fname, data_run, ref_run):
         ref_dir = ref_file.GetDirectory(ref_dirname)
 
         if not data_dir:
-            raise Exception(
+            raise error(
                 "Subsystem dir {0} not found in data root file".format(data_dirname))
         if not ref_dir:
-            raise Exception(
+            raise error(
                 "Subsystem dir {0} not found in ref root file".format(ref_dirname))
 
         data_keys = data_dir.GetListOfKeys()
@@ -95,3 +128,30 @@ def compile_histpairs(subsystem, data_fname, ref_fname, data_run, ref_run):
     data_file.Close()
     ref_file.Close()
     return histPairs
+
+
+def load_comparators():
+    """Load comparators from each python module in ADQM_PLUGINS."""
+
+    plugin_dir = os.getenv('ADQM_PLUGINS')
+
+    comparators = dict()
+
+    # Load all plugins in the plugin dir
+    pm = PluginManager()
+    pm.setPluginPlaces([plugin_dir])
+    pm.collectPlugins()
+
+    # Collect new comparators from each loaded plugin
+    for pluginInfo in pm.getAllPlugins():
+        pm.activatePluginByName(pluginInfo.name)
+        try:
+            new_comps = pluginInfo.plugin_object.comparators()
+            comparators.update(new_comps)
+        except AttributeError:
+            raise error(
+                "Plugin {} does not have a comparators() function.".format(pluginInfo.name))
+
+
+class error(Exception):
+    pass
