@@ -31,49 +31,53 @@ def handle_request(req):
         err = e
         tb = traceback.format_exc()
     finally:
-        res = {
-            'type': req['type'],
-            'data': data if not err else None,
-            'error': str(err) if err else None,
-            'traceback': tb if err else None,
-        }
+        res = {}
+        if error:
+            res['error'] = {
+                'message': str(err)
+                'traceback': tb
+            }
+        else:
+            res['data'] = data
         return res
 
 
 def fetch_run(series, sample, run):
-    return fetch.fetch(series, sample, run)
+    fetch.fetch(series, sample, run)
+    return {}
 
 
 def process(uid, subsystem,
             data_series, data_sample, data_run,
             ref_series, ref_sample, ref_run):
-    return compare_hists.process(
+    data = {}
+    data['items'] = compare_hists.process(
         uid, subsystem
         {"series": data_series,
          "sample": data_sample,
          "run": data_run}
         {"series": ref_series,
          "sample": ref_sample,
-         "run": ref_run}
-    )
+         "run": ref_run})
+    return data
 
 
 def get_subsystems():
     with open(os.getenv('ADQM_CONFIG')) as config_file:
         config = json.load(config_file)
-    return [{"name": s} for s in config]
+    return {'items': [{"name": s} for s in config]}
 
 
 def get_series():
-    return fetch.get_series()
+    return {'items': fetch.get_series()}
 
 
 def get_samples(series):
-    return fetch.get_samples(series)
+    return {'items': fetch.get_samples(series)}
 
 
 def get_runs(series, sample):
-    return fetch.get_runs(series, sample)
+    return {'items': fetch.get_runs(series, sample)}
 
 
 class error(Exception):
@@ -89,6 +93,7 @@ if __name__ == "__main__":
 
     res = handle_request(req)
 
-    print "Content-type: application/json"
-    print "Access-Control-Allow-Origin: *\n\n"
-    print json.dumps(res)
+    print("Content-type: application/json")
+    print("Access-Control-Allow-Origin: *")
+    print()
+    print(json.dumps(res))
