@@ -7,6 +7,8 @@ RUN yum update -y && yum install -y \
       php \
       root-python
 
+RUN pip install -r requirements.txt
+
 RUN mkdir /db /run/secrets
 RUN chown -R apache:apache /db /var/www /run/secrets
 
