@@ -7,7 +7,7 @@ import subprocess
 import ROOT
 import AutoDQM
 from yapsy.PluginManager import PluginManager
-from HistPair import HistPair
+from histpair import HistPair
 
 
 def process(user_id, subsystem, query_info):
