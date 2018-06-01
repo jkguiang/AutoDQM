@@ -5,9 +5,11 @@ RUN yum update -y && yum install -y \
       ImageMagick \
       httpd \
       php \
+      python2-pip \
       root-python
 
-RUN pip install -r requirements.txt
+COPY requirements.txt /code/requirements.txt
+RUN pip install -r /code/requirements.txt
 
 RUN mkdir /db /run/secrets
 RUN chown -R apache:apache /db /var/www /run/secrets
