@@ -2,6 +2,9 @@
 AutoDQM parses DQM histograms and identifies outliers by various statistical tests for further analysis by the user. Its output can be easily parsed by eye on an AutoPlotter-based html page which is automatically generated when you submit a query from the AutoDQM GUI. Full documentation for AutoDQM can be found on our [wiki](http://github.com/jkguiang/AutoDQM/wiki).
 
 1. [Features](#features)
+2. [Setting Up AutoDQM for Development](#setting-up-autodqm-for-development)
+3. [Using AutoDQM Offline](#using-autodqm-offline)
+4. [Environment Variables](#environment-variables)
 
 ## Features
 
@@ -19,9 +22,7 @@ AutoDQM parses DQM histograms and identifies outliers by various statistical tes
 - [x] Dynamically displays text files below AutoPlotter toolbar
 - [x] Unique url's for sharing plots pages with the data and reference data set names
 
-## Using AutoDQM
-
-### Setup:
+## Setting Up AutoDQM for Development
 
 This shows how to set up AutoDQM to be served from your local machine or a machine on CERN OpenStack. This was written based on a fresh CC7 VM on CERN OpenStack. 
 
@@ -89,9 +90,3 @@ The `./run-offline.py` script can retrieve run data files and process them witho
 - `ADQM_SSLKEY` location of CMS VO authorized private ky to use in querying offline DQM
 - `ADQM_CACERT` location of a CERN Grid CA certificate chain, if needed
 
-### AutoDQM GUI
-###### Main Page:
-1. Select series and sample
-2. Enter data and reference information
-3. Click submit.
-    - After process is complete, you will be automatically redirected to the "plots" page
