@@ -1,11 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import os
-import json
-import traceback
-import fetch
+import cgi
 import compare_hists
+import fetch
+import json
+import os
+import traceback
 
 
 def handle_request(req):
@@ -14,7 +15,7 @@ def handle_request(req):
         if req['type'] == "fetch_run":
             data = fetch_run(req['series'], req['sample'], req['run'])
         elif req['type'] == "process":
-            data = process(req['uid'], req['subsystem'],
+            data = process(req['subsystem'],
                            req['data_series'], req['data_sample'], req['data_run'],
                            req['ref_series'], req['ref_sample'], req['ref_run'])
         elif req['type'] == "get_subsystems":
@@ -24,7 +25,7 @@ def handle_request(req):
         elif req['type'] == "get_samples":
             data = get_samples(req['series'])
         elif req['type'] == "get_runs":
-            data = get_samples(req['series'], req['sample'])
+            data = get_runs(req['series'], req['sample'])
         else:
             raise error
     except Exception as e:
@@ -32,9 +33,9 @@ def handle_request(req):
         tb = traceback.format_exc()
     finally:
         res = {}
-        if error:
+        if err:
             res['error'] = {
-                'message': str(err)
+                'message': str(err),
                 'traceback': tb
             }
         else:
@@ -47,18 +48,13 @@ def fetch_run(series, sample, run):
     return {}
 
 
-def process(uid, subsystem,
+def process(subsystem,
             data_series, data_sample, data_run,
             ref_series, ref_sample, ref_run):
     data = {}
-    data['items'] = compare_hists.process(
-        uid, subsystem
-        {"series": data_series,
-         "sample": data_sample,
-         "run": data_run}
-        {"series": ref_series,
-         "sample": ref_sample,
-         "run": ref_run})
+    data['items'] = compare_hists.process(subsystem,
+                                          data_series, data_sample, data_run,
+                                          ref_series, ref_sample, ref_run)
     return data
 
 
@@ -88,12 +84,12 @@ if __name__ == "__main__":
     cgi_req = cgi.FieldStorage()
 
     req = {}
-    for k in form.keys():
+    for k in cgi_req.keys():
         req[str(k)] = str(cgi_req[k].value)
 
     res = handle_request(req)
 
     print("Content-type: application/json")
     print("Access-Control-Allow-Origin: *")
-    print()
+    print("")
     print(json.dumps(res))

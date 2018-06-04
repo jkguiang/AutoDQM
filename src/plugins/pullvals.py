@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import ROOT
 
 def comparators():
     return {
@@ -18,34 +19,36 @@ def pullvals(histpair,
     ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
     ROOT.gStyle.SetNumberContours(255)
 
-    r_hist = histpair.ref
-    f_hist = histpair.data
+    data_name = histpair.data_name
+    ref_name = histpair.ref_name
+    ref_hist = histpair.ref_hist
+    data_hist = histpair.data_hist
 
     # Get empty clone of reference histogram for pull hist
-    pull_hist = histpair.ref.Clone("pull_hist")
+    pull_hist = ref_hist.Clone("pull_hist")
     pull_hist.Reset()
 
     # Reject empty histograms
-    is_good = f_hist.GetEntries() != 0 and f_hist.GetEntries() >= min_entries
+    is_good = data_hist.GetEntries() != 0 and data_hist.GetEntries() >= min_entries
 
-    # Normalize f_hist
+    # Normalize data_hist
     if norm_type == "row":
-        normalize_rows(f_hist, r_hist)
+        normalize_rows(data_hist, ref_hist)
     else:
-        if f_hist.GetEntries() > 0:
-            f_hist.Scale(r_hist.GetEntries() / f_hist.GetEntries())
+        if data_hist.GetEntries() > 0:
+            data_hist.Scale(ref_hist.GetEntries() / data_hist.GetEntries())
 
     max_pull = 0
     nBins = 0
     chi2 = 0
-    for x in range(1, r_hist.GetNbinsX() + 1):
-        for y in range(1, r_hist.GetNbinsY() + 1):
+    for x in range(1, ref_hist.GetNbinsX() + 1):
+        for y in range(1, ref_hist.GetNbinsY() + 1):
 
             # Bin 1 data
-            bin1 = f_hist.GetBinContent(x, y)
+            bin1 = data_hist.GetBinContent(x, y)
 
             # Bin 2 data
-            bin2 = r_hist.GetBinContent(x, y)
+            bin2 = ref_hist.GetBinContent(x, y)
 
             # Proper Poisson error
             bin1err, bin2err = get_errors(bin1, bin2)
@@ -80,8 +83,8 @@ def pullvals(histpair,
     pull_hist.Draw("colz")
 
     # Text box
-    data_text = ROOT.TLatex(.52, .91, "#scale[0.6]{Data: " + data_id + "}")
-    ref_text = ROOT.TLatex(.72, .91, "#scale[0.6]{Ref: " + ref_id + "}")
+    data_text = ROOT.TLatex(.52, .91, "#scale[0.6]{Data: " + data_name + "}")
+    ref_text = ROOT.TLatex(.72, .91, "#scale[0.6]{Ref: " + ref_name + "}")
     data_text.SetNDC(ROOT.kTRUE)
     ref_text.SetNDC(ROOT.kTRUE)
     data_text.Draw()
@@ -90,8 +93,8 @@ def pullvals(histpair,
     info = {
         'Chi_Squared': chi2,
         'Max_Pull_Val': max_pull,
-        'Data_Entries': f_hist.GetEntries(),
-        'Ref_Entries': r_hist.GetEntries(),
+        'Data_Entries': data_hist.GetEntries(),
+        'Ref_Entries': ref_hist.GetEntries(),
     }
 
     return c, is_outlier, info
@@ -135,20 +138,20 @@ def get_errors(bin1, bin2):
     return bin1err, bin2err
 
 
-def normalize_rows(f_hist, r_hist):
+def normalize_rows(data_hist, ref_hist):
 
-    for y in range(1, r_hist.GetNbinsY() + 1):
+    for y in range(1, ref_hist.GetNbinsY() + 1):
 
         # Stores sum of row elements
         rrow = 0
         frow = 0
 
         # Sum over row elements
-        for x in range(1, r_hist.GetNbinsX() + 1):
+        for x in range(1, ref_hist.GetNbinsX() + 1):
 
             # Bin data
-            rbin = r_hist.GetBinContent(x, y)
-            fbin = f_hist.GetBinContent(x, y)
+            rbin = ref_hist.GetBinContent(x, y)
+            fbin = data_hist.GetBinContent(x, y)
 
             rrow += rbin
             frow += fbin
@@ -166,13 +169,13 @@ def normalize_rows(f_hist, r_hist):
             sf = 1
 
         # Normalization
-        for x in range(1, f_hist.GetNbinsX() + 1):
+        for x in range(1, data_hist.GetNbinsX() + 1):
             # Bin data
-            fbin = f_hist.GetBinContent(x, y)
-            fbin_err = f_hist.GetBinError(x, y)
+            fbin = data_hist.GetBinContent(x, y)
+            fbin_err = data_hist.GetBinError(x, y)
 
             # Normalize bin
-            f_hist.SetBinContent(x, y, (fbin * sf))
-            f_hist.SetBinError(x, y, (fbin_err * sf))
+            data_hist.SetBinContent(x, y, (fbin * sf))
+            data_hist.SetBinError(x, y, (fbin_err * sf))
 
     return

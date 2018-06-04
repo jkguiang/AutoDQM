@@ -2,40 +2,49 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import json
 import subprocess
 import ROOT
 import AutoDQM
-from yapsy.PluginManager import PluginManager
 from histpair import HistPair
 
 
-def process(user_id, subsystem, query_info):
-    data_fname = "{0}/{1}/{2}/{3}.root".format(
-        os.environ["ADQM_DB"], query_info["data_series"], query_info["data_sample"], query_info["data_run"])
-    ref_fname = "{0}/{1}/{2}/{3}.root".format(
-        os.environ["ADQM_DB"], query_info["ref_series"], query_info["ref_sample"], query_info["ref_run"])
+def process(subsystem,
+            data_series, data_sample, data_run,
+            ref_series, ref_sample, ref_run):
 
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
-    histpairs = compile_histpairs(subsystem, data_fname,
-                                  ref_fname, query_info["data_run"], query_info["ref_run"])
+    histpairs = compile_histpairs(subsystem,
+                                  data_series, data_sample, data_run,
+                                  ref_series, ref_sample, ref_run)
 
-    tmp_dir = os.getenv('ADQM_TMP') + user_id + '/'
+    tmp_dir = os.getenv('ADQM_TMP') + 'out'
+    for d in [tmp_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
+        if not os.path.exists(d):
+            os.makedirs(d)
+
     hist_outputs = []
 
     comparator_funcs = load_comparators()
     for hp in histpairs:
-        for comparator in (comparator_funcs[c] for c in hp.comparators):
-            pdf_path = '{}/pdfs/{}.pdf'.format(tmp_dir, hash(hp))
-            json_path = '{}/jsons/{}.json'.format(tmp_dir, hash(hp))
-            png_path = '{}/pngs/{}.png'.format(tmp_dir, hash(hp))
+        try:
+            comparators = [comparator_funcs[c] for c in hp.comparators]
+        except KeyError as e:
+            raise error("Comparator {} was not found.".format(str(e)))
+
+        for comparator in comparators:
+            filename = identifier(hp)
+            pdf_path = '{}/pdfs/{}.pdf'.format(tmp_dir, filename)
+            json_path = '{}/jsons/{}.json'.format(tmp_dir, filename)
+            png_path = '{}/pngs/{}.png'.format(tmp_dir, filename)
 
             if not os.path.isfile(json_path):
                 canvas, show, results_info = comparator(
-                    hp, outfile, **query_info)
+                    hp, **hp.config)
 
                 # Make pdf
                 canvas.SaveAs(pdf_path)
@@ -49,11 +58,11 @@ def process(user_id, subsystem, query_info):
                     'pdf_path': pdf_path,
                     'json_path': json_path,
                     'png_path': png_path,
-                    'display': show or hp.config['always_show'],
+                    'display': show or hp.config.get('always_show', False),
                     'config': hp.config,
                     'results': results_info,
                 }
-                with open(json_path) as jf:
+                with open(json_path, 'w') as jf:
                     json.dump(info, jf)
             else:
                 with open(json_path) as jf:
@@ -64,7 +73,16 @@ def process(user_id, subsystem, query_info):
     return hist_outputs
 
 
-def compile_histpairs(subsystem, data_fname, ref_fname, data_run, ref_run):
+def compile_histpairs(subsystem,
+                      data_series, data_sample, data_run,
+                      ref_series, ref_sample, ref_run):
+
+    # Root files
+    data_fname = "{0}/{1}/{2}/{3}.root".format(
+        os.environ["ADQM_DB"], data_series, data_sample, data_run)
+    ref_fname = "{0}/{1}/{2}/{3}.root".format(
+        os.environ["ADQM_DB"], ref_series, ref_sample, ref_run)
+
     # Load config
     with open(os.getenv('ADQM_CONFIG')) as config_file:
         config = json.load(config_file)
@@ -122,7 +140,9 @@ def compile_histpairs(subsystem, data_fname, ref_fname, data_run, ref_run):
             data_hist.SetDirectory(0)
             ref_hist.SetDirectory(0)
 
-            hPair = HistPair(data_hist, ref_hist, hconf)
+            hPair = HistPair(hconf,
+                             data_series, data_sample, data_run, name, data_hist,
+                             ref_series, ref_sample, ref_run, name, ref_hist)
             histPairs.append(hPair)
 
     data_file.Close()
@@ -134,23 +154,38 @@ def load_comparators():
     """Load comparators from each python module in ADQM_PLUGINS."""
 
     plugin_dir = os.getenv('ADQM_PLUGINS')
+    sys.path.insert(0, plugin_dir)
 
     comparators = dict()
 
-    # Load all plugins in the plugin dir
-    pm = PluginManager()
-    pm.setPluginPlaces([plugin_dir])
-    pm.collectPlugins()
-
-    # Collect new comparators from each loaded plugin
-    for pluginInfo in pm.getAllPlugins():
-        pm.activatePluginByName(pluginInfo.name)
+    for modname in os.listdir(plugin_dir):
+        if modname[-3:] == '.py':
+            modname = modname[:-3]
+        mod = __import__("{}".format(modname))
         try:
-            new_comps = pluginInfo.plugin_object.comparators()
-            comparators.update(new_comps)
+            new_comps = mod.comparators()
         except AttributeError:
             raise error(
-                "Plugin {} does not have a comparators() function.".format(pluginInfo.name))
+                "Plugin {} does not have a comparators() function.".format(mod))
+        comparators.update(new_comps)
+
+    return comparators
+
+
+def identifier(hp):
+    """Return a `hashed` identifier for the histpair"""
+    data_id = "DATA-{}-{}-{}".format(hp.data_series,
+                                     hp.data_sample, hp.data_run)
+    ref_id = "REF-{}-{}-{}".format(hp.ref_series, hp.ref_sample, hp.ref_run)
+    if hp.data_name == hp.ref_name:
+        name_id = hp.data_name
+    else:
+        name_id = "DATANAME-{}_REFNAME-{}".format(hp.data_name, hp.ref_name)
+
+    hash_snippet = str(hash(hp))[-5:]
+
+    idname = "{}_{}_{}_{}".format(data_id, ref_id, name_id, hash_snippet)
+    return idname
 
 
 class error(Exception):
