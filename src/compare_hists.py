@@ -32,12 +32,12 @@ def process(subsystem,
     comparator_funcs = load_comparators()
     for hp in histpairs:
         try:
-            comparators = [comparator_funcs[c] for c in hp.comparators]
+            comparators = [(c, comparator_funcs[c]) for c in hp.comparators]
         except KeyError as e:
             raise error("Comparator {} was not found.".format(str(e)))
 
-        for comparator in comparators:
-            filename = identifier(hp)
+        for comp_name, comparator in comparators:
+            filename = identifier(hp, comp_name)
             pdf_path = '{}/pdfs/{}.pdf'.format(tmp_dir, filename)
             json_path = '{}/jsons/{}.json'.format(tmp_dir, filename)
             png_path = '{}/pngs/{}.png'.format(tmp_dir, filename)
@@ -172,7 +172,7 @@ def load_comparators():
     return comparators
 
 
-def identifier(hp):
+def identifier(hp, comparator_name):
     """Return a `hashed` identifier for the histpair"""
     data_id = "DATA-{}-{}-{}".format(hp.data_series,
                                      hp.data_sample, hp.data_run)
@@ -181,10 +181,12 @@ def identifier(hp):
         name_id = hp.data_name
     else:
         name_id = "DATANAME-{}_REFNAME-{}".format(hp.data_name, hp.ref_name)
+    comp_id = "COMP-{}".format(comparator_name)
 
     hash_snippet = str(hash(hp))[-5:]
 
-    idname = "{}_{}_{}_{}".format(data_id, ref_id, name_id, hash_snippet)
+    idname = "{}_{}_{}_{}_{}".format(
+        data_id, ref_id, name_id, comp_id, hash_snippet)
     return idname
 
 
