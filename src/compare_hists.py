@@ -5,6 +5,7 @@ import os
 import sys
 import json
 import subprocess
+import tempfile
 import ROOT
 import AutoDQM
 from histpair import HistPair
@@ -22,12 +23,14 @@ def process(subsystem,
                                   data_series, data_sample, data_run,
                                   ref_series, ref_sample, ref_run)
 
-    tmp_dir = os.getenv('ADQM_TMP') + 'out'
-    for d in [tmp_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
+    out_dir = os.getenv('ADQM_TMP') + 'out'
+    for d in [out_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
         if not os.path.exists(d):
             os.makedirs(d)
 
     hist_outputs = []
+    tmp_dir = tempfile.mkdtemp()
+    tmp_file = ROOT.TFile('{}/temp.root', 'RECREATE')
 
     comparator_funcs = load_comparators()
     for hp in histpairs:
@@ -38,16 +41,20 @@ def process(subsystem,
 
         for comp_name, comparator in comparators:
             filename = identifier(hp, comp_name)
-            pdf_path = '{}/pdfs/{}.pdf'.format(tmp_dir, filename)
-            json_path = '{}/jsons/{}.json'.format(tmp_dir, filename)
-            png_path = '{}/pngs/{}.png'.format(tmp_dir, filename)
+            pdf_path = '{}/pdfs/{}.pdf'.format(out_dir, filename)
+            json_path = '{}/jsons/{}.json'.format(out_dir, filename)
+            png_path = '{}/pngs/{}.png'.format(out_dir, filename)
 
             if not os.path.isfile(json_path):
-                canvas, show, results_info = comparator(
-                    hp, **hp.config)
+                results = comparator(hp, **hp.config)
 
+                # Continue if no results
+                if not results:
+                    continue
+                
                 # Make pdf
-                canvas.SaveAs(pdf_path)
+                results.canvas.Update()
+                results.canvas.SaveAs(pdf_path)
 
                 # Make png
                 subprocess.Popen(
@@ -58,9 +65,9 @@ def process(subsystem,
                     'pdf_path': pdf_path,
                     'json_path': json_path,
                     'png_path': png_path,
-                    'display': show or hp.config.get('always_show', False),
+                    'display': results.show or hp.config.get('always_show', False),
                     'config': hp.config,
-                    'results': results_info,
+                    'results': results.info,
                 }
                 with open(json_path, 'w') as jf:
                     json.dump(info, jf)
@@ -69,6 +76,8 @@ def process(subsystem,
                     info = json.load(jf)
 
             hist_outputs.append(info)
+
+    tmp_file.Close()
 
     return hist_outputs
 

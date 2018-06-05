@@ -3,6 +3,7 @@
 
 import ROOT
 
+
 def comparators():
     return {
         'pull_values': pullvals
@@ -13,16 +14,20 @@ def pullvals(histpair,
              pull_cap=25, chi2_cut=500, pull_cut=20, min_entries=100000, norm_type='all',
              **kwargs):
 
-    # Set up canvas
-    c = ROOT.TCanvas('c', 'Pull')
+    data_hist = histpair.data_hist
+    ref_hist = histpair.ref_hist
+
+    # Check that the hists are histograms
+    if not data_hist.InheritsFrom('TH1') or not ref_hist.InheritsFrom('TH1'):
+        return None
+
+    # Check that the hists are 1 dimensional
+    if data_hist.GetDimension() != 2 or ref_hist.GetDimension() != 2:
+        return None
+
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
     ROOT.gStyle.SetNumberContours(255)
-
-    data_name = histpair.data_name
-    ref_name = histpair.ref_name
-    ref_hist = histpair.ref_hist
-    data_hist = histpair.data_hist
 
     # Get empty clone of reference histogram for pull hist
     pull_hist = ref_hist.Clone("pull_hist")
@@ -77,14 +82,19 @@ def pullvals(histpair,
 
     is_outlier = is_good and (chi2 > chi2_cut or abs(max_pull) > pull_cut)
 
+    # Set up canvas
+    c = ROOT.TCanvas('c', 'Pull')
+
     # Plot pull hist
     pull_hist.GetZaxis().SetRangeUser(-(pull_cap), pull_cap)
     pull_hist.SetTitle(pull_hist.GetTitle() + " Pull Values")
     pull_hist.Draw("colz")
 
     # Text box
-    data_text = ROOT.TLatex(.52, .91, "#scale[0.6]{Data: " + data_name + "}")
-    ref_text = ROOT.TLatex(.72, .91, "#scale[0.6]{Ref: " + ref_name + "}")
+    data_text = ROOT.TLatex(.52, .91,
+                            "#scale[0.6]{Data: " + histpair.data_run + "}")
+    ref_text = ROOT.TLatex(.72, .91,
+                           "#scale[0.6]{Ref: " + histpair.ref_run + "}")
     data_text.SetNDC(ROOT.kTRUE)
     ref_text.SetNDC(ROOT.kTRUE)
     data_text.Draw()
@@ -97,7 +107,13 @@ def pullvals(histpair,
         'Ref_Entries': ref_hist.GetEntries(),
     }
 
-    return c, is_outlier, info
+    artifacts = [pull_hist, data_text, ref_text]
+
+    return PluginResults(
+        c,
+        show=is_outlier,
+        info=info,
+        artifacts=artifacts)
 
 
 def pull(bin1, binerr1, bin2, binerr2):
