@@ -21,6 +21,7 @@ ENV ADQM_CONFIG /var/www/public/configs.json
 ENV ADQM_PLUGINS /var/www/cgi-bin/plugins/
 ENV ADQM_DB /db/
 ENV ADQM_TMP /var/www/tmp/
+ENV ADQM_PUBLIC /var/www/
 ENV ADQM_SSLCERT /run/secrets/cmsvo-cert.pem
 ENV ADQM_SSLKEY /run/secrets/cmsvo-cert.key
 

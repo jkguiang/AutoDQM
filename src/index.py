@@ -51,11 +51,20 @@ def fetch_run(series, sample, run):
 def process(subsystem,
             data_series, data_sample, data_run,
             ref_series, ref_sample, ref_run):
-    data = {}
-    data['items'] = compare_hists.process(subsystem,
-                                          data_series, data_sample, data_run,
-                                          ref_series, ref_sample, ref_run)
-    return data
+    results_dir = os.path.join(os.getenv('ADQM_PUBLIC'), 'results')
+    results = compare_hists.process(subsystem,
+                                    data_series, data_sample, data_run,
+                                    ref_series, ref_sample, ref_run,
+                                    output_dir=results_dir)
+
+    # Relativize the results paths
+    relativize = lambda p: os.path.join('results', os.path.relpath(p, results_dir))
+    for r in results:
+        r['pdf_path'] = relativize(r['pdf_path'])
+        r['json_path'] = relativize(r['json_path'])
+        r['png_path'] = relativize(r['png_path'])
+
+    return {'items': results}
 
 
 def get_subsystems():

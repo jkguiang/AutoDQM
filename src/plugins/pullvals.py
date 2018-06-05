@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import ROOT
+from pluginresults import PluginResults
 
 
 def comparators():

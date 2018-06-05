@@ -13,7 +13,8 @@ from histpair import HistPair
 
 def process(subsystem,
             data_series, data_sample, data_run,
-            ref_series, ref_sample, ref_run):
+            ref_series, ref_sample, ref_run,
+            output_dir):
 
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -23,14 +24,11 @@ def process(subsystem,
                                   data_series, data_sample, data_run,
                                   ref_series, ref_sample, ref_run)
 
-    out_dir = os.getenv('ADQM_TMP') + 'out'
-    for d in [out_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
+    for d in [output_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
         if not os.path.exists(d):
             os.makedirs(d)
 
     hist_outputs = []
-    tmp_dir = tempfile.mkdtemp()
-    tmp_file = ROOT.TFile('{}/temp.root', 'RECREATE')
 
     comparator_funcs = load_comparators()
     for hp in histpairs:
@@ -41,9 +39,9 @@ def process(subsystem,
 
         for comp_name, comparator in comparators:
             filename = identifier(hp, comp_name)
-            pdf_path = '{}/pdfs/{}.pdf'.format(out_dir, filename)
-            json_path = '{}/jsons/{}.json'.format(out_dir, filename)
-            png_path = '{}/pngs/{}.png'.format(out_dir, filename)
+            pdf_path = '{}/pdfs/{}.pdf'.format(output_dir, filename)
+            json_path = '{}/jsons/{}.json'.format(output_dir, filename)
+            png_path = '{}/pngs/{}.png'.format(output_dir, filename)
 
             if not os.path.isfile(json_path):
                 results = comparator(hp, **hp.config)
@@ -51,7 +49,7 @@ def process(subsystem,
                 # Continue if no results
                 if not results:
                     continue
-                
+
                 # Make pdf
                 results.canvas.Update()
                 results.canvas.SaveAs(pdf_path)
@@ -76,8 +74,6 @@ def process(subsystem,
                     info = json.load(jf)
 
             hist_outputs.append(info)
-
-    tmp_file.Close()
 
     return hist_outputs
 
@@ -168,6 +164,8 @@ def load_comparators():
     comparators = dict()
 
     for modname in os.listdir(plugin_dir):
+        if modname[0] == '_':
+            continue
         if modname[-3:] == '.py':
             modname = modname[:-3]
         mod = __import__("{}".format(modname))
