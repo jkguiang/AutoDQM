@@ -3,6 +3,7 @@ var t0 = 0;
 
 function submit() {
     let query = getQuery();
+    localStorage["recent_query"] = JSON.stringify(query);
 
     $("#submit").hide();
     $("#finished").hide();
@@ -30,6 +31,7 @@ function submit() {
         })
         .then(res => {
             console.log(res);
+            load_plots(query);
             $("#load").hide()
             $("#load_msg").hide()
             $("#finished").show();
@@ -190,8 +192,8 @@ function load_query(query) {
     checkInput();
 }
 
-function load_plots(new_object) {
-    url = (window.location.href + "plots.php?" + $.param(new_object));
+function load_plots(query) {
+    url = (window.location.href + "plots.php?" + $.param(query));
     document.location.href = url;
 }
 
@@ -209,7 +211,15 @@ function load_samples(saSelect, series) {
 function load_runs(rSelect, series, sample) {
     rSelect.load(function(callback) {
         rSelect.req = getRuns(series, sample)
-            .done(res => callback(res.data.items))
+            .done(res => {
+                let runs = res.data.items;
+                let seen = {}
+                // Filter entries with duplicate run number
+                runs = runs.filter(r => {
+                    return seen.hasOwnProperty(r.name) ? false : (seen[r.name] = true);
+                });
+                callback(runs);
+            })
             .fail(res => {
                 console.log(res.error.message, res)
                 callback();
@@ -342,7 +352,7 @@ function main() {
     if (localStorage.hasOwnProperty("recent_query")) {
         // Update plots link if search stored in local storage
         let query = JSON.parse(localStorage["recent_query"]);
-        $("#plots_url").attr('href', window.location.href + "plots.php?query=" + $.param(query));
+        $("#plots_url").attr('href', window.location.href + "plots.php?" + $.param(query));
         load_query(query);
     }
 
@@ -350,11 +360,10 @@ function main() {
     if (localStorage.hasOwnProperty("external_query")) {
         // Submit external query
         let query = JSON.parse(localStorage["external_query"]);
-        query["type"] = "retrieve_data";
         localStorage.removeItem("external_query");
         console.log("External query detected:", query);
         load_query(query);
-        submit(query);
+        submit();
     }
 }
 

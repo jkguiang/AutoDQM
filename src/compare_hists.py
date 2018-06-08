@@ -38,10 +38,10 @@ def process(subsystem,
             raise error("Comparator {} was not found.".format(str(e)))
 
         for comp_name, comparator in comparators:
-            filename = identifier(hp, comp_name)
-            pdf_path = '{}/pdfs/{}.pdf'.format(output_dir, filename)
-            json_path = '{}/jsons/{}.json'.format(output_dir, filename)
-            png_path = '{}/pngs/{}.png'.format(output_dir, filename)
+            result_id = identifier(hp, comp_name)
+            pdf_path = '{}/pdfs/{}.pdf'.format(output_dir, result_id)
+            json_path = '{}/jsons/{}.json'.format(output_dir, result_id)
+            png_path = '{}/pngs/{}.png'.format(output_dir, result_id)
 
             if not os.path.isfile(json_path):
                 results = comparator(hp, **hp.config)
@@ -60,12 +60,15 @@ def process(subsystem,
 
                 # Make json
                 info = {
-                    'pdf_path': pdf_path,
-                    'json_path': json_path,
-                    'png_path': png_path,
+                    'id': result_id,
+                    'name': hp.data_name,
+                    'comparator': comp_name,
                     'display': results.show or hp.config.get('always_show', False),
                     'config': hp.config,
                     'results': results.info,
+                    'pdf_path': pdf_path,
+                    'json_path': json_path,
+                    'png_path': png_path,
                 }
                 with open(json_path, 'w') as jf:
                     json.dump(info, jf)
