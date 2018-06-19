@@ -181,7 +181,7 @@ function submit(query) {
 function initRunControls() {
 
     // Initialize buttons and selectize
-    let query = JSON.parse(localStorage["recent_query"]);
+    let query = getQuery();
     $("#next_run").click(function() {
         query.data_run = this.title.toString();
         submit(query);

@@ -75,8 +75,16 @@ def pullvals(histpair,
             # Check if max_pull
             max_pull = max(max_pull, abs(new_pull))
 
+            # Clamp the displayed value
+            fill_val = max(min(new_pull, pull_cap), -pull_cap)
+
+            # If the input bins were explicitly empty, make this bin white by
+            # setting it out of range
+            if bin1 == bin2 == 0:
+                fill_val = -999
+
             # Fill Pull Histogram
-            pull_hist.SetBinContent(x, y, new_pull)
+            pull_hist.SetBinContent(x, y, fill_val)
 
     # Compute chi2
     chi2 = (chi2 / nBins)
