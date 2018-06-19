@@ -1,15 +1,136 @@
 // Global variables
 var t0 = 0;
 
-function check_input() {
-    var filled =
-        $("#select-subsystem").val() != "" &&
-        $("#data-select-series").val() != "" &&
-        $("#data-select-sample").val() != "" &&
-        $("#data-select-run").val() != "" &&
-        $("#ref-select-series").val() != "" &&
-        $("#ref-select-sample").val() != "" &&
-        $("#ref-select-run").val() != "";
+function submit() {
+    let query = getQuery();
+    localStorage["recent_query"] = JSON.stringify(query);
+
+    $("#submit").hide();
+    $("#finished").hide();
+    $("#input_err").hide();
+    $("#internal_err").hide();
+    $("#load_msg").text("Loading...");
+    $("#load").show();
+    $("#load_msg").show();
+
+    // TODO this does fetching sequentially, but it could be done in parallel
+    $.Deferred().resolve()
+        .then(() => {
+            $("#load_msg").text("Loading data...")
+            return fetchRun(query.data_series, query.data_sample, query.data_run);
+        })
+        .then(res => {
+            $("#load_msg").text("Loading reference...")
+            return fetchRun(query.ref_series, query.ref_sample, query.ref_run);
+        })
+        .then(res => {
+            $("#load_msg").text("Processing...")
+            return process(query.subsystem,
+                query.data_series, query.data_sample, query.data_run,
+                query.ref_series, query.ref_sample, query.ref_run);
+        })
+        .then(res => {
+            console.log(res);
+            load_plots(query);
+            $("#load").hide()
+            $("#load_msg").hide()
+            $("#finished").show();
+        })
+        .fail(res => {
+            console.log("Error:", res);
+            res.error.traceback && console.log(res.error.traceback);
+            $("#load").hide();
+            $("#load_msg").hide();
+            $("#internal_err").text(res.error.message);
+            $("#internal_err").show();
+            $("#submit").show();
+        });
+}
+
+/** 
+ * Wraps a $.getJson call to the api so that ajax errors and api errors are
+ * sent homogenously to the .fail callback.
+ */
+function wrapApiCall(p) {
+    let defer = $.Deferred();
+    p.done(res => {
+            if (res.error) {
+                defer.reject(res);
+            } else {
+                defer.resolve(res);
+            }
+        })
+        .fail(res => {
+            defer.reject({
+                error: {
+                    message: res.statusText,
+                    jqXHR: res
+                }
+            });
+        })
+    defer.abort = p.abort;
+    return defer;
+}
+
+function fetchRun(series, sample, run) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'fetch_run',
+        series: series,
+        sample: sample,
+        run: run
+    }));
+}
+
+function process(subsystem,
+    data_series, data_sample, data_run,
+    ref_series, ref_sample, ref_run) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'process',
+        subsystem: subsystem,
+        data_series: data_series,
+        data_sample: data_sample,
+        data_run: data_run,
+        ref_series: ref_series,
+        ref_sample: ref_sample,
+        ref_run: ref_run
+    }));
+}
+
+function getSubsystems() {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'get_subsystems'
+    }));
+}
+
+function getSeries() {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'get_series'
+    }));
+}
+
+function getSamples(series) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'get_samples',
+        series: series
+    }));
+}
+
+function getRuns(series, sample) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'get_runs',
+        series: series,
+        sample: sample
+    }));
+}
+
+function checkInput() {
+    let query = getQuery();
+    let filled = true;
+
+    // Check that each option has a value (not "")
+    for (let key in query) {
+        filled = filled && query[key];
+    }
 
     if (filled) {
         $("#sample_chk").attr('class', 'list-group-item list-group-item-success');
@@ -18,6 +139,18 @@ function check_input() {
         $("#sample_chk").attr('class', 'list-group-item list-group-item-danger');
         $("#submit").attr('disabled', 'disabled');
     }
+}
+
+function getQuery() {
+    return {
+        subsystem: $("#select-subsystem").val(),
+        data_series: $("#data-select-series").val(),
+        data_sample: $("#data-select-sample").val(),
+        data_run: $("#data-select-run").val(),
+        ref_series: $("#ref-select-series").val(),
+        ref_sample: $("#ref-select-sample").val(),
+        ref_run: $("#ref-select-run").val(),
+    };
 }
 
 function load_query(query) {
@@ -56,143 +189,18 @@ function load_query(query) {
     load_samples($("#ref-select-sample")[0].selectize, query["ref_series"]);
     load_runs($("#ref-select-run")[0].selectize, query["ref_series"], query["ref_sample"]);
 
-    check_input();
+    checkInput();
 }
 
-function load_plots(new_object) {
-    url = (window.location.href + "plots.php?" + $.param(new_object));
+function load_plots(query) {
+    url = (window.location.href + "plots.php?" + $.param(query));
     document.location.href = url;
 }
 
-function handle_response(response) {
-    console.log(response);
-    console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
-    try {
-        // Handle output from main.py
-        console.log("query to be stored:");
-        console.log(response["query"]);
-        console.log("response:");
-        console.log(response["response"]["payload"]);
-        var resp = response["response"];
-
-        if (resp["status"] == "fail") {
-            $("#internal_err").text(resp["fail_reason"]);
-            $("#submit").show();
-            $("#internal_err").show();
-        } else {
-            localStorage["recent_query"] = JSON.stringify(response["query"]);
-            load_plots(response["query"]);
-            $("#finished").show();
-        }
-    } catch (TypeError) {
-        // Handle crashes, system error, timeouts, etc.
-        console.log(response["responseText"]);
-        var resp_txt = response["responseText"];
-        var err_msg = "";
-
-        console.log(resp_txt.indexOf("504"));
-        if (resp_txt.indexOf("504") <= -1) {
-            err_msg = "Error: Gateway timed out. Could not reach server."
-        } else {
-            err_msg = "Error: An internal error occured."
-        }
-
-        $("#internal_err").text(err_msg);
-
-        $("#submit").show();
-        $("#internal_err").show();
-    } finally {
-        $("#load").hide();
-        $("#load_msg").text("Loading...");
-        $("#load_msg").hide();
-    }
-}
-
-function handle_processes(response) {
-    console.log(response);
-    console.log("Run time: " + String(Math.floor(Date.now() / 1000) - t0));
-
-    try {
-        // Handle output from main.py
-        console.log("query to be stored:");
-        console.log(response["query"]);
-        console.log("response:");
-        console.log(response["response"]["payload"]);
-        var resp = response["response"];
-
-        if (resp["status"] == "fail") {
-            $("#load").hide()
-            $("#load_msg").hide()
-            $("#internal_err").text(resp["fail_reason"]);
-            $("#submit").show();
-            $("#internal_err").show();
-        } else if (response["query"]["type"] == "retrieve_data") {
-            console.log("data retrieved");
-            $("#load_msg").text("Loading reference...")
-            response["query"]["type"] = "retrieve_ref";
-            submit(response["query"]);
-        } else if (response["query"]["type"] == "retrieve_ref") {
-            console.log("processing")
-            response["query"]["type"] = "process";
-            $("#load_msg").text("Processing...")
-            $.ajaxSetup({
-                timeout: 0
-            });
-            $.get("cgi-bin/handler.py", response["query"])
-                .done(function(response) {})
-                .always(handle_response);
-        }
-    } catch (TypeError) {
-        // Handle crashes, system error, timeouts, etc.
-        console.log(response["responseText"]);
-        var resp = response["responseText"];
-        var err_msg = "";
-
-        console.log(resp.indexOf("504"));
-        if (resp.indexOf("504") > -1) {
-            err_msg = "Error: Gateway timed out. Could not reach server."
-        } else {
-            err_msg = "Error: An internal error occured."
-        }
-
-        $("#load").hide()
-        $("#load_msg").hide()
-        $("#internal_err").text(err_msg);
-
-        $("#submit").show();
-        $("#internal_err").show();
-    }
-
-}
-
-function submit(query) {
-    console.log("retrieving");
-    console.log(query);
-    $("#load").show();
-    $("#load_msg").show();
-    $("#submit").hide();
-    $("#finished").hide();
-    $("#input_err").hide();
-    $("#internal_err").hide();
-    t0 = Math.floor(Date.now() / 1000);
-    console.log(t0);
-
-    $.ajaxSetup({
-        timeout: 0
-    }); // Set timeout to 5 minutes
-    $.get("cgi-bin/handler.py", query)
-        .done(function(response) {})
-        .always(handle_processes);
-}
-
 function load_samples(saSelect, series) {
-    // Enable the sample selector and request its values
     saSelect.load(function(callback) {
-        saSelect.req = $.getJSON("cgi-bin/handler.py", {
-                    type: "getSamples",
-                    series: series
-                },
-                res => callback(res.response.samples))
+        saSelect.req = getSamples(series)
+            .done(res => callback(res.data.items))
             .fail(res => {
                 console.log("Samples could not be loaded", res)
                 callback();
@@ -201,16 +209,19 @@ function load_samples(saSelect, series) {
 }
 
 function load_runs(rSelect, series, sample) {
-    // Enable the run selector and request its values
     rSelect.load(function(callback) {
-        rSelect.req = $.getJSON("cgi-bin/handler.py", {
-                    type: "getRuns",
-                    series: series,
-                    sample: sample
-                },
-                res => callback(res.response.runs))
+        rSelect.req = getRuns(series, sample)
+            .done(res => {
+                let runs = res.data.items;
+                let seen = {}
+                // Filter entries with duplicate run number
+                runs = runs.filter(r => {
+                    return seen.hasOwnProperty(r.name) ? false : (seen[r.name] = true);
+                });
+                callback(runs);
+            })
             .fail(res => {
-                console.log("Runs could not be loaded", res)
+                console.log(res.error.message, res)
                 callback();
             });
     });
@@ -230,15 +241,11 @@ function initialize_selectors() {
 
     $suSelect = $("#select-subsystem").selectize(Object.assign({
         preload: true,
-        onChange: check_input,
+        onChange: checkInput,
         load: function(query, callback) {
             this.settings.load = null; // prevent reloading on user input
-            $.getJSON('cgi-bin/handler.py', {
-                    type: "getSubsystems"
-                },
-                function(res) {
-                    callback(res.response.subsystems);
-                })
+            getSubsystems()
+                .done(res => callback(res.data.items));
         },
     }, selectizeDefaults));
 
@@ -256,10 +263,8 @@ function initialize_selectors() {
             load: function(query, callback) {
                 this.settings.load = null; // prevent reloading on user input
                 this.req && this.req.abort();
-                this.req = $.getJSON("cgi-bin/handler.py", {
-                            type: "getSeries"
-                        },
-                        res => callback(res.response.series))
+                this.req = getSeries()
+                    .done(res => callback(res.data.items))
                     .fail(res => {
                         console.log("Series could not be loaded", res);
                         callback();
@@ -280,7 +285,7 @@ function initialize_selectors() {
                     }
                     load_samples(saSelect, series);
                 }
-                check_input();
+                checkInput();
             }
         }, selectizeDefaults));
 
@@ -300,12 +305,12 @@ function initialize_selectors() {
                     }
                     load_runs(rSelect, seSelect.getValue(), sample);
                 }
-                check_input();
+                checkInput();
             }
         }, selectizeDefaults));
 
         $rSelect = $(`#${colType}-select-run`).selectize(Object.assign({
-            onChange: check_input,
+            onChange: checkInput,
         }, selectizeDefaults));
 
         seSelect = $seSelect[0].selectize;
@@ -314,8 +319,7 @@ function initialize_selectors() {
     }
 }
 
-// Main function
-$(function() {
+function main() {
     console.log(localStorage);
 
     // Initital hides
@@ -339,34 +343,16 @@ $(function() {
     });
 
     initialize_selectors();
-    check_input();
+    checkInput();
 
     // Main query handler
-    $("#submit").click(function() {
-        $("#load").hide();
-        $("#load_msg").text("Loading data...")
-        $("#finished").hide();
-        $("#input_err").hide();
-        $("#internal_err").hide();
-        var query = {
-            "type": "retrieve_data",
-            "subsystem": $("#select-subsystem").val(),
-            "data_series": $("#data-select-series").val(),
-            "data_sample": $("#data-select-sample").val(),
-            "data_run": $("#data-select-run").val(),
-            "ref_series": $("#ref-select-series").val(),
-            "ref_sample": $("#ref-select-sample").val(),
-            "ref_run": $("#ref-select-run").val(),
-            "user_id": Date.now(),
-        };
-        submit(query);
-    });
+    $("#submit").click(submit);
 
     // Recent query handler
     if (localStorage.hasOwnProperty("recent_query")) {
         // Update plots link if search stored in local storage
         let query = JSON.parse(localStorage["recent_query"]);
-        $("#plots_url").attr('href', window.location.href + "plots.php?query=" + $.param(query));
+        $("#plots_url").attr('href', window.location.href + "plots.php?" + $.param(query));
         load_query(query);
     }
 
@@ -374,10 +360,11 @@ $(function() {
     if (localStorage.hasOwnProperty("external_query")) {
         // Submit external query
         let query = JSON.parse(localStorage["external_query"]);
-        query["type"] = "retrieve_data";
         localStorage.removeItem("external_query");
         console.log("External query detected:", query);
         load_query(query);
-        submit(query);
+        submit();
     }
-});
+}
+
+$(main);

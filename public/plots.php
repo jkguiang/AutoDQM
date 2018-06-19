@@ -1,229 +1,196 @@
 <html>
-    <head>
-        <title>AutoPlotter</title>
+<head>
+  <title>AutoPlotter</title>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js"></script>
 
-        <!-- Latest compiled and minified Boostrap CSS and Javascript -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
- 
-        <!-- Selectize libraries -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/css/selectize.bootstrap3.min.css"></link>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/js/standalone/selectize.min.js"></script>
+  <!-- Latest compiled and minified Boostrap CSS and Javascript -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-        <!-- My Code -->
-        
-        <!-- CSS -->
-        <style>
-            img:hover {
-                border: 1px solid #cecece;
-            }
-            
-            .well-image .bg {
-                pointer-events: none;
-                margin-bottom: 0px;
-                opacity: 0.2;
-                color: #fff;
-                background: #fff url("") no-repeat center top;
-                background-color: #ffffff !important;
-                background-size: contain !important;
+  <!-- Selectize libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/css/selectize.bootstrap3.min.css"></link>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/js/standalone/selectize.min.js"></script>
 
-                -webkit-filter: blur(5px);
-                -moz-filter: blur(5px);
-                -o-filter: blur(5px);
-                -ms-filter: blur(5px);
-                filter: blur(5px);
+  <!-- My Code -->
 
-                overflow: hidden;
-                width: 115%;
-                height: 100%;
+  <!-- CSS -->
+  <style>
+    img:hover {
+      border: 1px solid #cecece;
+    }
 
-                position: absolute;
-                top:0;left:0;
-                z-index:auto;
-            }
-            
-            .well {
-                overflow: hidden;
-                width: 115%;
-            }
-            
-            .tooltip-txt {
-                white-space: pre;
-            }
+    .well-image .bg {
+      pointer-events: none;
+      margin-bottom: 0px;
+      opacity: 0.2;
+      color: #fff;
+      background: #fff url("") no-repeat center top;
+      background-color: #ffffff !important;
+      background-size: contain !important;
 
-        </style>
+      -webkit-filter: blur(5px);
+      -moz-filter: blur(5px);
+      -o-filter: blur(5px);
+      -ms-filter: blur(5px);
+      filter: blur(5px);
 
-        <!-- PHP -->
-        <?php
-            $user_id = $_REQUEST["user_id"];
+      overflow: hidden;
+      width: 115%;
+      height: 100%;
 
-            $images = array();
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: auto;
+    }
 
-            function newImage($new_png, $new_pdf, $new_txt, $new_width, $new_height) {
-                global $images;
-                $new_image = array(
-                    "png_path" => $new_png,
-                    "pdf_path" => $new_pdf,
-                    "txt_path" => $new_txt,
-                    "width" => $new_width,
-                    "height" => $new_height,
-                );
+    .well {
+      overflow: hidden;
+      width: 115%;
+    }
 
-                $images[] = $new_image;
-            
-            }
+    .tooltip-txt {
+      white-space: pre;
+    }
+  </style>
 
-            if ($user_id != "") {
+  <!-- load jquery after php runs -->
+  <script src="js/plots.js"></script>
 
-                $cwd = getenv("ADQM_TMP");
+  <link rel="stylesheet" href="styles/select-loading.css"></link>
+  <style>
+    .container-wide {
+      padding: 0 50px !important;
+    }
+    .loader {
+      text-align: center;
+      margin: auto;
+      border: 6px solid #f3f3f3; /* Light grey */
+      border-top: 6px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
 
-                $pdf_path = ($user_id . "/pdfs/");
-                $png_path = ($user_id . "/pngs/");
-                $txt_path = ($user_id . "/txts/");
+<body>
+  <ul class="nav nav-tabs" id="navbar" role="tablist">
+    <li role="presentation"><a href="./">AutoDQM</a></li>
+    <li role="presentation" class="active"><a href="plots.php">Plots</a></li>
+  </ul>
 
-                $pdfs = scandir($cwd . "/" . $pdf_path);
-                $pngs = scandir($cwd . "/" . $png_path);
-                $txts = scandir($cwd . "/" . $txt_path);
-                
-                // Fill JSON
-                $txt_offset = 0;
-                for ($i = 0; $i < count($pngs); $i++) {
-                    $png_name = explode(".", $pngs[$i]);
-                    $pdf_name = explode(".", $pdfs[$i]);
-                    $txt_name = explode(".", $txts[$i - $txt_offset]);
-                    if ($png_name[0] != $pdf_name[0]) continue;
-                    if ($pngs[$i] == '.' || $pngs[$i] == '..') continue;
-                    list($width, $height) = getimagesize($cwd . "/" . $png_path . "/" . $pngs[$i]);
-                    if ($png_name[0] != $txt_name[0]) {
-                        newImage("tmp/" . $png_path . $pngs[$i], "tmp/" . $pdf_path . $pdfs[$i], "None", $width, $height);
-                        $txt_offset++;
-                        continue;
-                    }
-                    newImage("tmp/" . $png_path . $pngs[$i], "tmp/" . $pdf_path . $pdfs[$i], "tmp/" . $txt_path . $txts[$i - $txt_offset], $width, $height);
-                }
+  <p><br /><br /></p>
 
-            }
+  <div class="container-fluid">
+    <div class="row flex-xl">
 
-        ?>
+      <!-- Side panel -->
+      <div class="col-12 col-md-3 col-xl-3 bd-sidebar">
+        <div class="panel panel-default affix" style="max-width:400px">
 
-        <!-- pass php values to js vars -->
-        <script type="text/javascript">
-            var php_out = <?php echo json_encode($images); ?>;
-        </script>
+          <!-- Header -->
+          <div class="panel-heading">AutoDQM</div>
 
-        <!-- load jquery after php runs -->
-        <script src="js/plots.js"></script>
+          <!-- Controls -->
+          <div class="panel-body text-center">
+            <form>
+              <div class="form-group">
+                <input type="checkbox" id="showall" onchange="searchChange()">
+                  <span>Show all plots</span>
+                </input>
+                <input type="text" id="search" onkeyup="searchChange()" placeholder="Search" class="form-control">
+              </div>
+            </form>
+          </div>
 
-    </head>
+          <!-- Preview -->
+          <div class="panel-body text-center">
+            <img id="preview" class="img-thumbnail" src="" alt="Hover over a thumbnail to get preview here" width=300 >
+          </div>
 
-    <body>
-        <ul class="nav nav-tabs" id="navbar" role="tablist">
-            <li role="presentation"><a href="./">AutoDQM</a></li>
-            <li role="presentation" class="active"><a href="plots.php">Plots</a></li>
-        </ul>
-
-        <p><br /><br /></p>
-
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Side Navbar -->
-                <div class="col-md-3">
-                    <div class="sidebar-nav-fixed sidebar-nav-fixed affix">
-                        <div class="well well-image">
-                            <h4>AutoPlotter</h4>
-                            <div class="text-center">
-                                <form>
-                                    <div class="form-group">
-                                        <input type="text" id="search" onkeyup="refresh()" placeholder="Search" class="form-control">
-                                    </div>
-                                </form>
-                                <a style="z-index: auto; position: relative;" class="btn btn-primary btn-sm" href="http://github.com/jkguiang/AutoDQM" role="button">Github &raquo;</a>
-                            </div>
-                        </div>
-                        <div class="well">
-                            <div class="text-center">
-                                <img id="preview" class="img-thumbnail" src="" alt="Hover over a thumbnail to get preview here" width=200 height=300>
-                            </div>
-                        </div>
-                        <div class="well">
-                            <div id="tooltip" class="tooltip-txt"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                    <div class="row">
-                        <div class="col-sm-2"></div>
-                        <div class="col-sm-6" id="info_table">
-                            <!--<label for="data_well">Data</label>
-                            <div class="alert alert-success" id="data_well"><p id="data_title"></p></div>
-                            <label for="ref_well">Reference</label>
-                            <div class="alert alert-info" id="ref_well"><p id="ref_title" ></p></div>
-                            -->
-                            <table class="table table-striped" id="info_table">
-                                <thead>
-                                </thead>
-                                <tbody>
-                                    <tr class="table-success">
-                                        <th scope="row">Data</th>
-                                        <td id="data_cell"><p id="data_text"></p></td>
-                                    </tr>
-                                    <tr class="table-info">
-                                        <th scope="row">Reference</th>
-                                        <td id="ref_cell"><p id="ref_text"></p></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">Series</th>
-                                        <td id="series_cell"><p id="series_text"></p></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">Sample</th>
-                                        <td id="sample_cell"><p id="sample_text"></p></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">Subsystem</th>
-                                        <td id="subsys_cell"><p id="subsys_text"></p></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="col-sm-2"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-2"></div>
-                        <div class="col-md-6">
-                            <div class="col-sm-3 text-center">
-                                <button type="button" class="btn btn-primary" id="prev_run">&laquo Prev Run</button>
-                            </div>
-                            <div class="col-sm-6">
-                                <select class="form-control" id="data-select-run">
-                                    <option value="" disabled selected hidden>Select a different data run...<option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 text-center">
-                                <button type="button" class="btn btn-primary" id="next_run">Next Run &raquo</button>
-                            </div>
-                        </div>
-                        <div class="col-sm-2"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-2"></div>
-                        <div class="col-sm-6"><hr></div>
-                        <div class="col-sm-2"></div>
-                    </div>
-                    <!-- Images -->
-                    <div id="section_1" class="container">
-                    </div><!-- /.container -->
-
-                    <!-- Footer -->
-                    <div class="container">
-                        <hr> <!-- thin, grey horizontal line -->
-                    </div>
-                </div>
-            </div>
+          <!-- Information -->
+          <table id="tooltip" class="table">
+          </table>
         </div>
-    </body>
+      </div>
+
+      <div class="col-12 col-md-9 col-xl-9 bd-content">
+        <div class="row">
+          <div class="col-md-3"></div>
+          <div id="info_table" class="col-md-6">
+            <table class="table table-striped" id="info_table">
+              <thead>
+                <tr class="table-success">
+                  <th scope="col" id="subsystem"></th>
+                  <th scope="col">Data</th>
+                  <th scope="col">Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Series</th>
+                  <td><p id="data_series"></p></td>
+                  <td><p id="ref_series"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">Sample</th>
+                  <td><p id="data_sample"></p></td>
+                  <td><p id="ref_sample"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">Run</th>
+                  <td><p id="data_run"></p></td>
+                  <td><p id="ref_run"></p></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-3"></div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-3"></div>
+          <div class="col-md-6">
+            <div class="col-sm-3 text-center">
+              <button type="button" class="btn btn-primary" id="prev_run">&laquo Prev Run</button>
+            </div>
+            <div class="col-sm-6">
+              <select class="form-control" id="data-select-run">
+                <option value="" disabled selected hidden>Select a different data run...<option>
+             </select>
+            </div>
+            <div class="col-sm-3 text-center">
+              <button type="button" class="btn btn-primary" id="next_run">Next Run &raquo</button>
+            </div>
+          </div>
+          <div class="col-sm-3"></div>
+        </div>
+
+        <!-- Images -->
+        <div id="results" class="d-flex flex-wrap">
+          <div class="loader" id="load"></div>
+          <div class="text-center" id="load_msg"><small class="form-text text-muted"></small></div>
+          <div class="alert alert-danger text-center"id="err_msg"><small class="form-text text-muted"></small></div>
+        </div>
+        <!-- /.container -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="container">
+      <hr>
+      <!-- thin, grey horizontal line -->
+    </div>
+  </div>
+</body>
+
 </html>

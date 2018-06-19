@@ -1,7 +1,157 @@
+// Map for storing result objects by their id
+let result_map = {};
 
-var indexMap = {"thumbnails":{"width": 0, "height": 0}, "search":""};
-var page_loads = 0;
-var next_runNum, prev_runNum;
+function main() {
+    let query = getQuery();
+    updateInfo(query);
+
+    $("#load").show();
+    $("#load_msg").text("Processing...").show();
+    $("#err_msg").hide();
+
+    initRunControls();
+    process(query.subsystem,
+            query.data_series, query.data_sample, query.data_run,
+            query.ref_series, query.ref_sample, query.ref_run)
+        .then(res => {
+            console.log(res);
+            $("#load").hide();
+            $("#load_msg").hide();
+            renderResults(res.data.items);
+            searchChange();
+        })
+        .fail(res => {
+            console.log("Error:", res);
+            res.error.traceback && console.log(res.error.traceback);
+            $("#load").hide();
+            $("#load_msg").hide();
+            $("#err_msg").text(res.error.message).show();
+        });
+}
+
+function updateInfo(query) {
+    $("#subsystem").text(query.subsystem);
+    $("#data_series").text(query.data_series);
+    $("#data_sample").text(query.data_sample);
+    $("#data_run").text(query.data_run);
+    $("#ref_series").text(query.ref_series);
+    $("#ref_sample").text(query.ref_sample);
+    $("#ref_run").text(query.ref_run);
+}
+
+function wrapApiCall(p) {
+    let defer = $.Deferred();
+    p.done(res => {
+            if (res.error) {
+                defer.reject(res);
+            } else {
+                defer.resolve(res);
+            }
+        })
+        .fail(res => {
+            defer.reject({
+                error: {
+                    message: res.statusText,
+                    jqXHR: res
+                }
+            });
+        })
+    defer.abort = p.abort;
+    return defer;
+}
+
+function process(subsystem,
+    data_series, data_sample, data_run,
+    ref_series, ref_sample, ref_run) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'process',
+        subsystem: subsystem,
+        data_series: data_series,
+        data_sample: data_sample,
+        data_run: data_run,
+        ref_series: ref_series,
+        ref_sample: ref_sample,
+        ref_run: ref_run
+    }));
+}
+
+function getRuns(series, sample) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'get_runs',
+        series: series,
+        sample: sample
+    }));
+}
+
+function renderResults(results) {
+    let container = $("#results");
+
+    let blocks = [];
+    for (let i = 0; i < results.length; i++) {
+        blocks.push(resultHtml(results[i]));
+    }
+    container.append(...blocks);
+
+    $('.result').mouseenter(hoverResult);
+}
+
+function resultHtml(result) {
+    let classes = result.display ? 'result display' : 'result nodisplay';
+    let id = `result_${result.id}`;
+    result_map[id] = result;
+    return `
+    <div class="${classes}" id="result_${result.id}" style="display:inline-block">
+        <a href=${result.pdf_path} target="_blank">
+            <h4>${result.name}</h4>
+            <img src=${result.png_path} width="300" />
+        </a>
+    </div>`
+}
+
+function updateDisplay(search = "", showAll = false) {
+    let items = $('.result')
+    items.hide();
+    if (!showAll) {
+        items = items.filter('.display');
+    }
+    if (search) {
+        items = items.filter(`:contains(${search})`);
+    }
+    items.show();
+
+    $(".result h4").unmark({
+        done: search ? () => $(".result h4").mark(search) : null
+    });
+}
+
+function searchChange() {
+    let text = $('#search').val();
+    let showAll = $('#showall').prop("checked");
+    updateDisplay(text, showAll);
+}
+
+function hoverResult(e) {
+    let id = e.currentTarget.id;
+    let result = result_map[id];
+
+    $('#preview').attr("src", result.png_path);
+    $('#tooltip').html(resultInfoHtml(result));
+}
+
+function resultInfoHtml(result) {
+    let rows = [
+        `<tr><th scope="row">Name</th><td>${result.name}</td></tr>`,
+        `<tr><th scope="row">Algo</th><td>${result.comparator}</td></tr>`,
+        `<tr><th scope="row">Display</th><td>${result.display}</td></tr>`,
+    ]
+    for (let key in result.results) {
+        let val = result.results[key];
+        rows.push(`<tr><th scope="row">${key}</th><td>${val}</td></tr>`);
+    }
+    return `<tbody>
+                ${rows.join('\n')}
+            </tbody>`
+}
 
 // Fetch object pased from index
 function parseQString() {
@@ -13,260 +163,76 @@ function parseQString() {
         let tmp = params[i].split('=');
         query[tmp[0]] = tmp[1];
     }
-    if(query == {}) return null;
     return query;
+}
+
+function getQuery() {
+    return parseQString();
 }
 
 // Pass query to main submit page
 function submit(query) {
     localStorage["external_query"] = JSON.stringify(query);
-    document.location.href="./";
+    document.location.href = "./";
 }
 
-$(function() {
-    page_loads++;
-    console.log(localStorage);
-    load_page(php_out);
-});
+// Buttons for submitting same query with next or previous run
+// Grab next and previous runs for button functionality
+function initRunControls() {
 
-function load_page(php_out) {
-    var data = make_json(php_out);
-    filter(data);
-    fill_sections(data);
-    if (page_loads == 1) {
-        try {
-            // Fetch query info from URL
-            let query = parseQString();
-            localStorage["recent_query"] = JSON.stringify(query);
-            console.log(localStorage);
-            // Fill information table
-            $("#data_text").text(query["data_run"]);
-            $("#ref_text").text(query["ref_run"]);
-            $("#series_text").text(query["data_series"]);
-            $("#sample_text").text(query["data_sample"]);
-            $("#subsys_text").text(query["subsystem"]);
-            $("#info_table").show();
-            // Hide table if no query in localStorage
-            if (!query) {
-                $("#info_table").hide();
-            }
-        }
-        catch(TypeError) {
-            if (localStorage.hasOwnProperty("recent_query")) {
-                let query = JSON.parse(localStorage["recent_query"]);
-                $("#data_title").text(query["data_run"]);
-                $("#ref_title").text(query["ref_run"]);
-                $("#title_wells").show();
-            }
-            else {
-                $("#title_wells").hide();
-            } } }
-    $('[id^=img_]').mouseenter(
-        function() {
-            // Dynamic Well Preview
-            $("#preview").attr("src", $(this).attr("src"));
-
-            // Dynamic Well Tooltip
-            new_txt = data[Number($(this).attr('id').split("_")[1])]["txt_path"];
-            if (new_txt != "None"){
-                $("#tooltip").show();
-                $("#tooltip").load(new_txt);
-            }
-            else {
-                $("#tooltip").hide();
-            }
-        } 
-    );
-
-    // Buttons for submitting same query with next or previous run
-    // Grab next and previous runs for button functionality
-    var rReq;
-    var run_list;
-    let query = JSON.parse(localStorage["recent_query"]);
-    rReq = $.getJSON("cgi-bin/handler.py",
-        {type: "getRuns", series: query["data_series"], sample: query["data_sample"]},
-        function(res) {
-            $("#next_run").attr('disabled', 'disabled');
-            $("#prev_run").attr('disabled', 'disabled');
-            $("#data-select-run").attr('disabled', 'disabled');
-            console.log("response:");
-            run_list = (res["response"]["runs"]);
-            // Grab run numbers from list of html links ripped from online GUI
-            let run_num;
-            let run_numbers = [];
-            for (var i = 0; i < run_list.length; i++) {
-                run_num = Number(run_list[i]["name"]);
-                run_numbers.push(run_num);
-            }
-            run_numbers.sort();
-            next_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) + 1];
-            prev_runNum = run_numbers[run_numbers.indexOf(Number(query["data_run"])) - 1];
-            $("#next_run").removeAttr('disabled');
-            $("#prev_run").removeAttr('disabled');
-            $("#next_run").prop('title', next_runNum);
-            $("#prev_run").prop('title', prev_runNum);
-            $("#data-select-run").removeAttr('disabled');
-            $("#data-select-run")[0].selectize.load(cb => cb(run_list));
-        });
-    // Get next and previous runs
-    $("#next_run").click(function(){
-        let query = JSON.parse(localStorage["recent_query"]);
-        query["data_run"] = next_runNum.toString();
-        query["user_id"] = Date.now();
+    // Initialize buttons and selectize
+    let query = getQuery();
+    $("#next_run").click(function() {
+        query.data_run = this.title.toString();
         submit(query);
     });
-    $("#prev_run").click(function(){
-        let query = JSON.parse(localStorage["recent_query"]);
-        query["data_run"] = prev_runNum.toString();
-        query["user_id"] = Date.now();
+    $("#prev_run").click(function() {
+        query.data_run = this.title.toString();
         submit(query);
     });
+
     $("#data-select-run").selectize({
         valueField: 'name',
         labelField: 'name',
         searchField: 'name',
         onChange: run => {
-            let query = JSON.parse(localStorage["recent_query"]);
-            query["data_run"] = run; 
-            query["user_id"] = Date.now();
+            query.data_run = run;
             submit(query);
         },
     });
-}
 
-function make_json(php_out) {
-    var new_json = [];
-    
-    for (var i = 0; i < php_out.length; i++) {
-        var img_obj = php_out[i];
-        var png_path = img_obj["png_path"];
-        var pdf_path = img_obj["pdf_path"];
-        var txt_path = img_obj["txt_path"];
-        var width = img_obj["width"];
-        var height = img_obj["height"];
-        var name = png_path.split('/').reverse()[0].split('.')[0];
+    // Disable buttons/selectize until runs are loaded
+    $("#next_run").attr('disabled', 'true');
+    $("#prev_run").attr('disabled', 'true');
+    $("#data-select-run")[0].selectize.disable();
 
-        // Get divisor for image dimensions
-        var div = get_div(Math.max(width, height));
-        indexMap["thumbnails"]["width"] = width/div;
-        indexMap["thumbnails"]["height"] = height/div;
+    // Request runs based on local query
+    var rReq;
+    var run_list;
+    rReq = getRuns(query.data_series, query.data_sample)
+        .then(res => {
+            let runs = res.data.items;
+            let seen = {}
+            // Filter entries with duplicate run number
+            runs = runs.filter(r => {
+                return seen.hasOwnProperty(r.name) ? false : (seen[r.name] = true);
+            });
+            
+            let run_numbers = runs.map(r => Number(r.name)).sort();
 
-        new_json.push({
-            "name": name,
-            "png_path": png_path,
-            "pdf_path": pdf_path,
-            "txt_path": txt_path,
-            "width": indexMap["thumbnails"]["width"],
-            "height": indexMap["thumbnails"]["height"],
-            "hidden": false,
+            let current_runNum = Number(query.data_run);
+            let next_runNum = run_numbers[run_numbers.indexOf(current_runNum) + 1];
+            let prev_runNum = run_numbers[run_numbers.indexOf(current_runNum) - 1];
+
+            $("#next_run").removeAttr('disabled').prop('title', next_runNum);
+            $("#prev_run").removeAttr('disabled').prop('title', prev_runNum);
+            $("#data-select-run")[0].selectize.enable();
+            $("#data-select-run")[0].selectize.load(cb => cb(runs));
+        })
+        .fail(res => {
+            console.log("Failed to retrieve data runs: ", res);
+            res.error.traceback && console.log(res.error.traceback);
         });
-
-    }                
-    
-    return new_json;
 }
 
-function get_div(max_length) {
-    var divisor = 1;
-    while (true) {
-        if (max_length/divisor <= 250) {
-            return divisor;
-        }
-        divisor+=0.5;
-    }
-}
-
-function refresh() {
-    page_loads++;
-    load_page(php_out);
-}
-
-function filter(data) {
-
-    var input = document.getElementById('search');
-    if (page_loads == 1 && window.location.hash != "") {
-        var search = window.location.hash.split("#")[1];
-    }
-    else{
-        if (input == "") {
-            window.location.hash = "";
-        }
-        var search = input.value;
-        window.location.hash = search;
-    }
-    indexMap["search"] = search;
-    for (var i = 0; i < data.length; i++) {
-        if (data[i]["name"].indexOf(search) < 0) {
-            data[i]["hidden"] = true;
-        }
-    }
-
-    return data;
-}
-
-function set_grid(data) {
-    var container = $("#section_1");
-    var counter = 0;
-
-    container.html("");
-
-    for (var i = 0; i < (data.length + data.length % 3); i+=3) {
-        var toappend = "";
-
-        //Draw thumbnails
-        toappend += "<div class='row'>";
-        toappend += "   <div class='text-center'>"
-        for (var j = 0; j < 3; j++){
-            toappend +=     ("<div id=grid_" + (i + j) + " class='col-lg-4'></div>");
-            counter++;
-        }
-        toappend += "   </div>"
-        toappend += "</div>";
-        container.append(toappend);
-    }
-}
-
-function fill_grid(data) {
-
-    var counter = 0;
-    var new_search = "";
-
-    var true_count = 0;
-    for (var i = 0; i < data.length; i++) {
-        if (data[i]["hidden"]) {
-            true_count++;
-            continue;
-        }
-
-        var new_split = "";
-        var html_name = "";
-
-        if (indexMap["search"] != "") {
-            new_search = indexMap["search"];
-            new_split = data[i]["name"].split(new_search);
-            new_name = "";
-
-            for (var j = 0; j < new_split.length; j++) {
-                new_name += new_split[j];
-                html_name += new_split[j];
-                if (data[i]["name"].indexOf(new_name + new_search) != -1) {
-                    new_name += new_search;
-                    html_name += "<font class='bg-success'>"+new_search+"</font>";
-                }
-            }
-        }
-
-        else {
-            html_name = data[i]["name"];
-        }
-
-        $("#grid_" + counter).append("<a href="+data[i]["pdf_path"]+"><h4>"+html_name+"</h4></a><a href="+data[i]["pdf_path"]+"><img id=img_"+true_count+" src="+data[i]["png_path"]+" width="+data[i]["width"]+" height="+data[i]["height"]+"></a>");
-        true_count++;
-        counter++;
-    }
-}
-
-function fill_sections(data) {
-    set_grid(data);
-    fill_grid(data);
-}
+$(main);
