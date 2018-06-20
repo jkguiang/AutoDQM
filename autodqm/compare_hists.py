@@ -10,10 +10,10 @@ import ROOT
 from autodqm.histpair import HistPair
 
 
-def process(subsystem,
-            data_series, data_sample, data_run,
-            ref_series, ref_sample, ref_run,
-            output_dir):
+def process(config, subsystem,
+            data_series, data_sample, data_run, data_path,
+            ref_series, ref_sample, ref_run, ref_path,
+            output_dir='./out/', plugin_dir='./plugins/'):
 
     # Ensure no graphs are drawn to screen and no root messages are sent to terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -29,7 +29,7 @@ def process(subsystem,
 
     hist_outputs = []
 
-    comparator_funcs = load_comparators()
+    comparator_funcs = load_comparators(plugin_dir)
     for hp in histpairs:
         try:
             comparators = [(c, comparator_funcs[c]) for c in hp.comparators]
@@ -80,24 +80,18 @@ def process(subsystem,
     return hist_outputs
 
 
-def compile_histpairs(subsystem,
-                      data_series, data_sample, data_run,
-                      ref_series, ref_sample, ref_run):
+def compile_histpairs(config, subsystem,
+                      data_series, data_sample, data_run, data_path,
+                      ref_series, ref_sample, ref_run, ref_path):
 
-    # Root files
-    data_fname = "{0}/{1}/{2}/{3}.root".format(
-        os.environ["ADQM_DB"], data_series, data_sample, data_run)
-    ref_fname = "{0}/{1}/{2}/{3}.root".format(
-        os.environ["ADQM_DB"], ref_series, ref_sample, ref_run)
-
-    # Load config
-    with open(os.getenv('ADQM_CONFIG')) as config_file:
-        config = json.load(config_file)
+    # Histogram details
     conf_list = config[subsystem]["hists"]
     main_gdir = config[subsystem]["main_gdir"]
 
-    data_file = ROOT.TFile.Open(data_fname)
-    ref_file = ROOT.TFile.Open(ref_fname)
+    # ROOT files
+    data_file = ROOT.TFile.Open(data_path)
+    ref_file = ROOT.TFile.Open(ref_path)
+
     histPairs = []
 
     for hconf in conf_list:
@@ -157,10 +151,9 @@ def compile_histpairs(subsystem,
     return histPairs
 
 
-def load_comparators():
+def load_comparators(plugin_dir):
     """Load comparators from each python module in ADQM_PLUGINS."""
 
-    plugin_dir = os.getenv('ADQM_PLUGINS')
     sys.path.insert(0, plugin_dir)
 
     comparators = dict()

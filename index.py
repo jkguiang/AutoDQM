@@ -6,6 +6,7 @@ import json
 import os
 import traceback
 from autodqm import fetch, compare_hists
+from autodqm.cerncert import CernCert
 
 
 def handle_request(req):
@@ -42,19 +43,42 @@ def handle_request(req):
         return res
 
 
+def make_cert():
+    return CernCert(sslcert=os.getenv('ADQM_SSLCERT'),
+                    sslkey=os.getenv('ADQM_SSLKEY'),
+                    cainfo=os.getenv('ADQM_CERNCA'))
+
+
 def fetch_run(series, sample, run):
-    fetch.fetch(series, sample, run)
+    cert = make_cert()
+    fetch.fetch(cert, series, sample, run, db=os.getenv('ADQM_DB'))
     return {}
 
 
 def process(subsystem,
             data_series, data_sample, data_run,
             ref_series, ref_sample, ref_run):
+
+    # Get root file paths
+    cert = make_cert()
+    data_path = fetch.fetch(cert,
+                            data_series, data_sample, data_run,
+                            db=os.getenv('ADQM_DB'))
+    ref_path = fetch.fetch(cert,
+                           ref_series, ref_sample, ref_run,
+                           db=os.getenv('ADQM_DB'))
+
+    # Get config and results/plugins directories
     results_dir = os.path.join(os.getenv('ADQM_PUBLIC'), 'results')
-    results = compare_hists.process(subsystem,
-                                    data_series, data_sample, data_run,
-                                    ref_series, ref_sample, ref_run,
-                                    output_dir=results_dir)
+    plugin_dir = os.getenv('ADQM_PLUGINS')
+    with open(os.getenv('ADQM_CONFIG')) as config_file:
+        config = json.load(config_file)
+
+    # Process this query
+    results = compare_hists.process(config, subsystem,
+                                    data_series, data_sample, data_run, data_path,
+                                    ref_series, ref_sample, ref_run, ref_path,
+                                    output_dir=results_dir, plugin_dir=plugin_dir)
 
     # Relativize the results paths
     def relativize(p): return os.path.join(
@@ -74,15 +98,18 @@ def get_subsystems():
 
 
 def get_series():
-    return {'items': fetch.get_series()}
+    cert = make_cert()
+    return {'items': fetch.get_series(cert)}
 
 
 def get_samples(series):
-    return {'items': fetch.get_samples(series)}
+    cert = make_cert()
+    return {'items': fetch.get_samples(cert, series)}
 
 
 def get_runs(series, sample):
-    return {'items': fetch.get_runs(series, sample)}
+    cert = make_cert()
+    return {'items': fetch.get_runs(cert, series, sample)}
 
 
 class error(Exception):

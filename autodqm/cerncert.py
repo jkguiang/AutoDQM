@@ -4,28 +4,30 @@
 import os
 import pycurl
 import StringIO
+from collections import namedtuple
 
+CernCert = namedtuple('CernCert', ('sslcert', 'sslkey', 'cainfo'))
 
-def get_cert_curl():
+def get_cert_curl(cert):
     # NSS_STRICT_NOFORK=DISABLED allows for multiprocessed curl requests with cert
     os.environ['NSS_STRICT_NOFORK'] = 'DISABLED'
     c = pycurl.Curl()
 
     # cms voms member host certificate to authenticate adqm to cmsweb.cern.ch
-    c.setopt(pycurl.SSLCERT, os.getenv('ADQM_SSLCERT'))
+    c.setopt(pycurl.SSLCERT, cert.sslcert)
 
     # cms voms member host certificate key
     if 'ADQM_SSLKEY' in os.environ:
-        c.setopt(pycurl.SSLKEY, os.getenv('ADQM_SSLKEY'))
+        c.setopt(pycurl.SSLKEY, cert.sslkey)
     # cern root ca to verify cmsweb.cern.ch
     if 'ADQM_CERNCA' in os.environ:
-        c.setopt(pycurl.CAINFO, os.getenv('ADQM_CERNCA'))
+        c.setopt(pycurl.CAINFO, cert.cainfo)
     return c
 
 
-def get_url_with_cert(url):
+def get_url_with_cert(cert, url):
     b = StringIO.StringIO()
-    c = get_cert_curl()
+    c = get_cert_curl(cert)
     c.setopt(pycurl.WRITEFUNCTION, b.write)
     c.setopt(pycurl.URL, str(url))
     c.perform()
@@ -33,8 +35,8 @@ def get_url_with_cert(url):
     return content
 
 
-def get_file_with_cert(url, fname_out):
-    c = get_cert_curl()
+def get_file_with_cert(cert, url, fname_out):
+    c = get_cert_curl(cert)
     c.setopt(pycurl.URL, str(url))
     c.setopt(pycurl.FOLLOWLOCATION, 1)
     c.setopt(pycurl.NOPROGRESS, 1)

@@ -99,13 +99,13 @@ def hsv_to_rgb(h, s, v):
         return [v, p, q]
 
 
-def get_file(url, outname):
-    cerncert.get_file_with_cert(url, outname)
+def get_file(cert, url, outname):
+    cerncert.get_file_with_cert(cert, url, outname)
 
 
 # Grabs a DQM directory page and parses it into a list of row dicts
-def get_page(url):
-    content = cerncert.get_url_with_cert(url)
+def get_page(cert, url):
+    content = cerncert.get_url_with_cert(cert, url)
     parser = DQMParser()
     parser.feed(content)
     return parser.get_rows()
@@ -118,7 +118,7 @@ def hash_page(url, timestamp):
 # Grabs a DQM directory page from the cache if the url and timestamp match
 # Otherwise grabs the page and adds it to the cache
 def get_cache(url, timestamp):
-    cache_dir = os.environ['ADQM_TMP'] + 'dqm_cache/'
+    cache_dir = os.getenv('ADQM_TMP', '/tmp/adqm/') + 'dqm_cache/'
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
@@ -137,12 +137,12 @@ def clean_run_fname(fname):
     return fname.split('_')[2][4:]
 
 
-def get_series():
-    return get_page("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/")
+def get_series(cert):
+    return get_page(cert, "https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/")
 
 
-def get_samples(series):
-    return get_page("https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/".format(series))
+def get_samples(cert, series):
+    return get_page(cert, "https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/".format(series))
 
 
 # Bit of a hack to supply a function to Pool.map
@@ -156,9 +156,9 @@ class GetRunDir(object):
         return get_cache(self.runDirs[i]['url'], self.runDirs[i]['timestamp'])
 
 
-def get_runs(series, sample):
-    runDirs = get_page(
-        "https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
+def get_runs(cert, series, sample):
+    runDirs = get_page(cert,
+                       "https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/{0}/{1}/".format(series, sample))
     runs = []
 
     # Setup a pool to parallize getting run directories, 64 is mostly arbitrary
@@ -176,10 +176,9 @@ def get_runs(series, sample):
     return runs
 
 
-def fetch(series, sample, run):
+def fetch(cert, series, sample, run, db='./db/'):
 
     # Path to directory containing all data
-    db = os.getenv('ADQM_DB')
     if not os.path.exists(db):
         os.makedirs(db)
 
@@ -192,22 +191,18 @@ def fetch(series, sample, run):
     # Download file if not already in database
     if "{0}.root".format(run) not in dbase:
         found = False
-        runRows = get_runs(series, sample)
+        runRows = get_runs(cert, series, sample)
         for r in runRows:
             if str(run) == r["name"]:
                 found = True
-                get_file(r["url"], "{0}/{1}.root".format(db_dir, run))
+                get_file(cert, r["url"], "{0}/{1}.root".format(db_dir, run))
 
         if not found:
             raise error("Series: {0}, sample: {1}, run: {2} not found on offline DQM"
                         .format(series, sample, run))
 
+    return "{}/{}.root".format(db_dir, run)
+
 
 class error(Exception):
     pass
-
-
-if __name__ == '__main__':
-    pass
-    # fetch(run="301531", year="2017", sample="SingleMuon", targ_dir="")
-    # print(get_runs(limit=5, year="2017", sample="SingleMuon"))
