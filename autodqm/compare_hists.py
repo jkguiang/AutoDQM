@@ -19,9 +19,9 @@ def process(config, subsystem,
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
-    histpairs = compile_histpairs(subsystem,
-                                  data_series, data_sample, data_run,
-                                  ref_series, ref_sample, ref_run)
+    histpairs = compile_histpairs(config, subsystem,
+                                  data_series, data_sample, data_run, data_path,
+                                  ref_series, ref_sample, ref_run, ref_path)
 
     for d in [output_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
         if not os.path.exists(d):

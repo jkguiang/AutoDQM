@@ -117,7 +117,7 @@ def hash_page(url, timestamp):
 
 # Grabs a DQM directory page from the cache if the url and timestamp match
 # Otherwise grabs the page and adds it to the cache
-def get_cache(url, timestamp):
+def get_cache(cert, url, timestamp):
     cache_dir = os.getenv('ADQM_TMP', '/tmp/adqm/') + 'dqm_cache/'
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
@@ -127,7 +127,7 @@ def get_cache(url, timestamp):
         with open(cache_dir + hashed) as f:
             page = json.load(f)
     except:
-        page = get_page(url)
+        page = get_page(cert, url)
         with open(cache_dir + hashed, 'w') as f:
             json.dump(page, f)
     return page
@@ -149,11 +149,12 @@ def get_samples(cert, series):
 # Could be changed by switching Pool libraries
 # Unfortunate that native Pool doesn't support lambdas
 class GetRunDir(object):
-    def __init__(self, runDirs):
+    def __init__(self, cert, runDirs):
+        self.cert = cert
         self.runDirs = runDirs
 
     def __call__(self, i):
-        return get_cache(self.runDirs[i]['url'], self.runDirs[i]['timestamp'])
+        return get_cache(self.cert, self.runDirs[i]['url'], self.runDirs[i]['timestamp'])
 
 
 def get_runs(cert, series, sample):
@@ -163,7 +164,7 @@ def get_runs(cert, series, sample):
 
     # Setup a pool to parallize getting run directories, 64 is mostly arbitrary
     pool = Pool(64)
-    run_arrs = pool.map(GetRunDir(runDirs), range(len(runDirs)))
+    run_arrs = pool.map(GetRunDir(cert, runDirs), range(len(runDirs)))
 
     # Flatten results of pool
     runs = [r for run_arr in run_arrs for r in run_arr]
