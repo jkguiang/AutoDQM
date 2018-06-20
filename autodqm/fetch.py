@@ -4,7 +4,7 @@
 import os
 import json
 import datetime
-import cerncert
+import autodqm.cerncert as cerncert
 from HTMLParser import HTMLParser
 from urlparse import urljoin
 from multiprocessing import Pool

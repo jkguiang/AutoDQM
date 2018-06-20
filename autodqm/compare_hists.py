@@ -7,8 +7,7 @@ import json
 import subprocess
 import tempfile
 import ROOT
-import AutoDQM
-from histpair import HistPair
+from autodqm.histpair import HistPair
 
 
 def process(subsystem,

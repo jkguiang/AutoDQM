@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import cgi
-import compare_hists
-import fetch
 import json
 import os
 import traceback
+from autodqm import fetch, compare_hists
 
 
 def handle_request(req):

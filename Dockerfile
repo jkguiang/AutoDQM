@@ -27,7 +27,9 @@ ENV ADQM_SSLKEY /run/secrets/cmsvo-cert.key
 
 COPY httpd.conf /etc/httpd/conf/httpd.conf
 COPY public /var/www/public
-COPY src /var/www/cgi-bin
+COPY index.py /var/www/cgi-bin/index.py
+COPY autodqm /var/www/cgi-bin/autodqm
+COPY plugins /var/www/cgi-bin/plugins
 COPY configs.json /var/www/public/configs.json
 
 CMD ["/usr/sbin/httpd","-D","FOREGROUND"]
