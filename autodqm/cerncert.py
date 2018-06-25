@@ -8,6 +8,7 @@ from collections import namedtuple
 
 CernCert = namedtuple('CernCert', ('sslcert', 'sslkey', 'cainfo'))
 
+
 def get_cert_curl(cert):
     # NSS_STRICT_NOFORK=DISABLED allows for multiprocessed curl requests with cert
     os.environ['NSS_STRICT_NOFORK'] = 'DISABLED'
