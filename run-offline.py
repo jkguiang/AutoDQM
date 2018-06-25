@@ -3,60 +3,55 @@
 
 import os
 import argparse
-import shutil
+import json
 from glob import glob
-from subprocess import call
-from json import dumps
+from autodqm.cerncert import CernCert
+from autodqm.fetch import fetch
+from autodqm.compare_hists import process
 
 
-# Retrieves data and reference root files, then runs AutoDQM on them
-def autodqm_offline(series, sample, subsystem, data_run, ref_run):
-    # Setup parameters
-    params = {
-        'user_id': 'offline',
-        'subsystem': subsystem,
-        'data_series': series,
-        'data_sample': sample,
-        'data_run': data_run,
-        'ref_series': series,
-        'ref_sample': sample,
-        'ref_run': ref_run
-    }
+def autodqm_offline(subsystem,
+                    data_run, data_sample, data_series,
+                    ref_run, ref_sample, ref_series,
+                    config_path, output_dir, plugin_dir,
+                    sslcert, sslkey, cainfo):
 
-    # Change to source directory
-    os.chdir('src/')
-    do_cmd = './do.sh'
+    if not ref_sample:
+        ref_sample = data_sample
+    if not ref_series:
+        ref_series = data_series
 
-    # Run data retrieval and AutoDQM processing
-    print("\nRetrieving data root files")
-    params['type'] = 'retrieve_data'
-    call(['python', 'index.py', dumps(params)])
+    print("Using cert/key pair:")
+    print("\tCertificate: {}".format(sslcert))
+    print("\tKey: {}".format(sslkey))
+    cert = make_cert(sslcert, sslkey, cainfo)
 
-    print("\nRetrieving ref root files")
-    params['type'] = 'retrieve_ref'
-    call(['python', 'index.py', dumps(params)])
+    # Get root files
+    print("Getting data root file...")
+    data_path = fetch(cert, data_series, data_sample, data_run)
+    print("Getting reference root file...")
+    ref_path = fetch(cert, ref_series, ref_sample, ref_run)
 
-    print("\nProcessing files")
-    params['type'] = 'process'
-    call(['python', 'index.py', dumps(params)])
+    print("Loading configuration...")
+    with open(config_path) as config_file:
+        config = json.load(config_file)
 
-    os.chdir('../')
+    print("Processing results...")
+    results = process(config, subsystem,
+                      data_series, data_sample, data_run, data_path,
+                      ref_series, ref_sample, ref_run, ref_path,
+                      output_dir=output_dir, plugin_dir=plugin_dir)
 
-
-# Makes a directory iff it doesn't exist
-def make_dir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    print("Results available in {}".format(output_dir))
+    return results
 
 
-# Copies files from one directory to another
-def copy_files(fromDir, toDir):
-    for f in os.listdir(fromDir):
-        shutil.copy(fromDir + f, toDir)
+def make_cert(sslcert, sslkey, cainfo):
+    return CernCert(sslcert, sslkey, cainfo)
 
 
-# Find the first file that matches the given pattern
 def find_file(pattern):
+    '''Find the first file that matches the given pattern.'''
     pattern = os.path.expandvars(pattern)
     pattern = os.path.expanduser(pattern)
     return next((f for f in glob(pattern)), None)
@@ -66,43 +61,42 @@ if __name__ == '__main__':
 
     # Collect command line arguments
     parser = argparse.ArgumentParser(description='Run AutoDQM offline.')
-    parser.add_argument('series', type=str,
-                        help="series to look for samples in. Examples: Run2017, Commissioning2018")
-    parser.add_argument('sample', type=str,
-                        help="sample to look for runs in. Examples: ZeroBias, SingleMuon, Cosmics")
     parser.add_argument('subsystem', type=str,
                         help="subsystem configuration to use. Examples: CSC, EMTF")
-    parser.add_argument('data', type=str, help="data run number")
-    parser.add_argument('ref', type=str, help="ref run number")
-    parser.add_argument('-o', '--output', default='./offline/',
+
+    parser.add_argument('data_series', type=str,
+                        help="data series to look for samples in. Examples: Run2017, Commissioning2018")
+    parser.add_argument('data_sample', type=str,
+                        help="data sample to look for runs in. Examples: ZeroBias, SingleMuon, Cosmics")
+    parser.add_argument('data_run', type=str, help="data run number")
+    parser.add_argument('ref_run', type=str, help="data run number")
+
+    parser.add_argument('--ref_series', type=str, default=None,
+                        help="ref series to look for samples in. Defaults to data_series")
+    parser.add_argument('--ref_sample', type=str, default=None,
+                        help="ref sample to look for runs in. Defaults to data_ref")
+
+    parser.add_argument('-c', '--config', default='./configs.json',
+                        help="config file to use")
+    parser.add_argument('-o', '--output', default='./out/',
                         help="artifact (pdfs, pngs, txts) output directory")
+    parser.add_argument('-p', '--plugins', default='./plugins/',
+                        help="comparison plugins directory")
+
+    parser.add_argument('--sslcert', type=str, default='~/.globus/usercert.*',
+                        help="path to a CMS VO public certificate")
+    parser.add_argument('--sslkey', type=str, default='~/.globus/userkey.*',
+                        help="path to a CMS VO private key")
+    parser.add_argument('--cainfo', type=str, default=None,
+                        help="path to CERN CA files")
     args = parser.parse_args()
 
-    # Set environment variables to defaults if they're not already set
-    if 'ADQM_CONFIG' not in os.environ:
-        os.environ['ADQM_CONFIG'] = os.path.abspath('./configs.json')
-    if 'ADQM_DB' not in os.environ:
-        os.environ['ADQM_DB'] = os.path.abspath('./db/')
-    if 'ADQM_TMP' not in os.environ:
-        os.environ['ADQM_TMP'] = os.path.abspath('./tmp/')
-    if 'ADQM_SSLCERT' not in os.environ:
-        os.environ['ADQM_SSLCERT'] = find_file('~/.globus/usercert.*')
-        os.environ['ADQM_SSLKEY'] = find_file('~/.globus/userkey.*')
-
-    make_dir(os.environ['ADQM_DB'])
-    make_dir(os.environ['ADQM_TMP'])
-
-    autodqm_offline(args.series, args.sample,
-                    args.subsystem, args.data, args.ref)
-
-    # Prepare and move files into output directory
-    make_dir(args.output)
-    make_dir(args.output + '/pdfs')
-    make_dir(args.output + '/pngs')
-    make_dir(args.output + '/txts')
-
-    copy_files(os.environ['ADQM_TMP'] + 'offline/pdfs/', args.output + '/pdfs')
-    copy_files(os.environ['ADQM_TMP'] + 'offline/pngs/', args.output + '/pngs')
-    copy_files(os.environ['ADQM_TMP'] + 'offline/txts/', args.output + '/txts')
-
-    print("Results are available in the {0}".format(args.output))
+    sslcert = find_file(args.sslcert)
+    sslkey = find_file(args.sslkey)
+    autodqm_offline(args.subsystem,
+                    args.data_run, args.data_sample, args.data_series,
+                    args.ref_run, args.ref_sample, args.ref_series,
+                    config_path=args.config,
+                    output_dir=args.output,
+                    plugin_dir=args.plugins,
+                    sslcert=sslcert, sslkey=sslkey, cainfo=args.cainfo)

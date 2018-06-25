@@ -5,7 +5,6 @@ import os
 import sys
 import json
 import subprocess
-import tempfile
 import ROOT
 from autodqm.histpair import HistPair
 
@@ -15,9 +14,11 @@ def process(config, subsystem,
             ref_series, ref_sample, ref_run, ref_path,
             output_dir='./out/', plugin_dir='./plugins/'):
 
-    # Ensure no graphs are drawn to screen and no root messages are sent to terminal
+    # Ensure no graphs are drawn to screen and no root messages are sent to
+    # terminal
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
-    ROOT.gErrorIgnoreLevel = ROOT.kWarning
+    # Report only errors to stderr
+    ROOT.gErrorIgnoreLevel = ROOT.kWarning + 1
 
     histpairs = compile_histpairs(config, subsystem,
                                   data_series, data_sample, data_run, data_path,
@@ -159,12 +160,12 @@ def load_comparators(plugin_dir):
     comparators = dict()
 
     for modname in os.listdir(plugin_dir):
-        if modname[0] == '_':
+        if modname[0] == '_' or modname[-4:] == '.pyc':
             continue
         if modname[-3:] == '.py':
             modname = modname[:-3]
-        mod = __import__("{}".format(modname))
         try:
+            mod = __import__("{}".format(modname))
             new_comps = mod.comparators()
         except AttributeError:
             raise error(

@@ -4,6 +4,7 @@
 import os
 import json
 import datetime
+import errno
 import autodqm.cerncert as cerncert
 from HTMLParser import HTMLParser
 from urlparse import urljoin
@@ -119,8 +120,13 @@ def hash_page(url, timestamp):
 # Otherwise grabs the page and adds it to the cache
 def get_cache(cert, url, timestamp):
     cache_dir = os.getenv('ADQM_TMP', '/tmp/adqm/') + 'dqm_cache/'
-    if not os.path.exists(cache_dir):
+
+    # Make the cache_dir if it doesn't exist
+    try:
         os.makedirs(cache_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
     hashed = hash_page(url, timestamp)
     try:

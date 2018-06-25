@@ -15,12 +15,10 @@ def get_cert_curl(cert):
 
     # cms voms member host certificate to authenticate adqm to cmsweb.cern.ch
     c.setopt(pycurl.SSLCERT, cert.sslcert)
-
     # cms voms member host certificate key
-    if 'ADQM_SSLKEY' in os.environ:
-        c.setopt(pycurl.SSLKEY, cert.sslkey)
+    c.setopt(pycurl.SSLKEY, cert.sslkey)
     # cern root ca to verify cmsweb.cern.ch
-    if 'ADQM_CERNCA' in os.environ:
+    if cert.cainfo:
         c.setopt(pycurl.CAINFO, cert.cainfo)
     return c
 
