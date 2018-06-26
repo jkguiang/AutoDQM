@@ -5,10 +5,77 @@ import os
 import json
 import datetime
 import errno
-import autodqm.cerncert as cerncert
-from HTMLParser import HTMLParser
+import requests
+import shutil
+from bs4 import BeautifulSoup
 from urlparse import urljoin
 from multiprocessing import Pool
+
+DQM_URL = 'https://cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/'
+
+
+def fetch_run(cert, series, sample, run, db='./db/'):
+    for prog in stream_fetch_run(cert, series, sample, run, db=db):
+        pass
+    return _run_path(db, series, sample, run)
+
+
+def stream_fetch_run(cert, series, sample, run, db='./db/', yield_resolution=0.01):
+
+    run_path = _run_path(db, series, sample, run)
+    run_dir = os.path.dirname(run_path)
+
+    if not os.path.exists(run_path):
+        _try_makedirs(run_dir)
+
+        runs = fetch_run_list(cert, series, sample)
+        run_info = next(r for r in runs if r.name == run)
+
+        prev_prog = None
+        for prog in _stream_file(cert, run_info.url, run_path):
+            if not prev_prog or prog[0] - prev_prog[0] > yield_resolution:
+                prev_prog = prog
+                yield prog
+
+
+def fetch_series_list(cert, cache='./db/dqm_offline/'):
+    page = requests.get(DQM_URL, cert=cert).text
+    return _parse_dqm_page(page)
+
+
+def fetch_sample_list(cert, series, cache='./db/dqm_offline/'):
+    pass
+
+
+def fetch_run_list(cert, series, sample, cache='./db/dqm_offline/'):
+    pass
+
+
+def _stream_file(cert, url, dest, chunk_size=4096):
+    res = requests.get(url, cert=cert, stream=True)
+    size = res.headers.get('content-length')
+    downloaded = 0
+    with open(dest, 'wb') as f:
+        for data in res.iter_content(chunk_size=chunk_size):
+            downloaded += len(data)
+            shutil.copyfileobj(data, f)
+            yield (downloaded, size)
+
+
+def _parse_dqm_page(content):
+    pass
+
+
+def _run_path(db, series, sample, run):
+    return "{}/{}.root".format(os.path.join(db, series, sample), run)
+
+
+def _try_makedirs(*args, **kwargs):
+    try:
+        return os.makedirs(*args, **kwargs)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 class DQMParser(HTMLParser):
