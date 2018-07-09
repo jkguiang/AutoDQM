@@ -8,6 +8,9 @@ RUN yum update -y && yum install -y \
       python2-pip \
       root-python
 
+ADD https://cafiles.cern.ch/cafiles/certificates/CERN%20Root%20Certification%20Authority%202.crt /usr/local/share/ca-certificates/
+ADD  https://cafiles.cern.ch/cafiles/certificates/CERN%20Grid%20Certification%20Authority.crt /usr/local/share/ca-certificates/
+
 COPY requirements.txt /code/requirements.txt
 RUN pip install -r /code/requirements.txt
 
@@ -17,13 +20,13 @@ RUN chown -R apache:apache /db /var/www /run/secrets
 RUN ln -s /dev/stdout /etc/httpd/logs/access_log
 RUN ln -s /dev/stderr /etc/httpd/logs/error_log
 
-ENV ADQM_CONFIG /var/www/public/configs.json
-ENV ADQM_PLUGINS /var/www/cgi-bin/plugins/
-ENV ADQM_DB /db/
-ENV ADQM_TMP /var/www/tmp/
-ENV ADQM_PUBLIC /var/www/
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-bundle.crt
 ENV ADQM_SSLCERT /run/secrets/cmsvo-cert.pem
 ENV ADQM_SSLKEY /run/secrets/cmsvo-cert.key
+ENV ADQM_DB /db/
+ENV ADQM_PUBLIC /var/www/
+ENV ADQM_CONFIG /var/www/public/configs.json
+ENV ADQM_PLUGINS /var/www/cgi-bin/plugins/
 
 COPY httpd.conf /etc/httpd/conf/httpd.conf
 COPY public /var/www/public
