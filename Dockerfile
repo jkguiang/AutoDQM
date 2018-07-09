@@ -8,9 +8,6 @@ RUN yum update -y && yum install -y \
       python2-pip \
       root-python
 
-ADD https://cafiles.cern.ch/cafiles/certificates/CERN%20Root%20Certification%20Authority%202.crt /usr/local/share/ca-certificates/
-ADD  https://cafiles.cern.ch/cafiles/certificates/CERN%20Grid%20Certification%20Authority.crt /usr/local/share/ca-certificates/
-
 COPY requirements.txt /code/requirements.txt
 RUN pip install -r /code/requirements.txt
 
