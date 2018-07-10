@@ -147,7 +147,9 @@ def _stream_file(cert, url, dest, chunk_size=4096):
 
     Returns a generator of StreamProg tuples to indicate download progress."""
     res = requests.get(url, cert=cert, stream=True)
-    total = res.headers.get('content-length')
+    if not res:
+        raise error("Failed to download file: {}".format(url))
+    total = int(res.headers.get('content-length'))
     cur = 0
     with open(dest, 'wb') as f:
         for data in res.iter_content(chunk_size=chunk_size):
