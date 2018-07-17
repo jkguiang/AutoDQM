@@ -1,12 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
 import argparse
 import json
 from glob import glob
-from autodqm.cerncert import CernCert
-from autodqm.fetch import fetch
+from tqdm import tqdm
+from autodqm import dqm
 from autodqm.compare_hists import process
 
 
@@ -27,27 +27,49 @@ def autodqm_offline(subsystem,
     cert = make_cert(sslcert, sslkey, cainfo)
 
     # Get root files
+    print('')
     print("Getting data root file...")
-    data_path = fetch(cert, data_series, data_sample, data_run)
-    print("Getting reference root file...")
-    ref_path = fetch(cert, ref_series, ref_sample, ref_run)
+    data_path = get_run(data_series, data_sample, data_run, cert)
 
+    print('')
+    print("Getting reference root file...")
+    ref_path = get_run(ref_series, ref_sample, ref_run, cert)
+
+    print('')
     print("Loading configuration...")
     with open(config_path) as config_file:
         config = json.load(config_file)
 
+    print('')
     print("Processing results...")
     results = process(config, subsystem,
                       data_series, data_sample, data_run, data_path,
                       ref_series, ref_sample, ref_run, ref_path,
                       output_dir=output_dir, plugin_dir=plugin_dir)
 
+    print('')
     print("Results available in {}".format(output_dir))
     return results
 
 
+def get_run(series, sample, run, cert):
+    stream = dqm.stream_run(series, sample, run, cert)
+    first = stream.next()
+    path = first.path
+    if first.cur == first.total:
+        print("Run cached at {}".format(path))
+    else:
+        with tqdm(total=first.total,
+                  unit='B', unit_scale=True, unit_divisor=1024) as t:
+            prev = 0
+            for p in stream:
+                t.update(p.cur - prev)
+                prev = p.cur
+    return path
+
+
 def make_cert(sslcert, sslkey, cainfo):
-    return CernCert(sslcert, sslkey, cainfo)
+    return (sslcert, sslkey, cainfo)
 
 
 def find_file(pattern):
@@ -87,12 +109,13 @@ if __name__ == '__main__':
                         help="path to a CMS VO public certificate")
     parser.add_argument('--sslkey', type=str, default='~/.globus/userkey.*',
                         help="path to a CMS VO private key")
-    parser.add_argument('--cainfo', type=str, default=None,
+    parser.add_argument('--cainfo', type=str, default='/etc/ssl/certs/ca-bundle.crt',
                         help="path to CERN CA files")
     args = parser.parse_args()
 
     sslcert = find_file(args.sslcert)
     sslkey = find_file(args.sslkey)
+    os.environ['REQUESTS_CA_BUNDLE'] = args.cainfo
     autodqm_offline(args.subsystem,
                     args.data_run, args.data_sample, args.data_series,
                     args.ref_run, args.ref_sample, args.ref_series,
