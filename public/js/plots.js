@@ -258,8 +258,6 @@ function initRunControls() {
             $("#prev_run").removeAttr('disabled').prop('title', prev_runNum);
             $("#data-select-run")[0].selectize.enable();
             $("#data-select-run")[0].selectize.load(cb => cb(runs));
-
-            $('[data-toggle="tooltip"]').tooltip()
         })
         .fail(res => {
             console.log("Failed to retrieve data runs: ", res);
