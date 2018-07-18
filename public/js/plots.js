@@ -161,7 +161,7 @@ function resultInfoHtml(result) {
         name: 'Display',
         val: result.display
     }];
-    
+
     for (let key in result.results) {
         rows.push({
             name: key,
