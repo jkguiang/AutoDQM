@@ -5,9 +5,9 @@ function main() {
     let query = getQuery();
     updateInfo(query);
 
-    $("#load").show();
-    $("#load_msg").text("Processing...").show();
-    $("#err_msg").hide();
+    $("#error").hide();
+    $("#load_msg").text("Loading...");
+    $("#load").fadeIn();
 
     initRunControls();
     process(query.subsystem,
@@ -15,8 +15,7 @@ function main() {
             query.ref_series, query.ref_sample, query.ref_run)
         .then(res => {
             console.log(res);
-            $("#load").hide();
-            $("#load_msg").hide();
+            $("#load").fadeOut();
             renderResults(res.data.items);
             searchChange();
         })
@@ -24,8 +23,8 @@ function main() {
             console.log("Error:", res);
             res.error.traceback && console.log(res.error.traceback);
             $("#load").hide();
-            $("#load_msg").hide();
-            $("#err_msg").text(res.error.message).show();
+            $("#error").show();
+            $("#err_msg").text(res.error.message);
         });
 }
 
@@ -37,6 +36,7 @@ function updateInfo(query) {
     $("#ref_series").text(query.ref_series);
     $("#ref_sample").text(query.ref_sample);
     $("#ref_run").text(query.ref_run);
+    $("#timestamp").text(new Date().toUTCString());
 }
 
 function wrapApiCall(p) {
@@ -91,6 +91,9 @@ function renderResults(results) {
         blocks.push(resultHtml(results[i]));
     }
     container.append(...blocks);
+    let jblocks = container.children();
+    jblocks.hide();
+    jblocks.fadeIn();
 
     $('.result').mouseenter(hoverResult);
 }
@@ -99,29 +102,35 @@ function resultHtml(result) {
     let classes = result.display ? 'result display' : 'result nodisplay';
     let id = `result_${result.id}`;
     result_map[id] = result;
-    return `
-    <div class="${classes}" id="result_${result.id}" style="display:inline-block">
-        <a href=${result.pdf_path} target="_blank">
-            <h4>${result.name}</h4>
-            <img src=${result.png_path} width="300" />
-        </a>
-    </div>`
+    return `<div class="card mt-2 ${classes}" id="result_${result.id}">
+            <a href="${result.pdf_path}" target="_blank">
+                <div class="card-header p-2">${result.name}</div>
+                <img src="${result.png_path}" class="card-img-top img-fluid">
+            </a>
+          </div>`
 }
 
+let marked = 0;
+
 function updateDisplay(search = "", showAll = false) {
-    let items = $('.result')
-    items.hide();
+    let items = $('.result');
+    let toShow = $('.result');
     if (!showAll) {
-        items = items.filter('.display');
+        toShow = toShow.filter('.display');
     }
     if (search) {
-        items = items.filter(`:contains(${search})`);
+        toShow = toShow.filter(`:contains(${search})`);
     }
-    items.show();
+    let toHide = items.not(toShow);
 
-    $(".result h4").unmark({
-        done: search ? () => $(".result h4").mark(search) : null
-    });
+    toShow.fadeIn();
+    toHide.fadeOut(100);
+
+    try {
+        $(".result div").unmark({
+            done: search ? () => $(".result div").mark(search) : null
+        });
+    } catch (err) {}
 }
 
 function searchChange() {
@@ -134,23 +143,44 @@ function hoverResult(e) {
     let id = e.currentTarget.id;
     let result = result_map[id];
 
+    $('#previewText').hide();
     $('#preview').attr("src", result.png_path);
-    $('#tooltip').html(resultInfoHtml(result));
+    $('#plotStats').html(resultInfoHtml(result));
+    $('#preview').fadeIn()
+    $('#plotStats').fadeIn()
 }
 
 function resultInfoHtml(result) {
-    let rows = [
-        `<tr><th scope="row">Name</th><td>${result.name}</td></tr>`,
-        `<tr><th scope="row">Algo</th><td>${result.comparator}</td></tr>`,
-        `<tr><th scope="row">Display</th><td>${result.display}</td></tr>`,
-    ]
+    let rows = [{
+        name: 'Name',
+        val: result.name
+    }, {
+        name: 'Algo',
+        val: result.comparator
+    }, {
+        name: 'Display',
+        val: result.display
+    }];
+    
     for (let key in result.results) {
-        let val = result.results[key];
-        rows.push(`<tr><th scope="row">${key}</th><td>${val}</td></tr>`);
+        rows.push({
+            name: key,
+            val: result.results[key]
+        });
     }
-    return `<tbody>
-                ${rows.join('\n')}
-            </tbody>`
+
+    let out = []
+    for (let i = 0; i < rows.length; i++) {
+        let pair = rows[i];
+        out.push(
+            `<div class="list-group-item p-2 d-flex w-100 justify-content-between">
+              <small class="text-muted">${pair.name}</small>
+              <span></span>
+              <span class="text-truncate">${pair.val}</span>
+            </div>`
+        );
+    }
+    return out.join('\n');
 }
 
 // Fetch object pased from index
@@ -217,7 +247,7 @@ function initRunControls() {
             runs = runs.filter(r => {
                 return seen.hasOwnProperty(r.name) ? false : (seen[r.name] = true);
             });
-            
+
             let run_numbers = runs.map(r => Number(r.name)).sort();
 
             let current_runNum = Number(query.data_run);
@@ -228,6 +258,8 @@ function initRunControls() {
             $("#prev_run").removeAttr('disabled').prop('title', prev_runNum);
             $("#data-select-run")[0].selectize.enable();
             $("#data-select-run")[0].selectize.load(cb => cb(runs));
+
+            $('[data-toggle="tooltip"]').tooltip()
         })
         .fail(res => {
             console.log("Failed to retrieve data runs: ", res);

@@ -193,7 +193,7 @@ function load_query(query) {
 }
 
 function load_plots(query) {
-    url = (window.location.href + "plots.php?" + $.param(query));
+    url = (window.location.href + "plots.html?" + $.param(query));
     document.location.href = url;
 }
 
@@ -352,7 +352,7 @@ function main() {
     if (localStorage.hasOwnProperty("recent_query")) {
         // Update plots link if search stored in local storage
         let query = JSON.parse(localStorage["recent_query"]);
-        $("#plots_url").attr('href', window.location.href + "plots.php?" + $.param(query));
+        $("#plots_url").attr('href', window.location.href + "plots.html?" + $.param(query));
         load_query(query);
     }
 

@@ -46,7 +46,7 @@
         <body>
             <ul class="nav nav-tabs" id="navbar" role="tablist">
                 <li role="presentation" class="active"><a href="./">AutoDQM</a></li>
-                <li role="presentation"><a id="plots_url" href="plots.php">Plots</a></li>
+                <li role="presentation"><a id="plots_url" href="plots.html">Plots</a></li>
             </ul>
 
 
@@ -120,7 +120,7 @@
                         <div class="text-center">
                             <button id="submit" type="submit" class="btn btn-lg btn-success">Submit</button>
                             <p><br /></p>
-                            <a href="plots.php"><div class="alert alert-success" id="finished">Success! Please navigate to the 'Plots' page to view the results.</div></a>
+                            <a href="plots.html"><div class="alert alert-success" id="finished">Success! Please navigate to the 'Plots' page to view the results.</div></a>
                             <div class="alert alert-danger" id="input_err">Error: Incomplete input.</div>
                             <div class="alert alert-danger" id="internal_err">Error: Internal error.</div>
                         </div>
