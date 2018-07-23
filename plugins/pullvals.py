@@ -127,10 +127,10 @@ def pullvals(histpair,
 
 def pull(bin1, binerr1, bin2, binerr2):
     ''' Calculate the pull value between two bins.
-        pull = [(data - expected)^2]/(sum of errors in quadrature)
+        pull = (data - expected)/sqrt(sum of errors in quadrature))
         data = |bin1 - bin2|, expected = 0
     '''
-    return ((bin1 - bin2)) / ((binerr1**2 + binerr2**2)**(0.5))
+    return (bin1 - bin2) / ((binerr1**2 + binerr2**2)**0.5)
 
 
 def get_errors(bin1, bin2):
