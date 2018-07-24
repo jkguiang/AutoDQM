@@ -158,17 +158,21 @@ class DQMSession(FuturesSession):
 
         total = int(res.headers.get('content-length'))
         cur = 0
-        with open(dest, 'wb') as f:
-            yield StreamProg(cur, total, dest)
-            for data in res.iter_content(chunk_size=chunk_size):
-                cur += len(data)
-                f.write(data)
+        try:
+            with open(dest, 'wb') as f:
                 yield StreamProg(cur, total, dest)
-        if cur != total:
+                for data in res.iter_content(chunk_size=chunk_size):
+                    cur += len(data)
+                    f.write(data)
+                    yield StreamProg(cur, total, dest)
+            if cur != total:
+                raise error(
+                    "Failed to stream file: Final size {} less than total {}"
+                    .format(cur, total))
+        except:
+            # Remove the file if anything went wrong in the middle
             os.remove(dest)
-            raise error(
-                "Failed to stream file: Final size {} less than total {}"
-                .format(cur, total))
+            raise
 
     def _run_path(self, series, sample, run):
         """Return the path to the specified run data file in the cached db."""

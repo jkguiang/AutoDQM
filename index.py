@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import autodqm.cfg
 import cgi
 import json
 import os
@@ -68,11 +69,10 @@ def process(subsystem,
     # Get config and results/plugins directories
     results_dir = os.path.join(VARS['PUBLIC'], 'results')
     plugin_dir = VARS['PLUGINS']
-    with open(VARS['CONFIG']) as config_file:
-        config = json.load(config_file)
+    config_dir = VARS['CONFIG']
 
     # Process this query
-    results = compare_hists.process(config, subsystem,
+    results = compare_hists.process(config_dir, subsystem,
                                     data_series, data_sample,
                                     data_run, data_path,
                                     ref_series, ref_sample,
@@ -92,9 +92,8 @@ def process(subsystem,
 
 
 def get_subsystems():
-    with open(VARS['CONFIG']) as config_file:
-        config = json.load(config_file)
-    return {'items': [{"name": s} for s in config]}
+    names = autodqm.cfg.list_subsystems(VARS['CONFIG'])
+    return {'items': [{"name": n} for n in names]}
 
 
 def get_series():

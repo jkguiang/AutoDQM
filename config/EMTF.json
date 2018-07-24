@@ -1,0 +1,37 @@
+{
+  "main_gdir": "DQMData/Run {0}/L1T/Run summary/L1TStage2EMTF/",
+  "hists": [{
+      "path": "CSCInput/csc*"
+    },
+    {
+      "path": "RPCInput/rpc*"
+    },
+    {
+      "path": "cscDQMOccupancy",
+      "norm_type": "row",
+      "always_show": true
+    },
+    {
+      "path": "Timing/cscLCTTiming*",
+      "norm_type": "row"
+    },
+    {
+      "path": "emtfTrackEta"
+    },
+    {
+      "path": "emtfTrackMode"
+    },
+    {
+      "path": "emtfTrackPhi"
+    },
+    {
+      "path": "emtfTrackPt"
+    },
+    {
+      "path": "emtfTracknHits"
+    },
+    {
+      "path": "emtfnTracks"
+    }
+  ]
+}

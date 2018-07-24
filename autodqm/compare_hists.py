@@ -6,10 +6,11 @@ import sys
 import json
 import subprocess
 import ROOT
+from autodqm import cfg
 from autodqm.histpair import HistPair
 
 
-def process(config, subsystem,
+def process(config_dir, subsystem,
             data_series, data_sample, data_run, data_path,
             ref_series, ref_sample, ref_run, ref_path,
             output_dir='./out/', plugin_dir='./plugins/'):
@@ -20,7 +21,7 @@ def process(config, subsystem,
     # Report only errors to stderr
     ROOT.gErrorIgnoreLevel = ROOT.kWarning + 1
 
-    histpairs = compile_histpairs(config, subsystem,
+    histpairs = compile_histpairs(config_dir, subsystem,
                                   data_series, data_sample, data_run, data_path,
                                   ref_series, ref_sample, ref_run, ref_path)
 
@@ -81,13 +82,14 @@ def process(config, subsystem,
     return hist_outputs
 
 
-def compile_histpairs(config, subsystem,
+def compile_histpairs(config_dir, subsystem,
                       data_series, data_sample, data_run, data_path,
                       ref_series, ref_sample, ref_run, ref_path):
 
+    config = cfg.get_subsystem(config_dir, subsystem)
     # Histogram details
-    conf_list = config[subsystem]["hists"]
-    main_gdir = config[subsystem]["main_gdir"]
+    conf_list = config["hists"]
+    main_gdir = config["main_gdir"]
 
     # ROOT files
     data_file = ROOT.TFile.Open(data_path)

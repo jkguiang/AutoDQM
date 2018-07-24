@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import autodqm.cfg
 import os
 import argparse
-import json
 from glob import glob
 from tqdm import tqdm
 from autodqm.dqm import DQMSession
@@ -13,7 +13,7 @@ from autodqm.compare_hists import process
 def autodqm_offline(subsystem,
                     data_run, data_sample, data_series,
                     ref_run, ref_sample, ref_series,
-                    config_path, output_dir, plugin_dir,
+                    cfg_dir, output_dir, plugin_dir,
                     sslcert, sslkey, db):
 
     if not ref_sample:
@@ -37,13 +37,8 @@ def autodqm_offline(subsystem,
         ref_path = get_run(dqm, ref_series, ref_sample, ref_run)
 
     print('')
-    print("Loading configuration...")
-    with open(config_path) as config_file:
-        config = json.load(config_file)
-
-    print('')
     print("Processing results...")
-    results = process(config, subsystem,
+    results = process(cfg_dir, subsystem,
                       data_series, data_sample, data_run, data_path,
                       ref_series, ref_sample, ref_run, ref_path,
                       output_dir=output_dir, plugin_dir=plugin_dir)
@@ -99,8 +94,8 @@ if __name__ == '__main__':
     parser.add_argument('--ref_sample', type=str, default=None,
                         help="ref sample to look for runs in. Defaults to data_ref")
 
-    parser.add_argument('-c', '--config', default='./configs.json',
-                        help="config file to use")
+    parser.add_argument('-c', '--config', default='./config',
+                        help="config directory to use")
     parser.add_argument('-o', '--output', default='./out/',
                         help="artifact (pdfs, pngs, txts) output directory")
     parser.add_argument('-p', '--plugins', default='./plugins/',
@@ -121,7 +116,7 @@ if __name__ == '__main__':
     autodqm_offline(args.subsystem,
                     args.data_run, args.data_sample, args.data_series,
                     args.ref_run, args.ref_sample, args.ref_series,
-                    config_path=args.config,
+                    cfg_dir=args.config,
                     output_dir=args.output,
                     plugin_dir=args.plugins,
                     sslcert=sslcert, sslkey=sslkey, db=args.db)
