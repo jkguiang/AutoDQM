@@ -5,7 +5,8 @@ import cgi
 import json
 import os
 import traceback
-from autodqm import dqm, compare_hists
+from autodqm import compare_hists
+from autodqm.dqm import DQMSession
 
 VARS = {}
 
@@ -50,7 +51,8 @@ def handle_request(req):
 
 
 def fetch_run(series, sample, run):
-    dqm.fetch_run(series, sample, run, VARS['CERT'], db=VARS['DB'])
+    with make_dqm() as dqm:
+        dqm.fetch_run(series, sample, run)
     return {}
 
 
@@ -58,11 +60,10 @@ def process(subsystem,
             data_series, data_sample, data_run,
             ref_series, ref_sample, ref_run):
 
-    # Get root file paths
-    data_path = dqm.fetch_run(data_series, data_sample, data_run,
-                              VARS['CERT'], db=VARS['DB'])
-    ref_path = dqm.fetch_run(ref_series, ref_sample, ref_run,
-                             VARS['CERT'],  db=VARS['DB'])
+    with make_dqm() as dqm:
+        # Get root file paths
+        data_path = dqm.fetch_run(data_series, data_sample, data_run)
+        ref_path = dqm.fetch_run(ref_series, ref_sample, ref_run)
 
     # Get config and results/plugins directories
     results_dir = os.path.join(VARS['PUBLIC'], 'results')
@@ -97,18 +98,20 @@ def get_subsystems():
 
 
 def get_series():
-    rows = dqm.fetch_series_list(VARS['CERT'], cache=VARS['CACHE'])
+    with make_dqm() as dqm:
+        rows = dqm.fetch_series_list()
     return {'items': [r._asdict() for r in rows]}
 
 
 def get_samples(series):
-    rows = dqm.fetch_sample_list(series, VARS['CERT'], cache=VARS['CACHE'])
+    with make_dqm() as dqm:
+        rows = dqm.fetch_sample_list(series)
     return {'items': [r._asdict() for r in rows]}
 
 
 def get_runs(series, sample):
-    rows = dqm.fetch_run_list(series, sample,
-                              VARS['CERT'], cache=VARS['CACHE'])
+    with make_dqm() as dqm:
+        rows = dqm.fetch_run_list(series, sample)
     return {'items': [r._asdict() for r in rows]}
 
 
@@ -127,6 +130,8 @@ def load_vars():
     except Exception as e:
         raise ServerError("Server incorrectly configured: {}".format(e))
 
+def make_dqm():
+    return DQMSession(VARS['CERT'], VARS['DB'], cache=VARS['CACHE'])
 
 class error(Exception):
     pass
