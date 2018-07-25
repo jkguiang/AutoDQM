@@ -1,29 +1,30 @@
 import os
 import json
+
 import retrieve
+import get_runs
 
 def autoref(data_run):
     
-    if not os.path.isfile("data.json"):
-        data_map = retrieve.retrieve("data")
+    if not os.path.isfile("dqm.json"):
+        dqm_map = retrieve.retrieve("dqm", save=True)
     else:
-        with open("data.json", "r") as fin:
-            data_map = json.load(fin)
+        with open("dqm.json", "r") as fin:
+            dqm_map = json.load(fin)
     if not os.path.isfile("lumi.json"):
-        lumi_map = retrieve.retrieve("lumi", table="runs")
+        lumi_map = retrieve.retrieve("lumi", table="runs", save=True)
     else:
         with open("lumi.json", "r") as fin:
             lumi_map = json.load(fin)
 
-    data_runs = data_map["runs"]
-    data = data_map["data"]
+    dqm_runs = dqm_map["runs"]
+    dqm = dqm_map["data"]
     lumi = lumi_map["data"]
-    if int(data_run) not in data_runs:
-        print("Data run not in runreg_csc.datasets")
-        return
-    data_runs.sort()
 
-    run_scan = range(0, data_runs.index(data_run))
+    ref_runs = get_runs.main("Run2018_Cosmics.txt")
+    ref_runs.sort()
+
+    run_scan = range(0, ref_runs.index(data_run))
     run_scan.reverse()
 
     O1_ref = {} 
@@ -31,19 +32,23 @@ def autoref(data_run):
     best_ref = None
     best_ratio = None
     break_counter = 0 
+    in_runreg = False
     for run_i in run_scan:
+        this_run = ref_runs[run_i]
+        if int(this_run) == int(data_run): continue
+        if this_run not in dqm_runs: continue
+        in_runreg = True
         if break_counter > 100: break
-        this_run = data_runs[run_i]
         # First order: recency
         if not best_ref:
-            if data[str(this_run)]["RDA_CMP_OCCUPANCY"] == "GOOD":
+            if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] == "GOOD":
                 best_ref = this_run
                 lumi_ratio = get_lumi_ratio(data_run, this_run, lumi) 
                 if lumi_ratio: best_ratio = lumi_ratio
                 O1_ref[this_run] = lumi_ratio
         # Second order: luminocity
         else:
-            if data[str(this_run)]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
+            if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
             else:
                 lumi_ratio = get_lumi_ratio(data_run, this_run, lumi)
                 if not lumi_ratio: continue
@@ -64,10 +69,13 @@ def autoref(data_run):
 
         break_counter += 1
 
-    print("------------------ DATA: {0} ------------------".format(data_run))
-    print("Best ref: {0}".format(best_ref))
-    print("First order ref: {0}".format(O1_ref))
-    print("Second order refs: {0}".format(O2_refs))
+    if in_runreg:
+        print("------------------ DATA: {0} ------------------".format(data_run))
+        print("Best ref: {0}".format(best_ref))
+        print("First order ref: {0}".format(O1_ref))
+        print("Second order refs: {0}".format(O2_refs))
+    else:
+        print("No ref found")
 
     return
 
@@ -90,4 +98,9 @@ def get_lumi_ratio(data_run, this_run, lumi):
 
 
 if __name__ == "__main__":
-    autoref(312001)
+    runs = get_runs.main("Run2018_Cosmics.txt")
+    #import random
+    #data_run = (runs[random.randint(0,len(runs)-1)])
+    for data_run in runs:
+        print("Trying: {}".format(data_run))
+        autoref(data_run)
