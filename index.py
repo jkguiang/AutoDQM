@@ -6,6 +6,7 @@ import json
 import os
 import traceback
 from autodqm import dqm, compare_hists
+from autoref import ref
 
 VARS = {}
 
@@ -32,6 +33,8 @@ def handle_request(req):
             data = get_samples(req['series'])
         elif req['type'] == "get_runs":
             data = get_runs(req['series'], req['sample'])
+        elif req['type'] == "get_ref":
+            data = get_ref(req['data_run'], get_runs(req['series'], req['sample']))
         else:
             raise error
     except Exception as e:
@@ -110,6 +113,10 @@ def get_runs(series, sample):
     rows = dqm.fetch_run_list(series, sample,
                               VARS['CERT'], cache=VARS['CACHE'])
     return {'items': [r._asdict() for r in rows]}
+
+def get_ref(data_run, ref_runs):
+    refs = ref.fetch_ref(data_run, ref_runs)
+    return {'items': refs}
 
 
 def load_vars():
