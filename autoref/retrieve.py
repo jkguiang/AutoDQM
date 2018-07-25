@@ -4,7 +4,7 @@ import json
 # Run Registry API
 from rhapi import DEFAULT_URL, RhApi
 
-def retrieve(name, start_run=294927, folder="runreg_csc", table="datasets"):
+def retrieve(name, start_run=294927, folder="runreg_csc", table="datasets", save=False):
     
     api = RhApi(DEFAULT_URL, debug = False)
 
@@ -62,10 +62,11 @@ def retrieve(name, start_run=294927, folder="runreg_csc", table="datasets"):
 
     file_map = {"data":data, "runs":all_runs}
     if data:
-#        with open("{0}.json".format(name), "w") as fout:
-#            print("Found {0} runs from {1}.{2}".format(len(data), folder, table))
-#            json.dump(file_map, fout, indent=4)
-#            print("Wrote data to {0}.json".format(name))
+        if save: 
+            with open("{0}.json".format(name), "w") as fout:
+                json.dump(file_map, fout, indent=4)
+                print("Wrote data to {0}.json".format(name))
+        print("Found {0} runs from {1}.{2}".format(len(data), folder, table))
         return file_map
     else:
         print("Retrieval failed.")
@@ -73,8 +74,8 @@ def retrieve(name, start_run=294927, folder="runreg_csc", table="datasets"):
 
 
 if __name__ == "__main__":
-    retrieve("data")
-    retrieve("lumi", table="runs")
-    #retrieve("lumi", folder="wbm", table="runs")
+    retrieve("more_data", start_run=20000, save=True)
+    retrieve("more_lumi", start_run=20000, table="runs", save=True)
+    #retrieve("lumi", start_run=0, folder="wbm", table="runs")
     #import test_smartref
     #test_smartref.main()
