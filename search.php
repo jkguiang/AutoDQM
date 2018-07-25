@@ -58,7 +58,7 @@
                             <div class="col-sm-10">
                                 <form id="modular" action="/" method="post" role="form">
                                     <div class="form-group row">
-                                        <input type="text" class="form-control" id="search_txt" onkeyup="check_search()" name="search_txt" placeholder="Dataset name">
+                                        <input type="text" class="form-control" id="search_txt" onkeyup="check_search()" name="search_txt" placeholder="/SingleMuon/Run2017C*/DQMIO">
                                     </div>
                                 </form>
                             </div>
@@ -79,7 +79,14 @@
                 <hr>
                 <div class="row">
                     <div class="col-lg-6">
-                        <div class="list-group" id="dsnames"></div>
+                        <div class="list-group" id="dsnames">
+                            <p>
+                                <h4>Example Searches:</h4>
+                                /SingleMuon/Run2017A*/DQMIO<br />
+                                /SingleMuon/Run2017C-PromptReco-v1/DQMIO
+                                <p class="text-muted"><i>General Form: /{Series}/{Sample}-{version}/DQMIO</i><br/></p>
+                            </p>
+                        </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="list-group" id="files"></div>

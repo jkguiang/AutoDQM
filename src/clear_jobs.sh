@@ -1,11 +1,16 @@
+#!/bin/sh
 
-data=$PWD/data
-ref=$PWD/ref
-pngs=$PWD/pngs
-pdfs=$PWD/pdfs
-txts=$PWD/txts
+cur_dir=/home/users/${USER}/public_html/AutoDQM/src
+
+data=$cur_dir/data
+ref=$cur_dir/ref
+pngs=$cur_dir/pngs
+pdfs=$cur_dir/pdfs
+txts=$cur_dir/txts
 
 to_clear=( ${data} ${ref} ${pngs} ${pdfs} ${txts} )
+
+echo "Clearing jobs $date"
 
 for parent in ${to_clear[@]} ; do
 
@@ -18,17 +23,12 @@ for parent in ${to_clear[@]} ; do
         day=$(( 24 * 60 * 60 ))
 
         if [[ "$diff" -ge "$day" ]] ; then
-
+            echo "Deleted $dir"
             rm -r $dir
-
-        else
-            echo "NEW"
         fi
-
-        echo $cur_time
-        echo $mod_time
-        echo $dir
 
     done
 
 done
+
+echo "Done"
