@@ -73,7 +73,8 @@ def autoref(data_run):
         print("------------------ DATA: {0} ------------------".format(data_run))
         print("Best ref: {0}".format(best_ref))
         print("First order ref: {0}".format(O1_ref))
-        print("Second order refs: {0}".format(O2_refs))
+        if O2_refs:
+            print("Second order refs: {0}".format(O2_refs))
     else:
         print("No ref found")
 
@@ -102,5 +103,4 @@ if __name__ == "__main__":
     #import random
     #data_run = (runs[random.randint(0,len(runs)-1)])
     for data_run in runs:
-        print("Trying: {}".format(data_run))
         autoref(data_run)
