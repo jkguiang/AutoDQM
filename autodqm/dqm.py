@@ -137,7 +137,7 @@ def _fetch_dqm_rows(url, cert, timeout=TIMEOUT):
         text = requests.get(url, cert=cert, timeout=timeout).text
     except requests.ConnectionError as e:
         raise error(e)
-    except requests.TimeoutError as e:
+    except requests.Timeout as e:
         raise error(e)
     return _parse_dqm_page(text)
 
