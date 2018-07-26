@@ -114,7 +114,10 @@ def get_runs(series, sample):
                               VARS['CERT'], cache=VARS['CACHE'])
     return {'items': [r._asdict() for r in rows]}
 
-def get_ref(data_run, ref_runs):
+def get_ref(data_run, get_runs_out):
+    ref_runs = []
+    for row in get_runs_out['items']:
+        ref_runs.append(row['name'])
     refs = ref.fetch_ref(data_run, ref_runs)
     return {'items': refs}
 

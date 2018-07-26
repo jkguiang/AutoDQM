@@ -103,9 +103,17 @@
                     </div> <!-- End top left column -->
                     <div class="col-lg-6">
                         <p><br /></p>
-                        <div class="list-group">
-                            <li class="list-group-item">Requirements</li>
-                            <li class="list-group-item list-group-item-danger" id="sample_chk">Sample form filled</li>
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <li class="list-group-item">Requirements</li>
+                                <li class="list-group-item list-group-item-danger" id="sample_chk">Sample form filled</li>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="list-group" id="ref-suggest">
+                                <li class="list-group-item">Suggested Reference Runs</li>
+                                <button type="button" class="list-group-item" disabled>Please select a data run</button>
+                            </div>
                         </div>
                     </div>
                 </div>

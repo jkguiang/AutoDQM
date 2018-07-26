@@ -123,6 +123,14 @@ function getRuns(series, sample) {
     }));
 }
 
+function getRef(data_run) {
+    return wrapApiCall($.getJSON('cgi-bin/index.py', {
+        type: 'get_ref',
+        data_run: data_run,
+        subsystem: subsystem
+    }));
+}
+
 function checkInput() {
     let query = getQuery();
     let filled = true;
@@ -227,6 +235,41 @@ function load_runs(rSelect, series, sample) {
     });
 }
 
+function load_ref(rList, data_run) {
+    query = {
+        "type": "get_ref",
+        "data_run": data_run,
+        "series": $("#data-select-series").val(),
+        "sample": $("#data-select-sample").val(),
+    }
+    $.get('cgi-bin/index.py', query)
+        .done()
+        .always(function(response) {
+            console.log(response);
+            var refs = response["data"]["items"];
+            rList.html("");
+            rList.append("<li class='list-group-item'>Suggested Reference Runs</li>");
+            var toappend = "";
+            if (refs["O2"].length != 0) {
+                console.log("Appending O2 refs");
+                $.each(refs["O2"], function(key, val) {
+                    toappend += "<button type='button' class='list-group-item'>"+key+"</button>";
+                });
+            }
+            if (refs["O1"].length != 0) {
+                console.log("Appending O1 refs");
+                $.each(refs["O1"], function(key, val) {
+                    toappend += "<button type='button' class='list-group-item'>"+key+"</button>";
+                });
+            }
+            if (toappend == "") {
+                toappend += "<button type='button' class='list-group-item' disabled>Unable to find a reference run.</button>";
+            }
+            rList.append(toappend);
+        });
+
+}
+
 function initialize_selectors() {
     let selectizeDefaults = {
         create: true,
@@ -328,8 +371,6 @@ function main() {
     $("#finished").hide();
     $("#input_err").hide();
     $("#internal_err").hide();
-    $("#SingleMuon").hide();
-    $("#Cosmics").hide();
 
     // Initial Disables
     $("#submit").attr('disabled', 'disabled');
@@ -344,6 +385,12 @@ function main() {
 
     initialize_selectors();
     checkInput();
+
+    // TEMPORARY
+    $("#data-select-run").on("change", function() {
+        data_run = this.value;
+        load_ref($("#ref-suggest"), data_run);
+    });
 
     // Main query handler
     $("#submit").click(submit);
