@@ -258,15 +258,16 @@ function load_ref(rList, data_run) {
             var toappend = "";
             var best_run = "";
             $.each(refs, function(key, val) {
+                toappend += "<button id='suggest-opt-"+key+"' name='"+key+"'";
                 if (val["best"] == true) {
-                    toappend += "<button type='button' class='list-group-item list-group-item-success'>";
+                    toappend += " type='button' class='list-group-item list-group-item-success'>";
                 }
                 else {
                     if (val["order"] == 2) {
-                        toappend += "<button type='button' class='list-group-item list-group-item-info'>";
+                        toappend += " type='button' class='list-group-item list-group-item-info'>";
                     }
                     else {
-                        toappend += "<button type='button' class='list-group-item'>";
+                        toappend += " type='button' class='list-group-item'>";
                     }
                 }
                 toappend += "   <h5 class='list-group-item-heading'>"+key+"</h5>"
@@ -280,6 +281,9 @@ function load_ref(rList, data_run) {
             rList.append(toappend);
             $("#ref-suggest-load").hide();
             $("#ref-suggest").show();
+            $("[id^=suggest-opt-]").click(function() {
+                $("#ref-select-run")[0].selectize.setValue(this.name, true);
+            });
         });
 
 }
