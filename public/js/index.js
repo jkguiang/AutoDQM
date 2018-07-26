@@ -235,7 +235,13 @@ function load_runs(rSelect, series, sample) {
     });
 }
 
+// TEMPORARY
 function load_ref(rList, data_run) {
+    if ($("#data-select-run").val() == "") {
+        return;
+    }
+    $("#ref-suggest-load").show();
+    $("#ref-suggest").hide();
     query = {
         "type": "get_ref",
         "data_run": data_run,
@@ -250,22 +256,30 @@ function load_ref(rList, data_run) {
             rList.html("");
             rList.append("<li class='list-group-item'>Suggested Reference Runs</li>");
             var toappend = "";
-            if (refs["O2"].length != 0) {
-                console.log("Appending O2 refs");
-                $.each(refs["O2"], function(key, val) {
-                    toappend += "<button type='button' class='list-group-item'>"+key+"</button>";
-                });
-            }
-            if (refs["O1"].length != 0) {
-                console.log("Appending O1 refs");
-                $.each(refs["O1"], function(key, val) {
-                    toappend += "<button type='button' class='list-group-item'>"+key+"</button>";
-                });
-            }
+            var best_run = "";
+            $.each(refs, function(key, val) {
+                if (val["best"] == true) {
+                    toappend += "<button type='button' class='list-group-item list-group-item-success'>";
+                }
+                else {
+                    if (val["order"] == 2) {
+                        toappend += "<button type='button' class='list-group-item list-group-item-info'>";
+                    }
+                    else {
+                        toappend += "<button type='button' class='list-group-item'>";
+                    }
+                }
+                toappend += "   <h5 class='list-group-item-heading'>"+key+"</h5>"
+                toappend += "   <p>Started "+val["delta_t"]["days"]+" day(s), "+val["delta_t"]["hours"]+" hr(s), "+val["delta_t"]["minutes"]+" min prior</p>"
+                toappend += "   <p>Lumi Ratio (<sup>data</sup>&frasl;<sub>ref</sub>): "+val["lumi_ratio"]+"</p>"
+                toappend += "</button>"
+            });
             if (toappend == "") {
                 toappend += "<button type='button' class='list-group-item' disabled>Unable to find a reference run.</button>";
             }
             rList.append(toappend);
+            $("#ref-suggest-load").hide();
+            $("#ref-suggest").show();
         });
 
 }
@@ -371,6 +385,10 @@ function main() {
     $("#finished").hide();
     $("#input_err").hide();
     $("#internal_err").hide();
+
+    // TEMPORARY
+    $("#ref-suggest").show();
+    $("#ref-suggest-load").hide();
 
     // Initial Disables
     $("#submit").attr('disabled', 'disabled');
