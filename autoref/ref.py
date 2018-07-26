@@ -28,14 +28,14 @@ def fetch_ref(data_run, ref_runs):
     refs = {}
     best_ref = None
     best_ratio = None
-    break_counter = 0 
+    runback = 0 
     in_runreg = False
     for run_i in run_scan:
         this_run = ref_runs[run_i]
         if int(this_run) == int(data_run): continue
         if str(this_run) not in dqm: continue
         in_runreg = True
-        if break_counter > 150: break
+        if runback > 150: break
         # Get available data from wbm.json
         lumi_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
         # Zeroth order: High enough stats
@@ -66,7 +66,7 @@ def fetch_ref(data_run, ref_runs):
                         best_ratio = lumi_ratio
                         refs[str(this_run)] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
 
-        break_counter += 1
+        runback += 1
 
     if in_runreg:
         refs[best_ref]["best"] = True
