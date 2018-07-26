@@ -35,7 +35,7 @@ def fetch_ref(data_run, ref_runs):
         if int(this_run) == int(data_run): continue
         if str(this_run) not in dqm: continue
         in_runreg = True
-        if break_counter > 100: break
+        if break_counter > 150: break
         # Get available data from wbm.json
         lumi_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
         # Zeroth order: High enough stats
