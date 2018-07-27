@@ -267,7 +267,7 @@ function load_ref(rList, data_run) {
                 }
                 toappend += "   <h5 class='list-group-item-heading'>"+key+"</h5>"
                 toappend += "   <p>Started "+val["delta_t"]["days"]+" day(s), "+val["delta_t"]["hours"]+" hr(s), "+val["delta_t"]["minutes"]+" min prior</p>"
-                toappend += "   <p>Lumi Ratio (<sup>data</sup>&frasl;<sub>ref</sub>): "+val["lumi_ratio"]+"</p>"
+                toappend += "   <p>Average Inst. Lumi Ratio (<sup>data</sup>&frasl;<sub>ref</sub>): "+val["lumi_ratio"]+"</p>"
                 toappend += "</button>"
             });
             if (toappend == "") {
