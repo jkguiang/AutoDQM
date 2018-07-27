@@ -32,38 +32,43 @@ def fetch_ref(data_run, ref_runs):
     in_runreg = False
     for run_i in run_scan:
         this_run = ref_runs[run_i]
+        # Skip runs missing from database
         if int(this_run) == int(data_run): continue
         if str(this_run) not in dqm: continue
         in_runreg = True
+        # Allow for max of 150 runs previous
         if runback > 150: break
+        # Only runs marked as GOOD are approved for reference
+        if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
         # Get available data from wbm.json
         lumi_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
         # Zeroth order: High enough stats
         if Nevents and Nevents < 100000: continue
         # First order: recency
         if not best_ref:
-            if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] == "GOOD":
-                best_ref = this_run
-                if lumi_ratio: best_ratio = lumi_ratio
-                refs[this_run] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":1, "best":False}
+            best_ref = this_run
+            if lumi_ratio: best_ratio = lumi_ratio
+            refs[this_run] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":1, "best":False}
         # Second order: luminocity
         else:
-            if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
+            # Second order refs more than a month old most likely only happen to have similar lumis, likely different detector conditions
+            if delta_t["days"] > 31: continue
             else:
                 if not lumi_ratio: continue
                 if lumi_ratio > 0.68 and lumi_ratio < 1.32:
+                    recent = False
+                    # Best reference runs are "recent," set here to be arbitrarily at most ten days older
+                    if int(delta_t["days"]) < 10: recent = True
                     if best_ratio:
-                        if lumi_ratio > best_ratio and lumi_ratio < 1:
-                            best_ref = this_run
-                            best_ratio = lumi_ratio
-                            refs[str(this_run)] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
-                        elif lumi_ratio > 1 and lumi_ratio < best_ratio:
-                            best_ref = this_run
-                            best_ratio = lumi_ratio
+                        if abs(lumi_ratio - 1) < abs(best_ratio - 1):
+                            if recent:
+                                best_ref = this_run
+                                best_ratio = lumi_ratio
                             refs[str(this_run)] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
                     else:
-                        best_ref = this_run
-                        best_ratio = lumi_ratio
+                        if recent:
+                            best_ref = this_run
+                            best_ratio = lumi_ratio
                         refs[str(this_run)] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
 
         runback += 1
