@@ -13,12 +13,16 @@ def fetch_ref(data_run, ref_runs):
         with open("{}/autoref/dqm.json".format(os.getcwd()), "r") as fin:
             dqm = json.load(fin)
 
+    if str(data_run) not in dqm: return {}
+
     # Fetch WBM data
     if not os.path.isfile("{}/autoref/wbm.json".format(os.getcwd())):
         wbm = _fetch_sql_data("wbm", folder="runreg_csc", table="runs", save=True)
     else:
         with open("{}/autoref/wbm.json".format(os.getcwd()), "r") as fin:
             wbm = json.load(fin)
+
+    if str(data_run) not in wbm: return {}
 
     ref_runs.sort()
 
@@ -35,41 +39,36 @@ def fetch_ref(data_run, ref_runs):
         # Skip runs missing from database
         if int(this_run) == int(data_run): continue
         if str(this_run) not in dqm: continue
+        if str(this_run) not in wbm: continue
         in_runreg = True
         # Allow for max of 150 runs previous
         if runback > 150: break
         # Only runs marked as GOOD are approved for reference
         if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
         # Get available data from wbm.json
-        lumi_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
+        lumi_ratio, run_dur_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
         # Zeroth order: High enough stats
         if Nevents and Nevents < 100000: continue
+        passed_dur_cut = _get_ratio_cut(run_dur_ratio, cut=0.32)
+        if not passed_dur_cut: continue
         # First order: recency
         if not best_ref:
             best_ref = this_run
-            if lumi_ratio: best_ratio = lumi_ratio
+            if lumi_ratio:
+                best_ratio = lumi_ratio
+                lumi_ratio = round(lumi_ratio, 3)
+            else:
+                lumi_ratio = "Not available"
             refs[this_run] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":1, "best":False}
+
         # Second order: luminocity
         else:
-            # Second order refs more than a month old most likely only happen to have similar lumis, likely different detector conditions
-            if delta_t["days"] > 31: continue
-            else:
-                if not lumi_ratio: continue
-                if lumi_ratio > 0.68 and lumi_ratio < 1.32:
-                    recent = False
-                    # Best reference runs are "recent," set here to be arbitrarily at most ten days older
-                    if int(delta_t["days"]) < 10: recent = True
-                    if best_ratio:
-                        if abs(lumi_ratio - 1) < abs(best_ratio - 1):
-                            if recent:
-                                best_ref = this_run
-                                best_ratio = lumi_ratio
-                            refs[str(this_run)] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
-                    else:
-                        if recent:
-                            best_ref = this_run
-                            best_ratio = lumi_ratio
-                        refs[str(this_run)] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
+            passed_lumi_cut = _get_ratio_cut(lumi_ratio, best_ratio=best_ratio)
+            if not passed_lumi_cut: continue
+            elif int(delta_t["days"]) < 10:
+                best_ref = this_run
+                best_ratio = lumi_ratio
+                refs[this_run] = {"lumi_ratio":round(lumi_ratio, 3), "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
 
         runback += 1
 
@@ -79,24 +78,50 @@ def fetch_ref(data_run, ref_runs):
     else:
         return None
 
-def _get_wbm_data(data_run, this_run, wbm):
+def _get_ratio_cut(ratio, best_ratio=None, cut=0.15):
+    
+    # Reset cut if not usable
+    if cut < 0 or cut > 1: cut = 0.15
 
-    # Veto runs missing from WBM database
-    if str(data_run) not in wbm: return None, None
-    elif str(this_run) not in wbm: return None, None
+    passed_cut = False
+
+    if not ratio: return passed_cut 
+
+    abs_ratio = abs(ratio - 1)
+
+    if abs_ratio < (cut): 
+        if best_ratio and abs_ratio < abs(best_ratio - 1):
+            passed_cut = True
+        else:
+            passed_cut = True
+
+    return passed_cut
+
+
+def _get_wbm_data(data_run, this_run, wbm):
 
     # Get approximate gauge of available statistics
     Ntriggers = wbm[str(this_run)]["TRIGGERS"]
     Nevents = (0.0028725994131)*Ntriggers+128324.464261 # from numpy fit done on uaf
 
-    # Get run start time, time between runs
+    # Get run start and stop times
     data_start = wbm[str(data_run)]["STARTTIME"]
+    data_stop = wbm[str(data_run)]["STOPTIME"]
     this_start = wbm[str(this_run)]["STARTTIME"]
+    this_stop = wbm[str(this_run)]["STOPTIME"]
 
-    data_dt = datetime.strptime(data_start, "%Y-%m-%d %H:%M:%S")
-    this_dt = datetime.strptime(this_start, "%Y-%m-%d %H:%M:%S")
+    data_start_dt = datetime.strptime(data_start, "%Y-%m-%d %H:%M:%S")
+    data_stop_dt = datetime.strptime(data_stop, "%Y-%m-%d %H:%M:%S")
+    this_start_dt = datetime.strptime(this_start, "%Y-%m-%d %H:%M:%S")
+    this_stop_dt = datetime.strptime(this_stop, "%Y-%m-%d %H:%M:%S")
 
-    delta_dt = data_dt - this_dt
+    # Calculate run duration
+    data_run_dur = (data_start_dt - data_stop_dt)
+    this_run_dur = (this_start_dt - this_stop_dt)
+    run_dur_ratio = (float(data_run_dur.total_seconds())/float(this_run_dur.total_seconds()))
+
+    # Calculate time diff between run starts
+    delta_dt = data_start_dt - this_start_dt
     # Difference in start times in [days, hours, minutes, total(in seconds)]
     delta_t = {"days": delta_dt.days,
                "hours": delta_dt.seconds//3600,
@@ -120,7 +145,7 @@ def _get_wbm_data(data_run, this_run, wbm):
     else:
         lumi_ratio = None
 
-    return lumi_ratio, Nevents, delta_t
+    return lumi_ratio, run_dur_ratio, Nevents, delta_t
 
 def _get_avg_lumi(init_lumi, end_lumi):
 
