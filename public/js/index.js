@@ -123,14 +123,6 @@ function getRuns(series, sample) {
     }));
 }
 
-function getRef(data_run) {
-    return wrapApiCall($.getJSON('cgi-bin/index.py', {
-        type: 'get_ref',
-        data_run: data_run,
-        subsystem: subsystem
-    }));
-}
-
 function checkInput() {
     let query = getQuery();
     let filled = true;
@@ -196,6 +188,9 @@ function load_query(query) {
     load_runs($("#data-select-run")[0].selectize, query["data_series"], query["data_sample"]);
     load_samples($("#ref-select-sample")[0].selectize, query["ref_series"]);
     load_runs($("#ref-select-run")[0].selectize, query["ref_series"], query["ref_sample"]);
+
+    // TEMPORARY
+    load_ref($("#ref-suggest"), $("#data-select-run").val());
 
     checkInput();
 }
