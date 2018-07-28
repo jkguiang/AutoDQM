@@ -61,7 +61,7 @@ def fetch_ref(data_run, ref_runs):
                 lumi_ratio = "Not available"
             refs[this_run] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":1, "best":False}
 
-        # Second order: luminocity
+        # Second order: luminosity
         else:
             passed_lumi_cut = _get_ratio_cut(lumi_ratio, best_ratio=best_ratio)
             if not passed_lumi_cut: continue
@@ -171,37 +171,29 @@ def _fetch_sql_data(name, start_run=294927, folder="runreg_csc", table="datasets
     cols=[]
     r_num = ""
     r_num_i = 0
-    r_num_names = ["runnumber", "run_number"]
     for col in col_table:
         col_name = str(col["name"])
-        cols.append(col_name)
-        if not r_num:
-            if col_name.lower() in r_num_names:
-                r_num = col_name
-                r_num_i = cols.index(col_name)
-            if not r_num:
-                for r_name in r_num_names:
-                    if r_name in col_name.lower():
-                        r_num = col_name
-                        r_num_i = cols.index(col_name)
+        if _get_data_col(col_name, table): cols.append(col_name)
+        if not r_num and _get_run_col(col_name):
+            cols.append(col_name)
+            r_num = col_name
+            r_num_i = cols.index(col_name)
+
     if not r_num:
         r_num = cols[0]
     
-    q = "select * from {0}.{1} r where r.{2}>:minrun order by r.{2}".format(folder, table, r_num)
+    c = ",".join("r."+x for x in cols)
+    q = "select {0} from {1}.{2} r where r.{3}>:minrun order by r.{3}".format(c, folder, table, r_num)
     p = {"minrun": start_run}
     qid = api.qid(q)
 
     data = {}
-    it = 0
     while True:
-        new_runs = 0
         runs = []
         raw_data = api.json(q, p)["data"]
         for i in range(0, len(raw_data)):
             run = raw_data[i][r_num_i]
             runs.append(run)
-            if run not in data:
-                new_runs += 1
             if run not in data: data[run] = {}
             for j in range(0, len(raw_data[i])):
                 if j == r_num_i: continue
@@ -213,14 +205,32 @@ def _fetch_sql_data(name, start_run=294927, folder="runreg_csc", table="datasets
         if len(raw_data) < 1 or max(runs) == p["minrun"]:
             break
         p["minrun"]+=500 
-        it += 1
 
-    if data and save: 
-        with open("{0}/autoref/{1}.json".format(os.getcwd(), name), "w") as fout:
-            json.dump(data, fout, indent=4)
+    if data: 
+        if save:
+            with open("{0}/autoref/{1}.json".format(os.getcwd(), name), "w") as fout:
+                json.dump(data, fout, indent=4)
         return data
     else:
         return None
+
+def _get_data_col(col_name, table):
+    if table == "datasets":
+        return "RDA_CMP" in col_name and "COMMENT" not in col_name and "CAUSE" not in col_name
+    elif table == "runs":
+        return "TRIGGERS" in col_name or "LUMI" in col_name or "TIME" in col_name
+    else:
+        return True
+
+def _get_run_col(col_name):
+    r_num_names = ["runnumber", "run_number"]
+    if col_name.lower() in r_num_names:
+        return True 
+    else:
+        for r_name in r_num_names:
+            if r_name in col_name.lower():
+                return True
+    return False
 
 if __name__ == "__main__":
     pass
