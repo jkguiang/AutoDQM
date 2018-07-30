@@ -136,11 +136,6 @@ def compile_histpairs(config_dir, subsystem,
             data_hist = data_dir.Get(name)
             ref_hist = ref_dir.Get(name)
 
-            # TODO Check for THn, not THnF
-            if not ((type(data_hist) == ROOT.TH1F or type(data_hist) == ROOT.TH2F)
-                    and (type(ref_hist) == ROOT.TH1F or type(ref_hist) == ROOT.TH2F)):
-                continue
-
             data_hist.SetDirectory(0)
             ref_hist.SetDirectory(0)
 
