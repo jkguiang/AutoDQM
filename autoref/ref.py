@@ -4,53 +4,57 @@ from datetime import datetime
 import ROOT
 import json
 
+import sql
+
 def fetch_ref(data_run, ref_runs):
-    
-    # Fetch DQM data
-    if not os.path.isfile("{}/autoref/dqm.json".format(os.getcwd())):
-        dqm = _fetch_sql_data("dqm", folder="runreg_csc", table="datasets", save=True)
-    else:
-        with open("{}/autoref/dqm.json".format(os.getcwd()), "r") as fin:
-            dqm = json.load(fin)
 
-    if str(data_run) not in dqm: return {}
+    if type(data_run) != int:
+        data_run = int(data_run)
 
-    # Fetch WBM data
-    if not os.path.isfile("{}/autoref/wbm.json".format(os.getcwd())):
-        wbm = _fetch_sql_data("wbm", folder="runreg_csc", table="runs", save=True)
-    else:
-        with open("{}/autoref/wbm.json".format(os.getcwd()), "r") as fin:
-            wbm = json.load(fin)
-
-    if str(data_run) not in wbm: return {}
+    dqm = {}
+    wbm = {}
+    folder = "runreg_csc"
 
     ref_runs.sort()
-
-    run_scan = range(0, ref_runs.index(data_run))
+    run_scan = range(0, ref_runs.index(str(data_run)))
     run_scan.reverse()
+    runback = run_scan[0:156]
+
+    dqm = sql.fetch(max_run=data_run, min_run=int(ref_runs[runback[-1]]), folder=folder, table="datasets")
+    if data_run not in dqm:
+        return {}
+    wbm = sql.fetch(max_run=data_run, min_run=int(ref_runs[runback[-1]]), folder=folder, table="runs")
+    if data_run not in wbm:
+        return {}
 
     refs = {}
     best_ref = None
     best_ratio = None
-    runback = 0 
     in_runreg = False
-    for run_i in run_scan:
-        this_run = ref_runs[run_i]
+
+    for run_i in runback:
+
+        this_run = int(ref_runs[run_i])
+        if this_run == data_run: continue
+        if len(refs) == 3:
+            refs[best_ref]["best"] = True
+            return refs
+
         # Skip runs missing from database
-        if int(this_run) == int(data_run): continue
-        if str(this_run) not in dqm: continue
-        if str(this_run) not in wbm: continue
+        if this_run not in dqm or this_run not in wbm: continue
         in_runreg = True
-        # Allow for max of 150 runs previous
-        if runback > 150: break
+
         # Only runs marked as GOOD are approved for reference
-        if dqm[str(this_run)]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
+        if dqm[this_run]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
+
         # Get available data from wbm.json
         lumi_ratio, run_dur_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
+
         # Zeroth order: High enough stats
         if Nevents and Nevents < 100000: continue
         passed_dur_cut = _get_ratio_cut(run_dur_ratio, cut=0.32)
         if not passed_dur_cut: continue
+
         # First order: recency
         if not best_ref:
             best_ref = this_run
@@ -69,8 +73,6 @@ def fetch_ref(data_run, ref_runs):
                 best_ref = this_run
                 best_ratio = lumi_ratio
                 refs[this_run] = {"lumi_ratio":round(lumi_ratio, 3), "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
-
-        runback += 1
 
     if in_runreg:
         refs[best_ref]["best"] = True
@@ -101,14 +103,14 @@ def _get_ratio_cut(ratio, best_ratio=None, cut=0.15):
 def _get_wbm_data(data_run, this_run, wbm):
 
     # Get approximate gauge of available statistics
-    Ntriggers = wbm[str(this_run)]["TRIGGERS"]
+    Ntriggers = wbm[this_run]["TRIGGERS"]
     Nevents = (0.0028725994131)*Ntriggers+128324.464261 # from numpy fit done on uaf
 
     # Get run start and stop times
-    data_start = wbm[str(data_run)]["STARTTIME"]
-    data_stop = wbm[str(data_run)]["STOPTIME"]
-    this_start = wbm[str(this_run)]["STARTTIME"]
-    this_stop = wbm[str(this_run)]["STOPTIME"]
+    data_start = wbm[data_run]["STARTTIME"]
+    data_stop = wbm[data_run]["STOPTIME"]
+    this_start = wbm[this_run]["STARTTIME"]
+    this_stop = wbm[this_run]["STOPTIME"]
 
     data_start_dt = datetime.strptime(data_start, "%Y-%m-%d %H:%M:%S")
     data_stop_dt = datetime.strptime(data_stop, "%Y-%m-%d %H:%M:%S")
@@ -130,11 +132,11 @@ def _get_wbm_data(data_run, this_run, wbm):
 
     # Get luminosity ratio
     try:
-        data_init_lumi = float(wbm[str(data_run)]["INITLUMI"])
-        data_end_lumi = float(wbm[str(data_run)]["ENDLUMI"])
+        data_init_lumi = float(wbm[data_run]["INITLUMI"])
+        data_end_lumi = float(wbm[data_run]["ENDLUMI"])
         data_avg_lumi = _get_avg_lumi(data_init_lumi, data_end_lumi)
-        this_init_lumi = float(wbm[str(this_run)]["INITLUMI"])
-        this_end_lumi = float(wbm[str(this_run)]["ENDLUMI"])
+        this_init_lumi = float(wbm[this_run]["INITLUMI"])
+        this_end_lumi = float(wbm[this_run]["ENDLUMI"])
         this_avg_lumi = _get_avg_lumi(this_init_lumi, this_end_lumi)
     except TypeError: 
         data_avg_lumi = 0
@@ -158,79 +160,6 @@ def _get_avg_lumi(init_lumi, end_lumi):
     avg = diff/ROOT.TMath.Log(quot)
 
     return avg
-
-def _fetch_sql_data(name, start_run=294927, folder="runreg_csc", table="datasets", save=False):
-
-    # Run Registry API
-    from rhapi import DEFAULT_URL, RhApi
-    
-    api = RhApi(DEFAULT_URL, debug = False)
-
-    # Get column names and name of run column
-    col_table = api.table(folder=folder, table=table)["columns"]
-    cols=[]
-    r_num = ""
-    r_num_i = 0
-    for col in col_table:
-        col_name = str(col["name"])
-        if _get_data_col(col_name, table): cols.append(col_name)
-        if not r_num and _get_run_col(col_name):
-            cols.append(col_name)
-            r_num = col_name
-            r_num_i = cols.index(col_name)
-
-    if not r_num:
-        r_num = cols[0]
-    
-    c = ",".join("r."+x for x in cols)
-    q = "select {0} from {1}.{2} r where r.{3}>:minrun order by r.{3}".format(c, folder, table, r_num)
-    p = {"minrun": start_run}
-    qid = api.qid(q)
-
-    data = {}
-    while True:
-        runs = []
-        raw_data = api.json(q, p)["data"]
-        for i in range(0, len(raw_data)):
-            run = raw_data[i][r_num_i]
-            runs.append(run)
-            if run not in data: data[run] = {}
-            for j in range(0, len(raw_data[i])):
-                if j == r_num_i: continue
-                if cols[j] == "RDA_NAME":
-                    if "Express" not in raw_data[i][j]: continue
-                    if "PromptReco" not in raw_data[i][j]: continue
-                data[run][cols[j]] = raw_data[i][j]
-            if not data[run]: del data[run]
-        if len(raw_data) < 1 or max(runs) == p["minrun"]:
-            break
-        p["minrun"]+=500 
-
-    if data: 
-        if save:
-            with open("{0}/autoref/{1}.json".format(os.getcwd(), name), "w") as fout:
-                json.dump(data, fout, indent=4)
-        return data
-    else:
-        return None
-
-def _get_data_col(col_name, table):
-    if table == "datasets":
-        return "RDA_CMP" in col_name and "COMMENT" not in col_name and "CAUSE" not in col_name
-    elif table == "runs":
-        return "TRIGGERS" in col_name or "LUMI" in col_name or "TIME" in col_name
-    else:
-        return True
-
-def _get_run_col(col_name):
-    r_num_names = ["runnumber", "run_number"]
-    if col_name.lower() in r_num_names:
-        return True 
-    else:
-        for r_name in r_num_names:
-            if r_name in col_name.lower():
-                return True
-    return False
 
 if __name__ == "__main__":
     pass
