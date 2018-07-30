@@ -1,0 +1,25 @@
+{
+  "main_gdir": "DQMData/Run {0}/L1T/Run summary/L1TStage2uGMT/",
+  "hists": [{
+      "path": "ugmtMuonBXvs*"
+    },
+    {
+      "path": "ugmtMuonChargevsLink"
+    },
+    {
+      "path": "ugmtMuonEta"
+    },
+    {
+      "path": "ugmtMuonPhi"
+    },
+    {
+      "path": "ugmtMuonPhiAtVtxvsEtaAtVtx"
+    },
+    {
+      "path": "ugmtMuonPhivsEta"
+    },
+    {
+      "path": "ugmtMuonPt"
+    }
+  ]
+}

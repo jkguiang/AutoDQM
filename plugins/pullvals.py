@@ -22,7 +22,7 @@ def pullvals(histpair,
     if not data_hist.InheritsFrom('TH1') or not ref_hist.InheritsFrom('TH1'):
         return None
 
-    # Check that the hists are 1 dimensional
+    # Check that the hists are 2 dimensional
     if data_hist.GetDimension() != 2 or ref_hist.GetDimension() != 2:
         return None
 

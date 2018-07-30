@@ -1,0 +1,6 @@
+{
+  "main_gdir": "DQMData/Run {0}/L1T/Run summary/L1TStage2OMTF/",
+  "hists": [{
+    "path": "omtf_*"
+  }]
+}

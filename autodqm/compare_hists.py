@@ -136,8 +136,12 @@ def compile_histpairs(config_dir, subsystem,
             data_hist = data_dir.Get(name)
             ref_hist = ref_dir.Get(name)
 
-            data_hist.SetDirectory(0)
-            ref_hist.SetDirectory(0)
+            # This try/catch is a dirty way of checking that this objects are something plottable
+            try:
+                data_hist.SetDirectory(0)
+                ref_hist.SetDirectory(0)
+            except:
+                continue
 
             hPair = HistPair(hconf,
                              data_series, data_sample, data_run, name, data_hist,

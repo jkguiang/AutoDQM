@@ -1,0 +1,10 @@
+{
+  "main_gdir": "DQMData/Run {0}/L1T/Run summary/L1TStage2CaloLayer1/",
+  "hists": [{
+      "path": "ecal*"
+    },
+    {
+      "path": "hcal*"
+    }
+  ]
+}
