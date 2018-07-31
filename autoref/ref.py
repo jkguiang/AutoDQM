@@ -48,10 +48,9 @@ def fetch_ref(data_run, ref_runs):
         if dqm[this_run]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
 
         # Get available data from wbm.json
-        lumi_ratio, run_dur_ratio, Nevents, delta_t = _get_wbm_data(data_run, this_run, wbm)
+        lumi_ratio, run_dur_ratio, delta_t = _get_wbm_data(data_run, this_run, wbm)
 
         # Zeroth order: High enough stats
-        if Nevents and Nevents < 100000: continue
         passed_dur_cut = _get_ratio_cut(run_dur_ratio, cut=0.32)
         if not passed_dur_cut: continue
 
@@ -63,7 +62,7 @@ def fetch_ref(data_run, ref_runs):
                 lumi_ratio = round(lumi_ratio, 3)
             else:
                 lumi_ratio = "Not available"
-            refs[this_run] = {"lumi_ratio":lumi_ratio, "Nevents":Nevents, "delta_t":delta_t, "order":1, "best":False}
+            refs[this_run] = {"lumi_ratio":lumi_ratio, "delta_t":delta_t, "order":1, "best":False}
 
         # Second order: luminosity
         else:
@@ -72,7 +71,7 @@ def fetch_ref(data_run, ref_runs):
             elif int(delta_t["days"]) < 10:
                 best_ref = this_run
                 best_ratio = lumi_ratio
-                refs[this_run] = {"lumi_ratio":round(lumi_ratio, 3), "Nevents":Nevents, "delta_t":delta_t, "order":2, "best":False}
+                refs[this_run] = {"lumi_ratio":round(lumi_ratio, 3), "delta_t":delta_t, "order":2, "best":False}
 
     if in_runreg:
         refs[best_ref]["best"] = True
@@ -101,10 +100,6 @@ def _get_ratio_cut(ratio, best_ratio=None, cut=0.15):
 
 
 def _get_wbm_data(data_run, this_run, wbm):
-
-    # Get approximate gauge of available statistics
-    Ntriggers = wbm[this_run]["TRIGGERS"]
-    Nevents = (0.0028725994131)*Ntriggers+128324.464261 # from numpy fit done on uaf
 
     # Get run start and stop times
     data_start = wbm[data_run]["STARTTIME"]
@@ -147,7 +142,7 @@ def _get_wbm_data(data_run, this_run, wbm):
     else:
         lumi_ratio = None
 
-    return lumi_ratio, run_dur_ratio, Nevents, delta_t
+    return lumi_ratio, run_dur_ratio, delta_t
 
 def _get_avg_lumi(init_lumi, end_lumi):
 
