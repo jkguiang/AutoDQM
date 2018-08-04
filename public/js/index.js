@@ -239,6 +239,7 @@ function load_ref(rList, data_run) {
     $("#ref-suggest").hide();
     query = {
         "type": "get_ref",
+        "subsystem": $("#select-subsystem").val(),
         "data_run": data_run,
         "series": $("#data-select-series").val(),
         "sample": $("#data-select-sample").val(),
@@ -278,6 +279,7 @@ function load_ref(rList, data_run) {
             $("#ref-suggest").show();
             $("[id^=suggest-opt-]").click(function() {
                 $("#ref-select-run")[0].selectize.setValue(this.name, true);
+                checkInput();
             });
         });
 
