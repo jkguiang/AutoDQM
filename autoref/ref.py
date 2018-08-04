@@ -1,27 +1,48 @@
-import os
 from datetime import datetime
 import ROOT
 
+def get_ref_cands(refs):
 
-def get_best(refs):
+    ref_cands = {}
 
-    # Best ref to override 1st order ref
     best_ref = None
+    first_order = None
 
-    # Parse over refs and
     best_lumi_ratio = None
+    most_recent = None
     for run in refs:
+        # Recency
+        this_age = refs[run]["run_age"]["total"]
+        if not most_recent:
+            most_recent = this_age
+        elif this_age < most_recent:
+            most_recent = this_age
+            first_order = run
+        # Statistics
+        if not refs[run]["trigs_cut"]: continue
         # Lumi ratio
         this_lumi_ratio = refs[run]["lumi_ratio"]
-        if not best_lumi_ratio or abs(1 - this_lumi_ratio) < abs(1 - best_lumi_ratio):
+        if refs[run]["lumi_ratio_cut"]:
+            if not best_lumi_ratio: pass
+            elif abs(1 - this_lumi_ratio) < abs(1 - best_lumi_ratio) and refs[run]["run_age"]["days"] < 10:
+                best_ref = run
+                ref_cands[run] = dict({"order":2, "best":False}, **refs[run])
             best_lumi_ratio = this_lumi_ratio
-            best_ref = run
 
-    return best_ref
+    # Set first order ref
+    ref_cands[first_order] = dict({"order":1, "best":False}, **refs[run])
+
+    # Set best ref
+    if not best_ref:
+        ref_cands[first_order]["best"] = True
+    else:
+        ref_cands[best_ref]["best"] = True
+    
+    return ref_cands 
 
 def get_wbm_data(data_run, this_run, wbm):
 
-    wbm_data = dict.fromkeys(["lumi_ratio", "this_run_dur", "delta_t", "run_trigs", "trigs_cut", "lumi_ratio_cut"])
+    wbm_data = dict.fromkeys(["lumi_ratio", "run_dur", "run_age", "run_trigs", "trigs_cut", "lumi_ratio_cut"])
 
     # Get run triggers
     this_run_trigs = wbm[this_run]["TRIGGERS"]
@@ -39,12 +60,12 @@ def get_wbm_data(data_run, this_run, wbm):
     this_stop_dt = datetime.strptime(this_stop, "%Y-%m-%d %H:%M:%S")
 
     # Calculate run duration
-    wbm_data["this_run_dur"] = (this_stop_dt - this_start_dt).total_seconds()
+    wbm_data["run_dur"] = (this_stop_dt - this_start_dt).total_seconds()
 
     # Calculate time diff between run starts
     delta_dt = data_start_dt - this_start_dt
     # Difference in start times in [days, hours, minutes, total(in seconds)]
-    wbm_data["delta_t"] = {"days": delta_dt.days,
+    wbm_data["run_age"] = {"days": delta_dt.days,
                            "hours": delta_dt.seconds//3600,
                            "minutes": (delta_dt.seconds//60)%60,
                            "total": delta_dt.total_seconds()}
