@@ -7,7 +7,7 @@ import ref
 
 def fetch_refs(config, data_run, ref_runs):
     # Handle non-configured subsystems
-    if "run_reg" not in config: return {}
+    if "run_reg" not in config: return {"run_data":{}, "run_cands":{}}
 
     folder = "runreg_{}".format(config["run_reg"])
     # Get "runback"
@@ -59,7 +59,6 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
     skipped = 0
     it = 0
     while True:
-        print("(iteration {0}) Parameters: {1}".format(it, p))
         runs = []
         raw_data = api.json(q, p)["data"]
 
@@ -102,13 +101,8 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
                 if "is_good" not in data[run]: data[run]["is_good"] = False
 
         if len(raw_data) < 1 or max(runs) == p["minrun"] or p["minrun"] >= p["maxrun"]:
-            print("Broke on iteration {}".format(it))
-            print("len(raw_data) < 1: {0}, {1}".format(len(raw_data), len(raw_data) < 1))
-            print("max(runs) == p['minrun']: {0},{1}; {2}".format(max(runs), p["minrun"], max(runs) == p["minrun"]))
-            print("p['minrun'] >= p['maxrun']: {0},{1}; {2}".format(type(p["minrun"]), type(p["maxrun"]), p["minrun"] >= p["maxrun"]))
             break
         p["minrun"] = max(runs) 
-        print("(iteration {0}) Retrieved Runs: max - {1}, min - {0}".format(it, max(runs), min(runs)))
         it += 1
 
     if table == "runs" and ref_runs:
@@ -119,7 +113,6 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
             refs[run] = dict(ref.get_wbm_data(max(ref_runs), run, data), **dqm[run])
         return {"ref_data":refs, "ref_cands":ref.get_ref_cands(refs)}
     elif data:
-        print(skipped)
         return data 
     else:
         return None
