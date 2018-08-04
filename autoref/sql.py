@@ -4,7 +4,10 @@ import json
 # Run Registry API
 from rhapi import DEFAULT_URL, RhApi
 
-def fetch(max_run=320008, min_run=316766, folder="runreg_csc", table="datasets"):
+# Script for getting reference run qualities
+import ref
+
+def fetch(max_run=320008, min_run=316766, folder="runreg_csc", table="datasets", ref_runs=[]):
 
     api = RhApi(DEFAULT_URL, debug = False)
 
@@ -27,44 +30,87 @@ def fetch(max_run=320008, min_run=316766, folder="runreg_csc", table="datasets")
     # Form query
     c = ",".join("r."+x for x in cols)
     q = "select {0} from {1}.{2} r where r.{3}>=:minrun and r.{3}<=:maxrun order by r.{3}".format(c, folder, table, r_num)
-    p = {"maxrun":max_run, "minrun":min_run}
+    if ref_runs:
+        p = {"maxrun":max(ref_runs), "minrun":min(ref_runs)}
+    else:
+        p = {"maxrun":str(max_run), "minrun":str(min_run)}
     qid = api.qid(q)
 
+    # Allow for fetch() to update a pre-existing dict
     data = {}
+    if type(ref_runs) == dict:
+        dqm = ref_runs
+        ref_runs = ref_runs.keys()
+    skipped = 0
     it = 0
     while True:
+        print("(iteration {0}) Parameters: {1}".format(it, p))
         runs = []
         raw_data = api.json(q, p)["data"]
 
         for i in range(0, len(raw_data)):
-
-            run = raw_data[i][r_num_i]
+            run = str(raw_data[i][r_num_i])
+            # Only fetch runs relevant to AutoDQM
+            if run not in ref_runs: continue
+            # Get source of data (Global, Express, or PromptReco)
+            if "RDA_NAME" in cols:
+                rda_name = raw_data[i][cols.index("RDA_NAME")].lower()
             runs.append(run)
-
+            # Only make a new entry for new runs
             if run not in data:
                 data[run] = {}
             for j in range(0, len(raw_data[i])):
                 if j == r_num_i: continue
-                if cols[j] == "RDA_NAME":
-                    # Filter for Express and PromptReco data
-                    if "Express" not in raw_data[i][j]: continue
-                    if "PromptReco" not in raw_data[i][j]: continue
-                data[run][cols[j]] = raw_data[i][j]
-            if not data[run]: del data[run]
+                # Handle <folder>.datasets
+                if table != "runs":
+                    if "is_good" not in data[run]: pass
+                    elif not data[run]["is_good"]: continue 
+                    elif data[run]["is_good"]:
+                        # The "BAD" tag gets priority
+                        if raw_data[i][j] == "BAD":
+                            data[run]["is_good"] = False
+                        # Skip "NONSET" tags if marked as "GOOD" elsewhere
+                        continue
+                    if "RDA_NAME" in data[run]:
+                        # Update source
+                        data[run]["RDA_NAME"] = rda_name
+                    # Update status
+                    if raw_data[i][j] == "GOOD": data[run]["is_good"] = True
+                    elif raw_data[i][j] == "BAD": data[run]["is_good"] = False
+                    else: continue
+                # Handle <folder>.runs
+                else:
+                    data[run][cols[j]] = raw_data[i][j]
+
+            if table != "runs":
+                # handle cases where all statuses are NOTSET
+                if "is_good" not in data[run]: data[run]["is_good"] = False
 
         if len(raw_data) < 1 or max(runs) == p["minrun"] or p["minrun"] >= p["maxrun"]:
+            print("Broke on iteration {}".format(it))
+            print("len(raw_data) < 1: {0}, {1}".format(len(raw_data), len(raw_data) < 1))
+            print("max(runs) == p['minrun']: {0},{1}; {2}".format(max(runs), p["minrun"], max(runs) == p["minrun"]))
+            print("p['minrun'] >= p['maxrun']: {0},{1}; {2}".format(type(p["minrun"]), type(p["maxrun"]), p["minrun"] >= p["maxrun"]))
             break
-        p["minrun"]=max(runs) 
+        p["minrun"] = max(runs) 
+        print("(iteration {0}) Retrieved Runs: max - {1}, min - {0}".format(it, max(runs), min(runs)))
         it += 1
 
-    if data:
+    if table == "runs" and ref_runs:
+        refs = {}
+        for run in data:
+            if run == max(ref_runs): continue
+            refs[run] = dict(ref.get_wbm_data(max(ref_runs), run, data), **dqm[run])
+        return refs
+    elif data:
+        print(skipped)
         return data 
     else:
         return None
 
 def _get_data_col(col_name, table):
     if table == "datasets":
-        return "RDA_CMP" in col_name and "COMMENT" not in col_name and "CAUSE" not in col_name
+        return "RDA_CMP" in col_name and "COMMENT" not in col_name and "CAUSE" not in col_name or "RDA_NAME" in col_name
     if table == "runs":
         return "TRIGGERS" in col_name or "LUMI" in col_name or "TIME" in col_name
 
@@ -79,4 +125,20 @@ def _get_run_col(col_name):
     return False
 
 if __name__ == "__main__":
+    data_run = 320008 
+    import get_runs
+    ref_runs = get_runs.main("Run2018_SingleMuon.txt")
+    ref_runs.sort()
+    if not data_run: data_run = max(ref_runs)
+    runback = ref_runs[0:ref_runs.index(str(data_run))+1]
+    runback.reverse()
+    pass
+    test1 = fetch(min_run=runback[-1], max_run=data_run, ref_runs=runback)
+    test2 = fetch(min_run=runback[-1], max_run=data_run, ref_runs=test1, table="runs")
+    print("Returning {0}/{1} runs".format(len(test2), len(runback)))
+    print("Retrieved: max - {0}, min - {1}".format(max(test2), min(test2)))
+    print("Given: max - {0}, min - {1}".format(max(runback), min(runback)))
+    with open("small.json", "w") as fout:
+        json.dump(test2, fout, indent=4)
+
     pass
