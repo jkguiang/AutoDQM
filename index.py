@@ -34,7 +34,7 @@ def handle_request(req):
         elif req['type'] == "get_runs":
             data = get_runs(req['series'], req['sample'])
         elif req['type'] == "get_ref":
-            data = get_ref(req['data_run'], get_runs(req['series'], req['sample']))
+            data = get_ref(req['data_run'], req['series'], req['sample'])
         else:
             raise error
     except Exception as e:
@@ -114,11 +114,15 @@ def get_runs(series, sample):
                               VARS['CERT'], cache=VARS['CACHE'])
     return {'items': [r._asdict() for r in rows]}
 
-def get_ref(data_run, get_runs_out):
+def get_ref(data_run, series, sample):
+    with open(VARS['CONFIG']) as config_file:
+        config = json.load(config_file)
+    rows = dqm.fetch_run_list(series, sample,
+                              VARS['CERT'], cache=VARS['CACHE'])
     ref_runs = []
-    for row in get_runs_out['items']:
+    for row in rows:
         ref_runs.append(row['name'])
-    refs = ref.fetch_ref(data_run, ref_runs)
+    refs = sql.fetch_refs(config, data_run, ref_runs)
     return {'items': refs}
 
 
