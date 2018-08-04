@@ -7,7 +7,24 @@ from rhapi import DEFAULT_URL, RhApi
 # Script for getting reference run qualities
 import ref
 
-def fetch(max_run=320008, min_run=316766, folder="runreg_csc", table="datasets", ref_runs=[]):
+def fetch_refs(config, data_run, ref_runs):
+    # Handle non-configured subsystems
+    if "run_reg" not in config: return {}
+
+    folder = config["run_reg"]
+    # Get "runback"
+    ref_runs.sort()
+    runback = ref_runs[0:ref_runs.index(str(data_run))+1]
+    runback.reverse()
+    # Only interested in at most 150 runs before data run
+    if len(runback) > 151:
+        runback = runback[0:151]
+    
+    dqm = retrieve(folder=folder, ref_runs=runback)
+    refs = retrieve(folder=folder, table="runs", ref_runs=dqm)
+    return refs
+
+def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="datasets", ref_runs=[]):
 
     api = RhApi(DEFAULT_URL, debug = False)
 
