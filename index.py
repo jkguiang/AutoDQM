@@ -6,7 +6,7 @@ import json
 import os
 import traceback
 from autodqm import dqm, compare_hists
-from autoref import ref
+from autoref import sql
 
 VARS = {}
 
