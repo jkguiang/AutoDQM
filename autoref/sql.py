@@ -1,6 +1,4 @@
 # Imports
-import json
-
 # Run Registry API
 from rhapi import DEFAULT_URL, RhApi
 
@@ -11,7 +9,7 @@ def fetch_refs(config, data_run, ref_runs):
     # Handle non-configured subsystems
     if "run_reg" not in config: return {}
 
-    folder = config["run_reg"]
+    folder = "runreg_{}".format(config["run_reg"])
     # Get "runback"
     ref_runs.sort()
     runback = ref_runs[0:ref_runs.index(str(data_run))+1]
@@ -117,8 +115,9 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
         refs = {}
         for run in data:
             if run == max(ref_runs): continue
+            dqm[run]["best"] = False
             refs[run] = dict(ref.get_wbm_data(max(ref_runs), run, data), **dqm[run])
-        return refs
+        return {"data":refs, "cands":ref.get_ref_cands(refs)}
     elif data:
         print(skipped)
         return data 
@@ -142,20 +141,4 @@ def _get_run_col(col_name):
     return False
 
 if __name__ == "__main__":
-    data_run = 320008 
-    import get_runs
-    ref_runs = get_runs.main("Run2018_SingleMuon.txt")
-    ref_runs.sort()
-    if not data_run: data_run = max(ref_runs)
-    runback = ref_runs[0:ref_runs.index(str(data_run))+1]
-    runback.reverse()
-    pass
-    test1 = fetch(min_run=runback[-1], max_run=data_run, ref_runs=runback)
-    test2 = fetch(min_run=runback[-1], max_run=data_run, ref_runs=test1, table="runs")
-    print("Returning {0}/{1} runs".format(len(test2), len(runback)))
-    print("Retrieved: max - {0}, min - {1}".format(max(test2), min(test2)))
-    print("Given: max - {0}, min - {1}".format(max(runback), min(runback)))
-    with open("small.json", "w") as fout:
-        json.dump(test2, fout, indent=4)
-
     pass
