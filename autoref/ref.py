@@ -1,105 +1,31 @@
 import os
-from time import mktime
 from datetime import datetime
 import ROOT
-import json
 
-import sql
 
-def fetch_ref(data_run, ref_runs):
+def get_best(refs):
 
-    if type(data_run) != int:
-        data_run = int(data_run)
-
-    dqm = {}
-    wbm = {}
-    folder = "runreg_csc"
-
-    ref_runs.sort()
-    run_scan = range(0, ref_runs.index(str(data_run)))
-    run_scan.reverse()
-    runback = run_scan[0:156]
-
-    dqm = sql.fetch(max_run=data_run, min_run=int(ref_runs[runback[-1]]), folder=folder, table="datasets")
-    if data_run not in dqm:
-        return {}
-    wbm = sql.fetch(max_run=data_run, min_run=int(ref_runs[runback[-1]]), folder=folder, table="runs")
-    if data_run not in wbm:
-        return {}
-
-    refs = {}
+    # Best ref to override 1st order ref
     best_ref = None
-    best_ratio = None
-    in_runreg = False
 
-    for run_i in runback:
+    # Parse over refs and
+    best_lumi_ratio = None
+    for run in refs:
+        # Lumi ratio
+        this_lumi_ratio = refs[run]["lumi_ratio"]
+        if not best_lumi_ratio or abs(1 - this_lumi_ratio) < abs(1 - best_lumi_ratio):
+            best_lumi_ratio = this_lumi_ratio
+            best_ref = run
 
-        this_run = int(ref_runs[run_i])
-        if this_run == data_run: continue
-        if len(refs) == 3:
-            refs[best_ref]["best"] = True
-            return refs
+    return best_ref
 
-        # Skip runs missing from database
-        if this_run not in dqm or this_run not in wbm: continue
-        in_runreg = True
+def get_wbm_data(data_run, this_run, wbm):
 
-        # Only runs marked as GOOD are approved for reference
-        if dqm[this_run]["RDA_CMP_OCCUPANCY"] != "GOOD": continue
+    wbm_data = dict.fromkeys(["lumi_ratio", "this_run_dur", "delta_t", "run_trigs", "trigs_cut", "lumi_ratio_cut"])
 
-        # Get available data from wbm.json
-        lumi_ratio, run_dur_ratio, delta_t = _get_wbm_data(data_run, this_run, wbm)
-
-        # Zeroth order: High enough stats
-        passed_dur_cut = _get_ratio_cut(run_dur_ratio, cut=0.32)
-        if not passed_dur_cut: continue
-
-        # First order: recency
-        if not best_ref:
-            best_ref = this_run
-            if lumi_ratio:
-                best_ratio = lumi_ratio
-                lumi_ratio = round(lumi_ratio, 3)
-            else:
-                lumi_ratio = "Not available"
-            refs[this_run] = {"lumi_ratio":lumi_ratio, "delta_t":delta_t, "order":1, "best":False}
-
-        # Second order: luminosity
-        else:
-            passed_lumi_cut = _get_ratio_cut(lumi_ratio, best_ratio=best_ratio)
-            if not passed_lumi_cut: continue
-            elif int(delta_t["days"]) < 10:
-                best_ref = this_run
-                best_ratio = lumi_ratio
-                refs[this_run] = {"lumi_ratio":round(lumi_ratio, 3), "delta_t":delta_t, "order":2, "best":False}
-
-    if in_runreg:
-        refs[best_ref]["best"] = True
-        return refs
-    else:
-        return None
-
-def _get_ratio_cut(ratio, best_ratio=None, cut=0.15):
-    
-    # Reset cut if not usable
-    if cut < 0 or cut > 1: cut = 0.15
-
-    passed_cut = False
-
-    if not ratio: return passed_cut 
-
-    abs_ratio = abs(ratio - 1)
-
-    if abs_ratio < (cut): 
-        if best_ratio and abs_ratio < abs(best_ratio - 1):
-            passed_cut = True
-        else:
-            passed_cut = True
-
-    return passed_cut
-
-
-def _get_wbm_data(data_run, this_run, wbm):
+    # Get run triggers
+    this_run_trigs = wbm[this_run]["TRIGGERS"]
+    wbm_data["trigs_cut"] = int(this_run_trigs) > 8*10**7 
 
     # Get run start and stop times
     data_start = wbm[data_run]["STARTTIME"]
@@ -113,17 +39,15 @@ def _get_wbm_data(data_run, this_run, wbm):
     this_stop_dt = datetime.strptime(this_stop, "%Y-%m-%d %H:%M:%S")
 
     # Calculate run duration
-    data_run_dur = (data_start_dt - data_stop_dt)
-    this_run_dur = (this_start_dt - this_stop_dt)
-    run_dur_ratio = (float(data_run_dur.total_seconds())/float(this_run_dur.total_seconds()))
+    wbm_data["this_run_dur"] = (this_stop_dt - this_start_dt).total_seconds()
 
     # Calculate time diff between run starts
     delta_dt = data_start_dt - this_start_dt
     # Difference in start times in [days, hours, minutes, total(in seconds)]
-    delta_t = {"days": delta_dt.days,
-               "hours": delta_dt.seconds//3600,
-               "minutes": (delta_dt.seconds//60)%60,
-               "total": delta_dt.total_seconds()}
+    wbm_data["delta_t"] = {"days": delta_dt.days,
+                           "hours": delta_dt.seconds//3600,
+                           "minutes": (delta_dt.seconds//60)%60,
+                           "total": delta_dt.total_seconds()}
 
     # Get luminosity ratio
     try:
@@ -138,11 +62,10 @@ def _get_wbm_data(data_run, this_run, wbm):
         this_avg_lumi = 0
 
     if this_avg_lumi > 0:
-        lumi_ratio = data_avg_lumi/this_avg_lumi
-    else:
-        lumi_ratio = None
+        wbm_data["lumi_ratio"] = data_avg_lumi/this_avg_lumi
+        wbm_data["lumi_ratio_cut"] = abs(1 - wbm_data["lumi_ratio"]) < 0.15
 
-    return lumi_ratio, run_dur_ratio, delta_t
+    return wbm_data 
 
 def _get_avg_lumi(init_lumi, end_lumi):
 
