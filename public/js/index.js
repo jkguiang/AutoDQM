@@ -247,7 +247,7 @@ function load_ref(rList, data_run) {
         .done()
         .always(function(response) {
             console.log(response);
-            var refs = response["data"]["items"];
+            var refs = response["data"]["items"]["ref_cands"];
             rList.html("");
             rList.append("<li class='list-group-item'>Suggested Reference Runs</li>");
             var toappend = "";
@@ -266,7 +266,7 @@ function load_ref(rList, data_run) {
                     }
                 }
                 toappend += "   <h5 class='list-group-item-heading'>"+key+"</h5>"
-                toappend += "   <p>Started "+val["delta_t"]["days"]+" day(s), "+val["delta_t"]["hours"]+" hr(s), "+val["delta_t"]["minutes"]+" min prior</p>"
+                toappend += "   <p>Started "+val["run_age"]["days"]+" day(s), "+val["run_age"]["hours"]+" hr(s), "+val["run_age"]["minutes"]+" min prior</p>"
                 toappend += "   <p>Average Inst. Lumi Ratio (<sup>data</sup>&frasl;<sub>ref</sub>): "+val["lumi_ratio"]+"</p>"
                 toappend += "</button>"
             });
