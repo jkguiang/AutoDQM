@@ -30,7 +30,7 @@ def get_ref_cands(refs):
             best_lumi_ratio = this_lumi_ratio
 
     # Set first order ref
-    ref_cands[first_order] = dict({"order":1, "best":False}, **refs[run])
+    ref_cands[first_order] = dict({"order":1, "best":False}, **refs[first_order])
 
     # Set best ref
     if not best_ref:
