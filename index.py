@@ -1,11 +1,13 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import autodqm.cfg
 import cgi
 import json
 import os
 import traceback
-from autodqm import dqm, compare_hists
+from autodqm import compare_hists
+from autodqm.dqm import DQMSession
 from autoref import sql
 
 VARS = {}
@@ -56,7 +58,8 @@ def handle_request(req):
 
 
 def fetch_run(series, sample, run):
-    dqm.fetch_run(series, sample, run, VARS['CERT'], db=VARS['DB'])
+    with make_dqm() as dqm:
+        dqm.fetch_run(series, sample, run)
     return {}
 
 
@@ -64,20 +67,18 @@ def process(subsystem,
             data_series, data_sample, data_run,
             ref_series, ref_sample, ref_run):
 
-    # Get root file paths
-    data_path = dqm.fetch_run(data_series, data_sample, data_run,
-                              VARS['CERT'], db=VARS['DB'])
-    ref_path = dqm.fetch_run(ref_series, ref_sample, ref_run,
-                             VARS['CERT'],  db=VARS['DB'])
+    with make_dqm() as dqm:
+        # Get root file paths
+        data_path = dqm.fetch_run(data_series, data_sample, data_run)
+        ref_path = dqm.fetch_run(ref_series, ref_sample, ref_run)
 
     # Get config and results/plugins directories
     results_dir = os.path.join(VARS['PUBLIC'], 'results')
     plugin_dir = VARS['PLUGINS']
-    with open(VARS['CONFIG']) as config_file:
-        config = json.load(config_file)
+    config_dir = VARS['CONFIG']
 
     # Process this query
-    results = compare_hists.process(config, subsystem,
+    results = compare_hists.process(config_dir, subsystem,
                                     data_series, data_sample,
                                     data_run, data_path,
                                     ref_series, ref_sample,
@@ -97,35 +98,35 @@ def process(subsystem,
 
 
 def get_subsystems():
-    with open(VARS['CONFIG']) as config_file:
-        config = json.load(config_file)
-    return {'items': [{"name": s} for s in config]}
+    names = autodqm.cfg.list_subsystems(VARS['CONFIG'])
+    return {'items': [{"name": n} for n in names]}
 
 
 def get_series():
-    rows = dqm.fetch_series_list(VARS['CERT'], cache=VARS['CACHE'])
+    with make_dqm() as dqm:
+        rows = dqm.fetch_series_list()
     return {'items': [r._asdict() for r in rows]}
 
 
 def get_samples(series):
-    rows = dqm.fetch_sample_list(series, VARS['CERT'], cache=VARS['CACHE'])
+    with make_dqm() as dqm:
+        rows = dqm.fetch_sample_list(series)
     return {'items': [r._asdict() for r in rows]}
 
 
 def get_runs(series, sample):
-    rows = dqm.fetch_run_list(series, sample,
-                              VARS['CERT'], cache=VARS['CACHE'])
+    with make_dqm() as dqm:
+        rows = dqm.fetch_run_list(series, sample)
     return {'items': [r._asdict() for r in rows]}
 
 def get_ref(subsystem, data_run, series, sample):
-    with open(VARS['CONFIG']) as config_file:
-        config = json.load(config_file)
-    rows = dqm.fetch_run_list(series, sample,
-                              VARS['CERT'], cache=VARS['CACHE'])
+    config_dir = VARS['CONFIG']
+    with make_dqm() as dqm:
+        rows = dqm.fetch_run_list(series, sample)
     ref_runs = []
     for row in [r._asdict() for r in rows]:
         ref_runs.append(row['name'])
-    refs = sql.fetch_refs(config[subsystem], data_run, ref_runs)
+    refs = sql.fetch_refs(autodqm.cfg.get_subsystem(config_dir, subsystem), subsystem, data_run, ref_runs)
     return {'items': refs}
 
 
@@ -144,6 +145,8 @@ def load_vars():
     except Exception as e:
         raise ServerError("Server incorrectly configured: {}".format(e))
 
+def make_dqm():
+    return DQMSession(VARS['CERT'], VARS['DB'], cache=VARS['CACHE'])
 
 class error(Exception):
     pass

@@ -14,7 +14,7 @@ def comparators():
 def pullvals(histpair,
              pull_cap=25, chi2_cut=500, pull_cut=20, min_entries=100000, norm_type='all',
              **kwargs):
-
+    """Can handle poisson driven TH2s or generic TProfile2Ds"""
     data_hist = histpair.data_hist
     ref_hist = histpair.ref_hist
 
@@ -22,7 +22,7 @@ def pullvals(histpair,
     if not data_hist.InheritsFrom('TH1') or not ref_hist.InheritsFrom('TH1'):
         return None
 
-    # Check that the hists are 1 dimensional
+    # Check that the hists are 2 dimensional
     if data_hist.GetDimension() != 2 or ref_hist.GetDimension() != 2:
         return None
 
@@ -31,7 +31,10 @@ def pullvals(histpair,
     ROOT.gStyle.SetNumberContours(255)
 
     # Get empty clone of reference histogram for pull hist
-    pull_hist = ref_hist.Clone("pull_hist")
+    if ref_hist.InheritsFrom('TProfile2D'):
+        pull_hist = ref_hist.ProjectionXY("pull_hist")
+    else:
+        pull_hist = ref_hist.Clone("pull_hist")
     pull_hist.Reset()
 
     # Reject empty histograms
@@ -42,7 +45,7 @@ def pullvals(histpair,
         normalize_rows(data_hist, ref_hist)
     else:
         if data_hist.GetEntries() > 0:
-            data_hist.Scale(ref_hist.GetEntries() / data_hist.GetEntries())
+            data_hist.Scale(ref_hist.GetSumOfWeights() / data_hist.GetSumOfWeights())
 
     max_pull = 0
     nBins = 0
@@ -57,17 +60,20 @@ def pullvals(histpair,
             bin2 = ref_hist.GetBinContent(x, y)
 
             # Proper Poisson error
-            bin1err, bin2err = get_errors(bin1, bin2)
+            if ref_hist.InheritsFrom('TProfile2D'):
+                bin1err = data_hist.GetBinError(x, y)
+                bin2err = ref_hist.GetBinError(x, y)
+            else:
+                bin1err, bin2err = get_poisson_errors(bin1, bin2)
 
             # Count bins for chi2 calculation
             nBins += 1
 
             # Ensure that divide-by-zero error is not thrown when calculating pull
             if bin1err == 0 and bin2err == 0:
-                continue
-
-            # Calculate pull
-            new_pull = pull(bin1, bin1err, bin2, bin2err)
+                new_pull = 0
+            else:
+                new_pull = pull(bin1, bin1err, bin2, bin2err)
 
             # Sum pulls
             chi2 += new_pull**2
@@ -127,13 +133,13 @@ def pullvals(histpair,
 
 def pull(bin1, binerr1, bin2, binerr2):
     ''' Calculate the pull value between two bins.
-        pull = [(data - expected)^2]/(sum of errors in quadrature)
+        pull = (data - expected)/sqrt(sum of errors in quadrature))
         data = |bin1 - bin2|, expected = 0
     '''
-    return ((bin1 - bin2)) / ((binerr1**2 + binerr2**2)**(0.5))
+    return (bin1 - bin2) / ((binerr1**2 + binerr2**2)**0.5)
 
 
-def get_errors(bin1, bin2):
+def get_poisson_errors(bin1, bin2):
     '''Calculate the poisson error between two bins.
         bin1 = data
         bin2 = reference
@@ -161,7 +167,6 @@ def get_errors(bin1, bin2):
         bin1err = p_error1 - bin1
 
     return bin1err, bin2err
-
 
 def normalize_rows(data_hist, ref_hist):
 
