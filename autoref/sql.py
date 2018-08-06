@@ -5,7 +5,7 @@ from rhapi import DEFAULT_URL, RhApi
 # Script for getting reference run qualities
 import ref
 
-def fetch_refs(config, data_run, ref_runs):
+def fetch_refs(config, subsystem, data_run, ref_runs):
     # Handle non-configured subsystems
     if "run_reg" not in config: return {"run_data":{}, "run_cands":{}}
 
