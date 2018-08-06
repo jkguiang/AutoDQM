@@ -109,7 +109,6 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
         refs = {}
         for run in data:
             if run == max(ref_runs): continue
-            dqm[run]["best"] = False
             refs[run] = dict(ref.get_wbm_data(max(ref_runs), run, data), **dqm[run])
         return {"ref_data":refs, "ref_cands":ref.get_ref_cands(refs)}
     elif data:
