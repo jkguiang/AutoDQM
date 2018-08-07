@@ -31,6 +31,8 @@ export default class PlotsPage extends Component {
       refReq: null,
       dataReq: null,
       procReq: null,
+      search: '',
+      showAll: false,
     };
   }
 
@@ -44,6 +46,14 @@ export default class PlotsPage extends Component {
     }
   };
 
+  onShowAllChange = checked => {
+    this.setState({showAll: checked});
+  };
+
+  onSearchChange = search => {
+    this.setState({search});
+  };
+
   loadRun = (series, sample, run) => {
     return cancellableQuery('/cgi-bin/index.py', {
       type: 'fetch_run',
@@ -53,7 +63,7 @@ export default class PlotsPage extends Component {
     });
   };
 
-  process = (params) => {
+  process = params => {
     return cancellableQuery('/cgi-bin/index.py', {
       type: 'process',
       subsystem: params.subsystem,
@@ -134,8 +144,15 @@ export default class PlotsPage extends Component {
     } else if (refReq || dataReq || procReq) {
       body = <LoadingBox {...{refReq, dataReq, procReq}} />;
     } else {
-      body = <Plots />;
+      body = (
+        <Plots
+          plots={this.state.plots}
+          search={this.state.search}
+          showAll={this.state.showAll}
+        />
+      );
     }
+    
     return (
       <Container
         fluid
@@ -153,7 +170,12 @@ export default class PlotsPage extends Component {
             md={4}
             xl={3}
             className={`${fullHeight} d-none d-md-block bg-light p-3`}>
-            <Controls />
+            <Controls
+              onShowAllChange={this.onShowAllChange}
+              onSearchChange={this.onSearchChange}
+              showAll={this.state.showAll}
+              search={this.state.search}
+            />
             <Preview className="mt-3" />
           </Col>
           <Col md={8} xl={9} className={fullHeight}>
