@@ -33,6 +33,7 @@ export default class PlotsPage extends Component {
       procReq: null,
       search: '',
       showAll: false,
+      hoveredPlot: null,
     };
   }
 
@@ -52,6 +53,10 @@ export default class PlotsPage extends Component {
 
   onSearchChange = search => {
     this.setState({search});
+  };
+
+  handleHover = hoveredPlot => {
+    this.setState({hoveredPlot});
   };
 
   loadRun = (series, sample, run) => {
@@ -149,6 +154,7 @@ export default class PlotsPage extends Component {
           plots={this.state.plots}
           search={this.state.search}
           showAll={this.state.showAll}
+          onHover={this.handleHover}
         />
       );
     }
@@ -175,8 +181,9 @@ export default class PlotsPage extends Component {
               onSearchChange={this.onSearchChange}
               showAll={this.state.showAll}
               search={this.state.search}
+              onHover={this.handleHover}
             />
-            <Preview className="mt-3" />
+            <Preview className="my-3" plot={this.state.hoveredPlot}/>
           </Col>
           <Col md={8} xl={9} className={fullHeight}>
             <ReportInfo

@@ -15,6 +15,7 @@ export default class Plots extends Component {
           pdfUri={p.pdf_path}
           search={this.props.search}
           display={shouldDisplay(p, this.props.showAll, this.props.search)}
+          onHover={() => this.props.onHover(p)}
         />
       );
     });
@@ -22,9 +23,9 @@ export default class Plots extends Component {
   }
 }
 
-const Plot = ({name, pngUri, pdfUri, search, display}) => {
+const Plot = ({name, pngUri, pdfUri, search, display, onHover}) => {
   return (
-    <Card className={cx(plotSty, display ? null : hidden)}>
+    <Card className={cx(plotSty, display ? null : hidden)} onMouseEnter={onHover}>
       <a href={pdfUri} target="_blank">
         <CardHeader>{hlSearch(name, search)}</CardHeader>
         <CardImg src={pngUri} />
