@@ -1,9 +1,9 @@
 import React, {Component} from 'react';
 import {Container, Row as BSRow, Col, Button} from 'reactstrap';
-import Select from 'react-select';
 import styled, {css} from 'react-emotion';
 import RunSelectForm from './RunSelectForm.js';
 import SubsystemSelect from './SubsystemSelect.js';
+import {Link} from 'react-router-dom';
 
 // Give RSRow some bottom margin
 const Row = styled(BSRow)`
@@ -48,6 +48,20 @@ export default class InputPage extends Component {
     return this.state.subsystem && check(data) && check(ref);
   };
 
+  getQueryPath = () => {
+    const params = [
+      this.state.subsystem,
+      this.state.ref.series,
+      this.state.ref.sample,
+      this.state.ref.run,
+      this.state.data.series,
+      this.state.data.sample,
+      this.state.data.run,
+    ].map(o => o && o.value);
+    
+    return `/plots/${params.join('/')}`;
+  }
+
   render() {
     return (
       <Container fluid>
@@ -86,7 +100,9 @@ export default class InputPage extends Component {
                   className={css`
                     width: 100%;
                     margin-top: 10px;
-                  `}>
+                  `}
+                  tag={Link}
+                  to={this.getQueryPath()}>
                   Submit
                 </Button>
               </Col>

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {Card, CardBody, Input, Button, Col, Row} from 'reactstrap';
 import Select from 'react-select';
 import Switch from 'react-switch';
-import styled, {css} from 'react-emotion';
+import {css} from 'react-emotion';
 
 export default class Controls extends Component {
   render() {

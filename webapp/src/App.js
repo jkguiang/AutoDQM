@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {
   BrowserRouter as Router,
+  Switch,
   Route,
   NavLink as RouterNavLink,
 } from 'react-router-dom';
@@ -29,8 +30,16 @@ class App extends Component {
               </NavLink>
             </NavItem>
           </Nav>
+          <Switch>
           <Route exact path="/" component={InputPage} />
-          <Route path="/plots" component={PlotsPage} />
+          <Route
+            path="/plots/:subsystem/:refSeries/:refSample/:refRun/:dataSeries/:dataSample/:dataRun"
+            component={PlotsPage}
+          />
+          <Route
+            component={PlotsPage}
+          />
+        </Switch>
         </React.Fragment>
       </Router>
     );

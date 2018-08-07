@@ -9,7 +9,7 @@ export default class Preview extends Component {
         <React.Fragment>
           <img
             src={this.props.plot.png_path}
-            alt-text="Plot Preview"
+            alt="Plot Preview"
             className="card-img-top img-fluid"
           />
           <CardBody>

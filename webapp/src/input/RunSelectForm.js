@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import {Container, Row as BSRow, Col, Button} from 'reactstrap';
 import Select from 'react-select';
 import axios from 'axios';
+import {css} from 'react-emotion';
 
 export default class RunSelectForm extends Component {
   constructor(props) {
@@ -13,6 +13,9 @@ export default class RunSelectForm extends Component {
       seriesOpts: [],
       samplesOpts: [],
       refsOpts: [],
+      seriesErr: null,
+      samplesErr: null,
+      runsErr: null,
     };
   }
 
@@ -38,6 +41,9 @@ export default class RunSelectForm extends Component {
       seriesOpts: [],
       sampleOpts: [],
       runsOpts: [],
+      seriesErr: [],
+      sampleErr: [],
+      runsErr: [],
     });
   };
 
@@ -60,7 +66,8 @@ export default class RunSelectForm extends Component {
     p.then(res => {
       this.setState({seriesOpts: res, seriesReq: null});
     }).catch(err => {
-      if (!axios.isCancel(err)) this.setState({runsOpts: [], runsReq: null});
+      if (!axios.isCancel(err))
+        this.setState({seriesOpts: [], seriesReq: null, seriesErr: err});
     });
   };
 
@@ -75,7 +82,8 @@ export default class RunSelectForm extends Component {
     p.then(res => {
       this.setState({samplesOpts: res, samplesReq: null});
     }).catch(err => {
-      if (!axios.isCancel(err)) this.setState({runsOpts: [], runsReq: null});
+      if (!axios.isCancel(err))
+        this.setState({samplesOpts: [], samplesReq: null, samplesErr: err});
     });
   };
 
@@ -95,7 +103,8 @@ export default class RunSelectForm extends Component {
       );
       this.setState({runsOpts: runs, runsReq: null});
     }).catch(err => {
-      if (!axios.isCancel(err)) this.setState({runsOpts: [], runsReq: null});
+      if (!axios.isCancel(err))
+        this.setState({runsOpts: [], runsReq: null, runsErr: err});
     });
   };
 
@@ -128,6 +137,7 @@ export default class RunSelectForm extends Component {
           value={this.props.series}
           onChange={series => this.handleChange({series})}
           isLoading={this.state.seriesReq}
+          className={this.state.seriesErr && dangerBorder}
         />
         <span>Sample</span>
         <Select
@@ -151,3 +161,9 @@ export default class RunSelectForm extends Component {
     );
   }
 }
+
+const dangerBorder = css`
+  > div {
+    border-color: rgb(220, 53, 69);
+  }
+`;
