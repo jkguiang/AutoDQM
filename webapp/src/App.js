@@ -31,15 +31,13 @@ class App extends Component {
             </NavItem>
           </Nav>
           <Switch>
-          <Route exact path="/" component={InputPage} />
-          <Route
-            path="/plots/:subsystem/:refSeries/:refSample/:refRun/:dataSeries/:dataSample/:dataRun"
-            component={PlotsPage}
-          />
-          <Route
-            component={PlotsPage}
-          />
-        </Switch>
+            <Route exact path="/" component={InputPage} />
+            <Route
+              path="/plots/:subsystem/:refSeries/:refSample/:refRun/:dataSeries/:dataSample/:dataRun"
+              component={PlotsPage}
+            />
+            <Route path="/plots" component={PlotsPage} />
+          </Switch>
         </React.Fragment>
       </Router>
     );

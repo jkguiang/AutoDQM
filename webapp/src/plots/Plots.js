@@ -1,30 +1,20 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom';
 import {Card, CardHeader, CardImg} from 'reactstrap';
 import {css, cx} from 'react-emotion';
-import Fuse from 'fuse.js';
 
 export default class Plots extends Component {
   render() {
     let plotObjs = this.props.plots;
-    if (!this.props.showAll) plotObjs = plotObjs.filter(p => p.display);
-    if (this.props.search) {
-      let fuse = new Fuse(plotObjs, fuseOpts); // "list" is the item array
-      plotObjs = fuse.search(this.props.search);
-    } else {
-      plotObjs = plotObjs.map(p => {
-        return {item: p};
-      });
-    }
 
     const plots = plotObjs.map(p => {
       return (
         <Plot
-          key={p.item.name}
-          name={p.item.name}
-          pngUri={p.item.png_path}
-          pdfUri={p.item.pdf_path}
-          matches={p.matches}
+          key={p.name}
+          name={p.name}
+          pngUri={p.png_path}
+          pdfUri={p.pdf_path}
+          search={this.props.search}
+          display={shouldDisplay(p, this.props.showAll, this.props.search)}
         />
       );
     });
@@ -32,32 +22,24 @@ export default class Plots extends Component {
   }
 }
 
-const Plot = ({name, pngUri, pdfUri, matches}) => {
+const Plot = ({name, pngUri, pdfUri, search, display}) => {
   return (
-    <Card className={plotSty}>
-      <Link to={pdfUri}>
-        <CardHeader>{highlightedText(name, matches)}</CardHeader>
+    <Card className={cx(plotSty, display ? null : hidden)}>
+      <a href={pdfUri} target="_blank">
+        <CardHeader>{hlSearch(name, search)}</CardHeader>
         <CardImg src={pngUri} />
-      </Link>
+      </a>
     </Card>
   );
-};
-
-const fuseOpts = {
-  shouldSort: true,
-  includeScore: true,
-  includeMatches: true,
-  threshold: 0.6,
-  location: 0,
-  distance: 100,
-  maxPatternLength: 32,
-  minMatchCharLength: 1,
-  keys: ['name'],
 };
 
 const containerSty = css`
   margin-top: 0.5em;
 `;
+
+const hidden = css`
+  display: none;
+`
 
 const mh = '0.5em';
 const plotSty = css`
@@ -81,25 +63,21 @@ const plotSty = css`
   }
 `;
 
-const highlightedText = (text, matches) => {
-  if (!matches) return <span>{text}</span>;
-  let out = [];
-  let prev = [-1, -1];
-  for (let idx of matches[0].indices) {
-    out.push(
-      <span key={[prev[1] + 1, idx[0]]}>
-        {text.substring(prev[1] + 1, idx[0])}
-      </span>,
-    );
-    out.push(
-      <b key={[idx[0], idx[1] + 1]}>{text.substring(idx[0], idx[1] + 1)}</b>,
-    );
-    prev = idx;
-  }
-  out.push(
-    <span key={[prev[1] + 1, -1]}>
-      {text.substring(prev[1] + 1)}
-    </span>,
+const shouldDisplay = (plot, showAll, search) => {
+  if(!plot.display && !showAll) return false;
+  if(search && plot.name.indexOf(search) == -1) return false;
+  return true;
+}
+
+const hlSearch = (text, search) => {
+  if (!search) return <span>{text}</span>;
+  const len = search.length;
+  const idx = text.indexOf(search);
+  return (
+    <span>
+      {text.substring(0, idx)}
+      <b>{text.substring(idx, idx + len)}</b>
+      {text.substring(idx + len)}
+    </span>
   );
-  return out;
 };
