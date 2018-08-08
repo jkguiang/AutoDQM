@@ -62,6 +62,10 @@ const plotSty = css`
   @media (min-width: 1200px) {
     width: calc(100% / 4 - 2 * ${mh});
   }
+
+  :hover {
+    border-color: #6c757d;
+  }
 `;
 
 const shouldDisplay = (plot, showAll, search) => {

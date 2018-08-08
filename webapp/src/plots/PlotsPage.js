@@ -38,20 +38,30 @@ export default class PlotsPage extends Component {
   }
 
   componentWillMount = () => {
-    if (!this.validUrl()) {
+    this.update();
+  }
+  
+  componentDidUpdate = (prevProps) => {
+    if(prevProps.match.url === this.props.match.url) return;
+    this.update();
+  };
+
+  update = () => {
+    let curMatch = this.props.match;
+    if (!this.validParams(curMatch.params)) {
       this.setState({
         error: {message: 'Invalid report parameters!'},
       });
     } else {
-      this.loadReport();
+      this.loadReport(curMatch.params);
     }
-  };
+  }
 
-  onShowAllChange = checked => {
+  handleShowAllChange = checked => {
     this.setState({showAll: checked});
   };
 
-  onSearchChange = search => {
+  handleSearchChange = search => {
     this.setState({search});
   };
 
@@ -81,11 +91,10 @@ export default class PlotsPage extends Component {
     });
   };
 
-  loadReport = () => {
-    const ps = this.props.match.params;
-    console.log(ps);
-    const refReq = this.loadRun(ps.refSeries, ps.refSample, ps.refRun);
-    const dataReq = this.loadRun(ps.dataSeries, ps.dataSample, ps.dataRun);
+  loadReport = (query) => {
+    console.log(query);
+    const refReq = this.loadRun(query.refSeries, query.refSample, query.refRun);
+    const dataReq = this.loadRun(query.dataSeries, query.dataSample, query.dataRun);
     this.setState({refReq, dataReq});
     refReq.then(res => {
       this.setState({refReq: null});
@@ -98,7 +107,7 @@ export default class PlotsPage extends Component {
 
     Promise.all([refReq, dataReq])
       .then(res => {
-        const procReq = this.process(ps);
+        const procReq = this.process(query);
         this.setState({refReq: null, dataReq: null, procReq});
         procReq
           .then(res => {
@@ -116,8 +125,7 @@ export default class PlotsPage extends Component {
       });
   };
 
-  validUrl = () => {
-    const params = this.props.match.params;
+  validParams = (params) => {
     return (
       params.subsystem &&
       params.refSeries &&
@@ -177,8 +185,9 @@ export default class PlotsPage extends Component {
             xl={3}
             className={`${fullHeight} d-none d-md-block bg-light p-3`}>
             <Controls
-              onShowAllChange={this.onShowAllChange}
-              onSearchChange={this.onSearchChange}
+              query={this.props.match.params}
+              onShowAllChange={this.handleShowAllChange}
+              onSearchChange={this.handleSearchChange}
               showAll={this.state.showAll}
               search={this.state.search}
               onHover={this.handleHover}
