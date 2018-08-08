@@ -53,6 +53,7 @@ export default class PlotsPage extends Component {
         error: {message: 'Invalid report parameters!'},
       });
     } else {
+      localStorage.setItem('recentQuery', JSON.stringify(curMatch.params));
       this.loadReport(curMatch.params);
     }
   }

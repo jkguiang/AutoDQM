@@ -75,7 +75,7 @@ export default class RunSelectForm extends Component {
     this.state.samplesReq && this.state.samplesReq.cancel();
     const p = this.loadOptions({
       type: 'get_samples',
-      series: this.props.series.value,
+      series: this.props.series,
     });
     this.setState({samplesReq: p});
 
@@ -91,8 +91,8 @@ export default class RunSelectForm extends Component {
     this.state.runsReq && this.state.runsReq.cancel();
     const p = this.loadOptions({
       type: 'get_runs',
-      series: this.props.series.value,
-      sample: this.props.sample.value,
+      series: this.props.series,
+      sample: this.props.sample,
     });
     this.setState({runsReq: p});
 
@@ -134,8 +134,8 @@ export default class RunSelectForm extends Component {
         <Select
           placeholder="Select series..."
           options={this.state.seriesOpts}
-          value={this.props.series}
-          onChange={series => this.handleChange({series})}
+          value={{value: this.props.series, label: this.props.series}}
+          onChange={opt => this.handleChange({series: opt.value})}
           isLoading={this.state.seriesReq}
           className={this.state.seriesErr && dangerBorder}
         />
@@ -143,8 +143,8 @@ export default class RunSelectForm extends Component {
         <Select
           placeholder="Select sample..."
           options={this.state.samplesOpts}
-          value={this.props.sample}
-          onChange={sample => this.handleChange({sample})}
+          value={{value: this.props.sample, label: this.props.sample}}
+          onChange={opt => this.handleChange({sample: opt.value})}
           isLoading={this.state.samplesReq}
           isDisabled={!this.props.series}
         />
@@ -152,8 +152,8 @@ export default class RunSelectForm extends Component {
         <Select
           placeholder="Select run..."
           options={this.state.runsOpts}
-          value={this.props.run}
-          onChange={run => this.handleChange({run})}
+          value={{value: this.props.run, label: this.props.run}}
+          onChange={opt => this.handleChange({run: opt.value})}
           isLoading={this.state.runsReq}
           isDisabled={!this.props.sample}
         />

@@ -24,7 +24,7 @@ export default class SubsystemSelect extends Component {
   };
 
   handleChange = change => {
-    this.props.onChange(change);
+    this.props.onChange(change.value);
   }
 
   loadSubsystems = () => {
@@ -61,7 +61,7 @@ export default class SubsystemSelect extends Component {
       <Select
         placeholder="Select subsystem..."
         options={this.state.subsysOpts}
-        value={this.props.subsystem}
+        value={{value: this.props.subsystem, label:this.props.subsystem}}
         onChange={this.handleChange}
         isLoading={this.state.subsysReq}
       />

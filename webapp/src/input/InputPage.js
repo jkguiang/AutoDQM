@@ -20,6 +20,18 @@ export default class InputPage extends Component {
     };
   }
 
+  componentWillMount = () => {
+    const recentQuery = localStorage.getItem('recentQuery');
+    if(recentQuery) {
+      const q = JSON.parse(recentQuery);
+      console.log(q);
+      const subsystem = q.subsystem;
+      const data = {series: q.dataSeries, sample: q.dataSample, run: q.dataRun};
+      const ref = {series: q.refSeries, sample: q.refSample, run: q.refRun};
+      this.setState({subsystem, data, ref});
+    }
+  }
+
   handleSubsysChange = subsystem => {
     this.setState({subsystem});
   };
@@ -57,7 +69,7 @@ export default class InputPage extends Component {
       this.state.data.series,
       this.state.data.sample,
       this.state.data.run,
-    ].map(o => o && o.value);
+    ];
     
     return `/plots/${params.join('/')}`;
   }
