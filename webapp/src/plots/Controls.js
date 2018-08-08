@@ -81,7 +81,7 @@ export default class Controls extends Component {
         const sorted = res.data.items
           .map(r => ({value: r.name, label: r.name}))
           .filter(r => !seen.hasOwnProperty(r.value) && (seen[r.value] = true))
-          .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+          .sort((a, b) => parseInt(a.value, 10) - parseInt(b.value, 10));
 
         this.setState({runReq: null, runOpts: sorted});
       })
