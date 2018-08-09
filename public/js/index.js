@@ -240,7 +240,7 @@ function load_ref(rList, data_run) {
     query = {
         "type": "get_ref",
         "subsystem": $("#select-subsystem").val(),
-        "data_run": data_run,
+        "run": data_run,
         "series": $("#data-select-series").val(),
         "sample": $("#data-select-sample").val(),
     }

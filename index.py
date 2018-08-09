@@ -37,7 +37,7 @@ def handle_request(req):
             data = get_runs(req['series'], req['sample'])
         elif req['type'] == "get_ref":
             data = get_ref(req['subsystem'],
-                           req['data_run'],
+                           req['run'],
                            req['series'],
                            req['sample'])
         else:
