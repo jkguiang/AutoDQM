@@ -46,7 +46,7 @@ const resultItems = plot => {
   }
   return rows.map(r => (
     <ListGroupItem
-      id={r.label}
+      key={r.label}
       className="justify-content-between d-flex w-100 p-2">
       <small className="text-muted">{r.label}</small>
       <span />

@@ -39,30 +39,27 @@ export default class PlotsPage extends Component {
 
   componentWillMount = () => {
     this.update();
-  }
+  };
 
   componentWillUnmount = () => {
     this.state.refReq && this.state.refReq.cancel();
     this.state.dataReq && this.state.dataReq.cancel();
     this.state.procReq && this.state.procReq.cancel();
-  }
-  
-  componentDidUpdate = (prevProps) => {
-    if(prevProps.match.url === this.props.match.url) return;
+  };
+
+  componentDidUpdate = prevProps => {
+    if (prevProps.match.url === this.props.match.url) return;
     this.update();
   };
 
   update = () => {
-    let curMatch = this.props.match;
-    if (!this.validParams(curMatch.params)) {
-      this.setState({
-        error: {message: 'Invalid report parameters!'},
-      });
+    if (!this.validParams(this.props.match.params)) {
+      this.setState({error: {message: 'Invalid report parameters!'}});
     } else {
-      localStorage.setItem('recentQuery', JSON.stringify(curMatch.params));
-      this.loadReport(curMatch.params);
+      this.props.onNewQuery(this.props.match.params);
+      this.loadReport(this.props.match.params);
     }
-  }
+  };
 
   handleShowAllChange = checked => {
     this.setState({showAll: checked});
@@ -76,11 +73,15 @@ export default class PlotsPage extends Component {
     this.setState({hoveredPlot});
   };
 
-  loadReport = (query) => {
+  loadReport = query => {
     const refReq = api.loadRun(query.refSeries, query.refSample, query.refRun);
-    const dataReq = api.loadRun(query.dataSeries, query.dataSample, query.dataRun);
+    const dataReq = api.loadRun(
+      query.dataSeries,
+      query.dataSample,
+      query.dataRun,
+    );
     this.setState({refReq, dataReq});
-    
+
     refReq.then(res => {
       this.state.refReq && this.setState({refReq: null});
       return res;
@@ -101,17 +102,17 @@ export default class PlotsPage extends Component {
             this.setState({plots, procReq: null});
           })
           .catch(err => {
-            if(err.type === 'cancel') return;
+            if (err.type === 'cancel') return;
             this.setState({procReq: null, error: err});
           });
       })
       .catch(err => {
-        if(err.type === 'cancel') return;
+        if (err.type === 'cancel') return;
         this.setState({refReq: null, dataReq: null, error: err});
       });
   };
 
-  validParams = (params) => {
+  validParams = params => {
     return (
       params.subsystem &&
       params.refSeries &&
@@ -152,7 +153,7 @@ export default class PlotsPage extends Component {
         />
       );
     }
-    
+
     return (
       <Container
         fluid
@@ -178,7 +179,7 @@ export default class PlotsPage extends Component {
               search={this.state.search}
               onHover={this.handleHover}
             />
-            <Preview className="my-3" plot={this.state.hoveredPlot}/>
+            <Preview className="my-3" plot={this.state.hoveredPlot} />
           </Col>
           <Col md={8} xl={9} className={fullHeight}>
             <ReportInfo

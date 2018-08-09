@@ -43,6 +43,28 @@ export function generateReport({
   });
 }
 
+export function queryUrl({
+  subsystem,
+  refSeries,
+  refSample,
+  refRun,
+  dataSeries,
+  dataSample,
+  dataRun,
+}) {
+  const params = [
+    subsystem,
+    refSeries,
+    refSample,
+    refRun,
+    dataSeries,
+    dataSample,
+    dataRun,
+  ];
+  if(!params.every(p => p)) return null;
+  return `/plots/${params.join('/')}`;
+}
+
 const cancellableQuery = (endpoint, query) => {
   const source = axios.CancelToken.source();
   const p = axios

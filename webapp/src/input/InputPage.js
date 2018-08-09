@@ -8,7 +8,7 @@ export default class InputPage extends Component {
       <Container fluid>
         <Row>
           <Col md="6">
-            <InputForm />
+            <InputForm recentQuery={this.props.recentQuery}/>
           </Col>
           <Col md="6" />
         </Row>

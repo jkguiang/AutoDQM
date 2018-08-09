@@ -3,6 +3,7 @@ import ApiSelect from './ApiSelect.js';
 import {Row, Col, Button} from 'reactstrap';
 import {css} from 'react-emotion';
 import {Link} from 'react-router-dom';
+import * as api from '../api.js';
 
 export default class InputForm extends Component {
   constructor(props) {
@@ -15,16 +16,9 @@ export default class InputForm extends Component {
       dataSeries: null,
       dataSample: null,
       dataRun: null,
+      ...props.recentQuery
     };
   }
-
-  componentWillMount = () => {
-    const recentQuery = localStorage.getItem('recentQuery');
-    if (recentQuery) {
-      const q = JSON.parse(recentQuery);
-      this.setState(q);
-    }
-  };
 
   handleSubsystemChange = opt => {
     this.setState({subsystem: opt.value});
@@ -63,25 +57,9 @@ export default class InputForm extends Component {
     else if (type === 'run') this.setState({refRun: opt.value});
   };
 
-  queryParams = () => {
-    return [
-      this.state.subsystem,
-      this.state.refSeries,
-      this.state.refSample,
-      this.state.refRun,
-      this.state.dataSeries,
-      this.state.dataSample,
-      this.state.dataRun,
-    ];
-  };
-
-  inputIsValid = () => {
-    return this.queryParams().every(o => o);
-  };
-
-  queryPath = () => {
-    const params = this.queryParams();
-    return `/plots/${params.join('/')}`;
+  queryUrl = () => {
+    const query = this.state;
+    return api.queryUrl(query);
   };
 
   render() {
@@ -116,13 +94,13 @@ export default class InputForm extends Component {
           <Col>
             <Button
               color="success"
-              disabled={!this.inputIsValid()}
+              disabled={!this.queryUrl()}
               className={css`
                 width: 100%;
                 margin-top: 10px;
               `}
               tag={Link}
-              to={this.queryPath()}>
+              to={this.queryUrl() || ""}>
               Submit
             </Button>
           </Col>
