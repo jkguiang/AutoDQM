@@ -88,12 +88,18 @@ def get_wbm_data(data_run, this_run, wbm):
         this_end_lumi = float(wbm[this_run]["ENDLUMI"])
         this_avg_lumi = _get_avg_lumi(this_init_lumi, this_end_lumi)
     except TypeError: 
+        # Handle 'null' entries
         data_avg_lumi = 0
         this_avg_lumi = 0
 
-    if this_avg_lumi > 0:
-        wbm_data["lumi_ratio"] = data_avg_lumi/this_avg_lumi
+    if this_avg_lumi*data_avg_lumi != 0:
+        wbm_data["lumi_ratio"] = round(data_avg_lumi/this_avg_lumi, 3)
         wbm_data["lumi_ratio_cut"] = abs(1 - wbm_data["lumi_ratio"]) < 0.15
+    else:
+        wbm_data["lumi_ratio"] = "Not available" 
+        wbm_data["lumi_ratio_cut"] = False 
+
+
 
     return wbm_data 
 
