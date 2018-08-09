@@ -2,6 +2,14 @@ from datetime import datetime
 import ROOT
 
 def get_ref_cands(refs):
+    """Check various cuts to get 1st and 2nd order reference
+    candidates.
+    
+    Returns a dictionary of ref candidates with relevant info
+    of the form: {'run_number':{'info_name':info, 
+                                            ..., 
+                                    'order':N, 
+                                     'best':True/False}}"""
 
     ref_cands = {}
 
@@ -41,6 +49,7 @@ def get_ref_cands(refs):
     return ref_cands 
 
 def get_wbm_data(data_run, this_run, wbm):
+    """Return processed data from WBM service"""
 
     wbm_data = dict.fromkeys(["lumi_ratio", "run_dur", "run_age", "run_trigs", "trigs_cut", "lumi_ratio_cut"])
 
@@ -89,6 +98,7 @@ def get_wbm_data(data_run, this_run, wbm):
     return wbm_data 
 
 def _get_avg_lumi(init_lumi, end_lumi):
+    """Return average run luminosity"""
 
     if init_lumi*end_lumi == 0: return 0
     if not init_lumi or not end_lumi: return 0
