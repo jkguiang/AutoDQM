@@ -7,7 +7,7 @@ import ref
 
 def fetch_refs(config, subsystem, data_run, ref_runs):
     # Handle non-configured subsystems
-    if "run_reg" not in config: return {"run_data":{}, "run_cands":{}}
+    if "run_reg" not in config: return {"ref_data":{}, "run_cands":{}}
 
     folder = "runreg_{}".format(config["run_reg"])
     # Get "runback"
