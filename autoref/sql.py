@@ -79,7 +79,7 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
                 if table != "runs":
                     if "is_good" not in data[run]: pass
                     elif not data[run]["is_good"]: continue 
-                    elif data[run]["is_good"]:
+                    else:
                         # The "BAD" tag gets priority
                         if raw_data[i][j] == "BAD":
                             data[run]["is_good"] = False
