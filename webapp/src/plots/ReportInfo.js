@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 import {Card, Container, Row, Col, Table} from 'reactstrap';
 
 export default function ReportInfo(props) {

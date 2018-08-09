@@ -70,7 +70,7 @@ const plotSty = css`
 
 const shouldDisplay = (plot, showAll, search) => {
   if(!plot.display && !showAll) return false;
-  if(search && plot.name.indexOf(search) == -1) return false;
+  if(search && plot.name.indexOf(search) === -1) return false;
   return true;
 }
 

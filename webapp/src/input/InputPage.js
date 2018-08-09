@@ -1,124 +1,14 @@
 import React, {Component} from 'react';
-import {Container, Row as BSRow, Col, Button} from 'reactstrap';
-import styled, {css} from 'react-emotion';
-import RunSelectForm from './RunSelectForm.js';
-import SubsystemSelect from './SubsystemSelect.js';
-import {Link} from 'react-router-dom';
-
-// Give RSRow some bottom margin
-const Row = styled(BSRow)`
-  margin-bottom: 1rem;
-`;
+import {Container, Row, Col} from 'reactstrap';
+import InputForm from './InputForm.js';
 
 export default class InputPage extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      subsystem: null,
-      data: {series: null, sample: null, run: null},
-      ref: {series: null, sample: null, run: null},
-    };
-  }
-
-  componentWillMount = () => {
-    const recentQuery = localStorage.getItem('recentQuery');
-    if(recentQuery) {
-      const q = JSON.parse(recentQuery);
-      console.log(q);
-      const subsystem = q.subsystem;
-      const data = {series: q.dataSeries, sample: q.dataSample, run: q.dataRun};
-      const ref = {series: q.refSeries, sample: q.refSample, run: q.refRun};
-      this.setState({subsystem, data, ref});
-    }
-  }
-
-  handleSubsysChange = subsystem => {
-    this.setState({subsystem});
-  };
-
-  handleDataChange = dataState => {
-    const other = {...this.state.ref};
-    if (!other.series) other.series = dataState.series;
-    if (!other.sample && other.series === dataState.series) {
-      other.sample = dataState.sample;
-    }
-    if (
-      !other.run &&
-      other.series === dataState.series &&
-      other.sample === dataState.sample
-    ) {
-      other.run = dataState.run;
-    }
-    this.setState({data: dataState, ref: other});
-  };
-  handleRefChange = refState => this.setState({ref: refState});
-
-  inputIsValid = () => {
-    const check = o => [o.series, o.sample, o.run].every(e => e);
-    const data = this.state.data;
-    const ref = this.state.ref;
-    return this.state.subsystem && check(data) && check(ref);
-  };
-
-  getQueryPath = () => {
-    const params = [
-      this.state.subsystem,
-      this.state.ref.series,
-      this.state.ref.sample,
-      this.state.ref.run,
-      this.state.data.series,
-      this.state.data.sample,
-      this.state.data.run,
-    ];
-    
-    return `/plots/${params.join('/')}`;
-  }
-
   render() {
     return (
       <Container fluid>
         <Row>
           <Col md="6">
-            <Row>
-              <Col>
-                <h3>Subsystem</h3>
-                <SubsystemSelect
-                  subsystem={this.state.subsystem}
-                  onChange={this.handleSubsysChange}
-                />
-              </Col>
-            </Row>
-            <Row>
-              <Col md="6">
-                <h3>Data Run</h3>
-                <RunSelectForm
-                  {...this.state.data}
-                  onChange={this.handleDataChange}
-                />
-              </Col>
-              <Col md="6">
-                <h3>Ref Run</h3>
-                <RunSelectForm
-                  {...this.state.ref}
-                  onChange={this.handleRefChange}
-                />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Button
-                  color="success"
-                  disabled={!this.inputIsValid()}
-                  className={css`
-                    width: 100%;
-                    margin-top: 10px;
-                  `}
-                  tag={Link}
-                  to={this.getQueryPath()}>
-                  Submit
-                </Button>
-              </Col>
-            </Row>
+            <InputForm />
           </Col>
           <Col md="6" />
         </Row>

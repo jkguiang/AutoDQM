@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 import {
   Card,
   CardBody,
@@ -10,9 +10,9 @@ import {
 
 export default function Preview(props) {
   const plot = props.plot;
+
   let inner;
   if (plot) {
-    const items = resultItems(plot);
     inner = (
       <React.Fragment>
         <img
@@ -20,7 +20,7 @@ export default function Preview(props) {
           alt="Plot Preview"
           className="card-img-top img-fluid"
         />
-          <ListGroup flush>{resultItems(plot)}</ListGroup>
+        <ListGroup flush>{resultItems(plot)}</ListGroup>
       </React.Fragment>
     );
   } else {
@@ -31,6 +31,7 @@ export default function Preview(props) {
       </CardBody>
     );
   }
+
   return <Card className={props.className}>{inner}</Card>;
 }
 
@@ -44,7 +45,9 @@ const resultItems = plot => {
     rows.push({label: key, value: plot.results[key]});
   }
   return rows.map(r => (
-    <ListGroupItem id={r.label} className="justify-content-between d-flex w-100 p-2">
+    <ListGroupItem
+      id={r.label}
+      className="justify-content-between d-flex w-100 p-2">
       <small className="text-muted">{r.label}</small>
       <span />
       <span className="text-truncate">{r.value}</span>

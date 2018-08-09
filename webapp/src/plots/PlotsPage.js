@@ -15,7 +15,7 @@ import Preview from './Preview.js';
 import ReportInfo from './ReportInfo.js';
 import Plots from './Plots.js';
 import {Link} from 'react-router-dom';
-import axios from 'axios';
+import * as api from '../api.js';
 
 const fullHeight = css`
   height: 100%;
@@ -39,6 +39,12 @@ export default class PlotsPage extends Component {
 
   componentWillMount = () => {
     this.update();
+  }
+
+  componentWillUnmount = () => {
+    this.state.refReq && this.state.refReq.cancel();
+    this.state.dataReq && this.state.dataReq.cancel();
+    this.state.procReq && this.state.procReq.cancel();
   }
   
   componentDidUpdate = (prevProps) => {
@@ -70,59 +76,38 @@ export default class PlotsPage extends Component {
     this.setState({hoveredPlot});
   };
 
-  loadRun = (series, sample, run) => {
-    return cancellableQuery('/cgi-bin/index.py', {
-      type: 'fetch_run',
-      series,
-      sample,
-      run,
-    });
-  };
-
-  process = params => {
-    return cancellableQuery('/cgi-bin/index.py', {
-      type: 'process',
-      subsystem: params.subsystem,
-      ref_series: params.refSeries,
-      ref_sample: params.refSample,
-      ref_run: params.refRun,
-      data_series: params.dataSeries,
-      data_sample: params.dataSample,
-      data_run: params.dataRun,
-    });
-  };
-
   loadReport = (query) => {
-    console.log(query);
-    const refReq = this.loadRun(query.refSeries, query.refSample, query.refRun);
-    const dataReq = this.loadRun(query.dataSeries, query.dataSample, query.dataRun);
+    const refReq = api.loadRun(query.refSeries, query.refSample, query.refRun);
+    const dataReq = api.loadRun(query.dataSeries, query.dataSample, query.dataRun);
     this.setState({refReq, dataReq});
+    
     refReq.then(res => {
-      this.setState({refReq: null});
+      this.state.refReq && this.setState({refReq: null});
       return res;
     });
     dataReq.then(res => {
+      this.state.dataReq && this.setState({refReq: null});
       this.setState({dataReq: null});
       return res;
     });
 
     Promise.all([refReq, dataReq])
       .then(res => {
-        const procReq = this.process(query);
+        const procReq = api.generateReport(query);
         this.setState({refReq: null, dataReq: null, procReq});
         procReq
           .then(res => {
-            const plots = res.data.items;
+            const plots = res.items;
             this.setState({plots, procReq: null});
           })
           .catch(err => {
-            if (!axios.isCancel(err))
-              this.setState({procReq: null, error: err});
+            if(err.type === 'cancel') return;
+            this.setState({procReq: null, error: err});
           });
       })
       .catch(err => {
-        if (!axios.isCancel(err))
-          this.setState({refReq: null, dataReq: null, error: err});
+        if(err.type === 'cancel') return;
+        this.setState({refReq: null, dataReq: null, error: err});
       });
   };
 
@@ -239,20 +224,4 @@ const LoadingBox = ({refReq, dataReq, procReq}) => {
       </Progress>
     </Card>
   );
-};
-
-const cancellableQuery = (endpoint, query) => {
-  const source = axios.CancelToken.source();
-  const p = axios
-    .get(endpoint, {params: query, cancelToken: source.token})
-    .then(res => {
-      if (res.data.error) throw res.data.error;
-      return res.data;
-    })
-    .catch(err => {
-      console.log(err);
-      throw err;
-    });
-  p.cancel = () => source.cancel(`Cancelled request of type ${query.type}`);
-  return p;
 };
