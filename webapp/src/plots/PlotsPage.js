@@ -31,6 +31,7 @@ export default class PlotsPage extends Component {
       refReq: null,
       dataReq: null,
       procReq: null,
+      showLoading: false,
       search: '',
       showAll: false,
       hoveredPlot: null,
@@ -80,7 +81,7 @@ export default class PlotsPage extends Component {
       query.dataSample,
       query.dataRun,
     );
-    this.setState({refReq, dataReq});
+    this.setState({refReq, dataReq, showLoading: true});
 
     refReq.then(res => {
       this.state.refReq && this.setState({refReq: null});
@@ -99,16 +100,16 @@ export default class PlotsPage extends Component {
         procReq
           .then(res => {
             const plots = res.items;
-            this.setState({plots, procReq: null});
+            this.setState({plots, procReq: null, showLoading: false});
           })
           .catch(err => {
             if (err.type === 'cancel') return;
-            this.setState({procReq: null, error: err});
+            this.setState({procReq: null, error: err, showLoading: false});
           });
       })
       .catch(err => {
         if (err.type === 'cancel') return;
-        this.setState({refReq: null, dataReq: null, error: err});
+        this.setState({refReq: null, dataReq: null, error: err, showLoading: false});
       });
   };
 
@@ -125,7 +126,7 @@ export default class PlotsPage extends Component {
   };
 
   render() {
-    const {refReq, dataReq, procReq} = this.state;
+    const {refReq, dataReq, procReq, showLoading} = this.state;
     let body;
     if (this.state.error) {
       body = (
@@ -141,7 +142,7 @@ export default class PlotsPage extends Component {
           </Button>
         </Card>
       );
-    } else if (refReq || dataReq || procReq) {
+    } else if (showLoading) {
       body = <LoadingBox {...{refReq, dataReq, procReq}} />;
     } else {
       body = (
