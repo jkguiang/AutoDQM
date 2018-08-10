@@ -248,13 +248,14 @@ function load_ref(rList, data_run) {
         .done()
         .always(function(response) {
             console.log(response);
-            var refs = response["data"]["items"]["ref_cands"];
+            var refs = response["data"]["candidates"];
             rList.html("");
             rList.append("<li class='list-group-item'>Suggested Reference Runs</li>");
             var toappend = "";
             var best_run = "";
-            $.each(refs, function(key, val) {
-                toappend += "<button id='suggest-opt-"+key+"' name='"+key+"'";
+            for (var key = 0; key < refs.length; key++) {
+                var val = refs[key];
+                toappend += "<button id='suggest-opt-"+key+"' name='"+val["run"]+"'";
                 if (val["best"] == true) {
                     toappend += " type='button' class='list-group-item list-group-item-success'>";
                 }
@@ -266,11 +267,11 @@ function load_ref(rList, data_run) {
                         toappend += " type='button' class='list-group-item'>";
                     }
                 }
-                toappend += "   <h5 class='list-group-item-heading'>"+key+"</h5>"
+                toappend += "   <h5 class='list-group-item-heading'>"+val["run"]+"</h5>"
                 toappend += "   <p>Started "+val["run_age"]["days"]+" day(s), "+val["run_age"]["hours"]+" hr(s), "+val["run_age"]["minutes"]+" min prior</p>"
                 toappend += "   <p>Average Inst. Lumi Ratio (<sup>data</sup>&frasl;<sub>ref</sub>): "+val["lumi_ratio"]+"</p>"
                 toappend += "</button>"
-            });
+            }
             if (toappend == "") {
                 toappend += "<button type='button' class='list-group-item' disabled>Unable to find a reference run.</button>";
             }
