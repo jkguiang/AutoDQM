@@ -103,9 +103,21 @@
                     </div> <!-- End top left column -->
                     <div class="col-lg-6">
                         <p><br /></p>
-                        <div class="list-group">
-                            <li class="list-group-item">Requirements</li>
-                            <li class="list-group-item list-group-item-danger" id="sample_chk">Sample form filled</li>
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <li class="list-group-item">Requirements</li>
+                                <li class="list-group-item list-group-item-danger" id="sample_chk">Sample form filled</li>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="loader" id="ref-suggest-load" hidden></div>
+                            <div class="list-group" id="ref-suggest">
+                                <li class="list-group-item">Suggested Reference Runs</li>
+                                <button type="button" class="list-group-item" disabled>
+                                    <h5 class="list-group-item-heading">Reference Run Information</h5>
+                                    <p>Information about suggested references runs will appear here</p>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

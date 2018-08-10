@@ -189,6 +189,9 @@ function load_query(query) {
     load_samples($("#ref-select-sample")[0].selectize, query["ref_series"]);
     load_runs($("#ref-select-run")[0].selectize, query["ref_series"], query["ref_sample"]);
 
+    // TEMPORARY
+    load_ref($("#ref-suggest"), $("#data-select-run").val());
+
     checkInput();
 }
 
@@ -225,6 +228,62 @@ function load_runs(rSelect, series, sample) {
                 callback();
             });
     });
+}
+
+// TEMPORARY
+function load_ref(rList, data_run) {
+    if ($("#data-select-run").val() == "") {
+        return;
+    }
+    $("#ref-suggest-load").show();
+    $("#ref-suggest").hide();
+    query = {
+        "type": "get_ref",
+        "subsystem": $("#select-subsystem").val(),
+        "run": data_run,
+        "series": $("#data-select-series").val(),
+        "sample": $("#data-select-sample").val(),
+    }
+    $.get('cgi-bin/index.py', query)
+        .done()
+        .always(function(response) {
+            console.log(response);
+            var refs = response["data"]["candidates"];
+            rList.html("");
+            rList.append("<li class='list-group-item'>Suggested Reference Runs</li>");
+            var toappend = "";
+            var best_run = "";
+            for (var key = 0; key < refs.length; key++) {
+                var val = refs[key];
+                toappend += "<button id='suggest-opt-"+key+"' name='"+val["run"]+"'";
+                if (val["best"] == true) {
+                    toappend += " type='button' class='list-group-item list-group-item-success'>";
+                }
+                else {
+                    if (val["order"] == 2) {
+                        toappend += " type='button' class='list-group-item list-group-item-info'>";
+                    }
+                    else {
+                        toappend += " type='button' class='list-group-item'>";
+                    }
+                }
+                toappend += "   <h5 class='list-group-item-heading'>"+val["run"]+"</h5>"
+                toappend += "   <p>Started "+val["run_age"]["days"]+" day(s), "+val["run_age"]["hours"]+" hr(s), "+val["run_age"]["minutes"]+" min prior</p>"
+                toappend += "   <p>Average Inst. Lumi Ratio (<sup>data</sup>&frasl;<sub>ref</sub>): "+val["lumi_ratio"]+"</p>"
+                toappend += "</button>"
+            }
+            if (toappend == "") {
+                toappend += "<button type='button' class='list-group-item' disabled>Unable to find a reference run.</button>";
+            }
+            rList.append(toappend);
+            $("#ref-suggest-load").hide();
+            $("#ref-suggest").show();
+            $("[id^=suggest-opt-]").click(function() {
+                $("#ref-select-run")[0].selectize.setValue(this.name, true);
+                checkInput();
+            });
+        });
+
 }
 
 function initialize_selectors() {
@@ -328,8 +387,10 @@ function main() {
     $("#finished").hide();
     $("#input_err").hide();
     $("#internal_err").hide();
-    $("#SingleMuon").hide();
-    $("#Cosmics").hide();
+
+    // TEMPORARY
+    $("#ref-suggest").show();
+    $("#ref-suggest-load").hide();
 
     // Initial Disables
     $("#submit").attr('disabled', 'disabled');
@@ -344,6 +405,12 @@ function main() {
 
     initialize_selectors();
     checkInput();
+
+    // TEMPORARY
+    $("#data-select-run").on("change", function() {
+        data_run = this.value;
+        load_ref($("#ref-suggest"), data_run);
+    });
 
     // Main query handler
     $("#submit").click(submit);
