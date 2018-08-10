@@ -212,21 +212,21 @@ const LoadingBox = ({refLoading, dataLoading, procLoading, procStandby}) => {
     <Card body outline className="mx-auto mt-3 col-lg-5">
       <CardTitle className="text-center">Loading...</CardTitle>
       <Progress
-        animated={refLoading}
+        animated={!!refLoading}
         color={refLoading ? 'info' : 'success'}
         value={100}
         className="mt-2">
         {refLoading ? 'Reference loading...' : 'Reference loaded!'}
       </Progress>
       <Progress
-        animated={dataLoading}
+        animated={!!dataLoading}
         color={dataLoading ? 'info' : 'success'}
         value={100}
         className="mt-2">
         {dataLoading ? 'Data loading...' : 'Data loaded!'}
       </Progress>
       <Progress
-        animated={!procStandby && procLoading}
+        animated={!procStandby && !!procLoading}
         color={procLoading ? 'info' : procStandby ? 'secondary' : 'success'}
         value={100}
         className="mt-2">
