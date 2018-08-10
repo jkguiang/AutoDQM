@@ -109,7 +109,12 @@ export default class PlotsPage extends Component {
       })
       .catch(err => {
         if (err.type === 'cancel') return;
-        this.setState({refReq: null, dataReq: null, error: err, showLoading: false});
+        this.setState({
+          refReq: null,
+          dataReq: null,
+          error: err,
+          showLoading: false,
+        });
       });
   };
 
@@ -143,7 +148,14 @@ export default class PlotsPage extends Component {
         </Card>
       );
     } else if (showLoading) {
-      body = <LoadingBox {...{refReq, dataReq, procReq}} />;
+      body = (
+        <LoadingBox
+          refLoading={refReq}
+          dataLoading={dataReq}
+          procLoading={procReq}
+          procStandby={!procReq}
+        />
+      );
     } else {
       body = (
         <Plots
@@ -195,32 +207,32 @@ export default class PlotsPage extends Component {
   }
 }
 
-const LoadingBox = ({refReq, dataReq, procReq}) => {
+const LoadingBox = ({refLoading, dataLoading, procLoading, procStandby}) => {
   return (
     <Card body outline className="mx-auto mt-3 col-lg-5">
       <CardTitle className="text-center">Loading...</CardTitle>
       <Progress
-        animated={refReq ? true : false}
-        color={refReq ? 'info' : 'success'}
+        animated={refLoading}
+        color={refLoading ? 'info' : 'success'}
         value={100}
         className="mt-2">
-        {refReq ? 'Reference loading...' : 'Reference loaded!'}
+        {refLoading ? 'Reference loading...' : 'Reference loaded!'}
       </Progress>
       <Progress
-        animated={dataReq ? true : false}
-        color={dataReq ? 'info' : 'success'}
+        animated={dataLoading}
+        color={dataLoading ? 'info' : 'success'}
         value={100}
         className="mt-2">
-        {dataReq ? 'Data loading...' : 'Data loaded!'}
+        {dataLoading ? 'Data loading...' : 'Data loaded!'}
       </Progress>
       <Progress
-        animated={procReq ? true : false}
-        color={procReq ? 'info' : refReq || dataReq ? 'secondary' : 'success'}
+        animated={!procStandby && procLoading}
+        color={procLoading ? 'info' : procStandby ? 'secondary' : 'success'}
         value={100}
         className="mt-2">
-        {procReq
+        {procLoading
           ? 'Processing...'
-          : refReq || dataReq
+          : procStandby
             ? 'Waiting to process...'
             : 'Processed!'}
       </Progress>
