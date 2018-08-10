@@ -126,8 +126,8 @@ def get_ref(subsystem, data_run, series, sample):
     ref_runs = []
     for row in [r._asdict() for r in rows]:
         ref_runs.append(row['name'])
-    refs = sql.fetch_refs(autodqm.cfg.get_subsystem(config_dir, subsystem), subsystem, data_run, ref_runs)
-    return {'items': refs}
+    refs = sql.fetch_refs(autodqm.cfg.get_subsystem(config_dir, subsystem), data_run, ref_runs)
+    return {'items': refs['ref_data'], 'candidates':refs['ref_cands']}
 
 
 def load_vars():

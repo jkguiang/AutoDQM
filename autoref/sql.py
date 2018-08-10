@@ -5,7 +5,7 @@ from rhapi import DEFAULT_URL, RhApi
 # Script for getting reference run qualities
 import ref
 
-def fetch_refs(config, subsystem, data_run, ref_runs):
+def fetch_refs(config, data_run, ref_runs):
     # Handle non-configured subsystems
     if "run_reg" not in config: return {"ref_data":{}, "run_cands":{}}
 
@@ -106,11 +106,12 @@ def retrieve(max_run=320008, min_run=316766, folder="runreg_csc", table="dataset
         it += 1
 
     if table == "runs" and ref_runs:
-        refs = {}
+        refs = {"ref_data":[], "ref_cands":[]}
         for run in data:
             if run == max(ref_runs): continue
-            refs[run] = dict(ref.get_wbm_data(max(ref_runs), run, data), **dqm[run])
-        return {"ref_data":refs, "ref_cands":ref.get_ref_cands(refs)}
+            refs["ref_data"].append(dict(ref.get_wbm_data(max(ref_runs), run, data), **dqm[run]))
+        refs["ref_cands"] = ref.get_ref_cands(refs["ref_data"])
+        return refs
     elif data:
         return data 
     else:

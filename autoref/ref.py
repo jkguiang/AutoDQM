@@ -1,7 +1,7 @@
 from datetime import datetime
 import ROOT
 
-def get_ref_cands(refs):
+def get_ref_cands(ref_data):
     """Check various cuts to get 1st and 2nd order reference
     candidates.
     
@@ -11,40 +11,40 @@ def get_ref_cands(refs):
                                     'order':N, 
                                      'best':True/False}}"""
 
-    ref_cands = {}
+    ref_cands = [] 
 
-    best_ref = None
+    best_ref_i = None
     first_order = None
 
     best_lumi_ratio = None
     most_recent = None
-    for run in refs:
+    for ref_run in ref_data:
         # Recency
-        this_age = refs[run]["run_age"]["total"]
+        this_age = ref_run["run_age"]["total"]
         if not most_recent:
             most_recent = this_age
         elif this_age < most_recent:
             most_recent = this_age
-            first_order = run
+            first_order = ref_run
         # Statistics
-        if not refs[run]["trigs_cut"]: continue
+        if not ref_run["trigs_cut"]: continue
         # Lumi ratio
-        this_lumi_ratio = refs[run]["lumi_ratio"]
-        if refs[run]["lumi_ratio_cut"]:
+        this_lumi_ratio = ref_run["lumi_ratio"]
+        if ref_run["lumi_ratio_cut"]:
             if not best_lumi_ratio: pass
-            elif abs(1 - this_lumi_ratio) < abs(1 - best_lumi_ratio) and refs[run]["run_age"]["days"] < 10:
-                best_ref = run
-                ref_cands[run] = dict({"order":2, "best":False}, **refs[run])
+            elif abs(1 - this_lumi_ratio) < abs(1 - best_lumi_ratio) and ref_run["run_age"]["days"] < 10:
+                best_ref_i = len(ref_cands)
+                ref_cands.append(dict({"order":2, "best":False}, **ref_run))
             best_lumi_ratio = this_lumi_ratio
 
     # Set first order ref
-    ref_cands[first_order] = dict({"order":1, "best":False}, **refs[first_order])
+    ref_cands.append(dict({"order":1, "best":False}, **first_order))
 
     # Set best ref
-    if not best_ref:
-        ref_cands[first_order]["best"] = True
+    if not best_ref_i:
+        ref_cands[0]["best"] = True
     else:
-        ref_cands[best_ref]["best"] = True
+        ref_cands[best_ref_i]["best"] = True
     
     return ref_cands 
 
@@ -52,6 +52,7 @@ def get_wbm_data(data_run, this_run, wbm):
     """Return processed data from WBM service"""
 
     wbm_data = dict.fromkeys(["lumi_ratio", "run_dur", "run_age", "run_trigs", "trigs_cut", "lumi_ratio_cut"])
+    wbm_data["run"] = this_run
 
     # Get run triggers
     this_run_trigs = wbm[this_run]["TRIGGERS"]
