@@ -25,7 +25,7 @@ def process(config_dir, subsystem,
                                   data_series, data_sample, data_run, data_path,
                                   ref_series, ref_sample, ref_run, ref_path)
 
-    for d in [output_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
+    for d in [output_dir + s for s in ['/pdf', '/info', '/png', '/data_json', '/ref_json', '/plot_json']]:
         if not os.path.exists(d):
             os.makedirs(d)
 
@@ -40,16 +40,34 @@ def process(config_dir, subsystem,
 
         for comp_name, comparator in comparators:
             result_id = identifier(hp, comp_name)
-            pdf_path = '{}/pdfs/{}.pdf'.format(output_dir, result_id)
-            json_path = '{}/jsons/{}.json'.format(output_dir, result_id)
-            png_path = '{}/pngs/{}.png'.format(output_dir, result_id)
+            info_path = '{}/info/{}.json'.format(output_dir, result_id)
+            plot_json_path = '{}/plot_json/{}.json'.format(output_dir, result_id)
+            data_json_path = '{}/data_json/{}.json'.format(output_dir, result_id)
+            ref_json_path = '{}/ref_json/{}.json'.format(output_dir, result_id)
+            pdf_path = '{}/pdf/{}.pdf'.format(output_dir, result_id)
+            png_path = '{}/png/{}.png'.format(output_dir, result_id)
 
-            if not os.path.isfile(json_path):
+            if not os.path.isfile(info_path):
                 results = comparator(hp, **hp.config)
 
                 # Continue if no results
                 if not results:
                     continue
+
+                # Make plot json
+                json_str = str(ROOT.TBufferJSON.ConvertToJSON(results.canvas))
+                with open(plot_json_path, 'w') as jf:
+                    json.dump(json_str, jf)
+
+                # Make data json
+                json_str = str(ROOT.TBufferJSON.ConvertToJSON(hp.data_hist))
+                with open(data_json_path, 'w') as jf:
+                    json.dump(json_str, jf)
+
+                # Make data json
+                json_str = str(ROOT.TBufferJSON.ConvertToJSON(hp.ref_hist))
+                with open(ref_json_path, 'w') as jf:
+                    json.dump(json_str, jf)
 
                 # Make pdf
                 results.canvas.Update()
@@ -59,22 +77,29 @@ def process(config_dir, subsystem,
                 subprocess.Popen(
                     ['convert', '-density', '50', '-trim', '-fuzz', '1%', pdf_path, png_path])
 
-                # Make json
+                # Make info
+                paths = {
+                    'info': info_path,
+                    'plot_json': plot_json_path,
+                    'data_json': data_json_path,
+                    'ref_json': ref_json_path,
+                    'pdf': pdf_path,
+                    'png': png_path,
+                }
                 info = {
                     'id': result_id,
                     'name': hp.data_name,
                     'comparator': comp_name,
-                    'display': results.show or hp.config.get('always_show', False),
+                    'always_show': hp.config.get('always_show', False),
+                    'anomalous': results.show,
                     'config': hp.config,
                     'results': results.info,
-                    'pdf_path': pdf_path,
-                    'json_path': json_path,
-                    'png_path': png_path,
+                    'paths': paths
                 }
-                with open(json_path, 'w') as jf:
+                with open(info_path, 'w') as jf:
                     json.dump(info, jf)
             else:
-                with open(json_path) as jf:
+                with open(info_path) as jf:
                     info = json.load(jf)
 
             hist_outputs.append(info)

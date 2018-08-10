@@ -9,10 +9,11 @@ export default class Plots extends Component {
     const plots = plotObjs.map(p => {
       return (
         <Plot
+          color={p.anomalous ? 'warning' : p.always_show ? 'info' : null}
           key={p.name}
           name={p.name}
-          pngUri={p.png_path}
-          pdfUri={p.pdf_path}
+          pngUri={p.paths.png}
+          pdfUri={p.paths.pdf}
           search={this.props.search}
           display={shouldDisplay(p, this.props.showAll, this.props.search)}
           onHover={() => this.props.onHover(p)}
@@ -23,9 +24,13 @@ export default class Plots extends Component {
   }
 }
 
-const Plot = ({name, pngUri, pdfUri, search, display, onHover}) => {
+const Plot = ({color, name, pngUri, pdfUri, search, display, onHover}) => {
   return (
-    <Card className={cx(plotSty, display ? null : hidden)} onMouseEnter={onHover}>
+    <Card
+      outline
+      color={color}
+      className={cx(plotSty, display ? null : hidden)}
+      onMouseEnter={onHover}>
       <a href={pdfUri} target="_blank">
         <CardHeader>{hlSearch(name, search)}</CardHeader>
         <CardImg src={pngUri} />
@@ -40,7 +45,7 @@ const containerSty = css`
 
 const hidden = css`
   display: none;
-`
+`;
 
 const mh = '0.5em';
 const plotSty = css`
@@ -69,10 +74,10 @@ const plotSty = css`
 `;
 
 const shouldDisplay = (plot, showAll, search) => {
-  if(!plot.display && !showAll) return false;
-  if(search && plot.name.indexOf(search) === -1) return false;
+  if (!plot.always_show && !plot.anomalous && !showAll) return false;
+  if (search && plot.name.indexOf(search) === -1) return false;
   return true;
-}
+};
 
 const hlSearch = (text, search) => {
   if (!search) return <span>{text}</span>;

@@ -84,9 +84,7 @@ def process(subsystem,
     def relativize(p): return os.path.join(
         '/results', os.path.relpath(p, results_dir))
     for r in results:
-        r['pdf_path'] = relativize(r['pdf_path'])
-        r['json_path'] = relativize(r['json_path'])
-        r['png_path'] = relativize(r['png_path'])
+        r['paths'] = {key: relativize(val) for (key, val) in r['paths'].items()}
 
     return {'items': results}
 

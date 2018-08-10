@@ -16,7 +16,7 @@ export default function Preview(props) {
     inner = (
       <React.Fragment>
         <img
-          src={plot.png_path}
+          src={plot.paths.png}
           alt="Plot Preview"
           className="card-img-top img-fluid"
         />
@@ -39,7 +39,8 @@ const resultItems = plot => {
   const rows = [
     {label: 'Name', value: plot.name},
     {label: 'Comparator', value: plot.comparator},
-    {label: 'Anomalous', value: plot.display.toString()},
+    {label: 'Always Show', value: plot.always_show.toString()},
+    {label: 'Anomalous', value: plot.anomalous.toString()},
   ];
   for (let key in plot.results) {
     rows.push({label: key, value: plot.results[key]});
