@@ -10,11 +10,12 @@ import {
   Col,
   Progress,
 } from 'reactstrap';
+import {Link} from 'react-router-dom';
 import Controls from './Controls.js';
 import Preview from './Preview.js';
 import ReportInfo from './ReportInfo.js';
 import Plots from './Plots.js';
-import {Link} from 'react-router-dom';
+import PlotModal from './PlotModal.js';
 import * as api from '../api.js';
 
 const fullHeight = css`
@@ -31,7 +32,7 @@ export default class PlotsPage extends Component {
       refReq: null,
       dataReq: null,
       procReq: null,
-      showLoading: false,
+      isLoading: false,
       search: '',
       showAll: false,
       hoveredPlot: null,
@@ -74,6 +75,19 @@ export default class PlotsPage extends Component {
     this.setState({hoveredPlot});
   };
 
+  handleModalClose = () => {
+    this.props.history.replace({...this.props.location, hash: ''});
+  };
+
+  openModal = plot => {
+    this.props.history.replace({...this.props.location, hash: '#' + plot.name});
+  };
+
+  findPlot = name => {
+    if (!name) return null;
+    return this.state.plots.find(p => p.name === name);
+  };
+
   loadReport = query => {
     const refReq = api.loadRun(query.refSeries, query.refSample, query.refRun);
     const dataReq = api.loadRun(
@@ -81,7 +95,7 @@ export default class PlotsPage extends Component {
       query.dataSample,
       query.dataRun,
     );
-    this.setState({refReq, dataReq, showLoading: true});
+    this.setState({refReq, dataReq, isLoading: true});
 
     refReq.then(res => {
       this.state.refReq && this.setState({refReq: null});
@@ -100,11 +114,11 @@ export default class PlotsPage extends Component {
         procReq
           .then(res => {
             const plots = res.items;
-            this.setState({plots, procReq: null, showLoading: false});
+            this.setState({plots, procReq: null, isLoading: false});
           })
           .catch(err => {
             if (err.type === 'cancel') return;
-            this.setState({procReq: null, error: err, showLoading: false});
+            this.setState({procReq: null, error: err, isLoading: false});
           });
       })
       .catch(err => {
@@ -113,7 +127,7 @@ export default class PlotsPage extends Component {
           refReq: null,
           dataReq: null,
           error: err,
-          showLoading: false,
+          isLoading: false,
         });
       });
   };
@@ -131,7 +145,7 @@ export default class PlotsPage extends Component {
   };
 
   render() {
-    const {refReq, dataReq, procReq, showLoading} = this.state;
+    const {refReq, dataReq, procReq, isLoading} = this.state;
     let body;
     if (this.state.error) {
       body = (
@@ -147,7 +161,7 @@ export default class PlotsPage extends Component {
           </Button>
         </Card>
       );
-    } else if (showLoading) {
+    } else if (isLoading) {
       body = (
         <LoadingBox
           refLoading={refReq}
@@ -163,46 +177,58 @@ export default class PlotsPage extends Component {
           search={this.state.search}
           showAll={this.state.showAll}
           onHover={this.handleHover}
+          onClick={this.openModal}
         />
       );
     }
 
     return (
-      <Container
-        fluid
-        className={css`
-          flex-grow: 1;
-          min-height: 0;
-          height: 100%;
-        `}>
-        <Row
+      <React.Fragment>
+        <PlotModal
+          isOpen={
+            this.props.location.hash &&
+            !this.state.isLoading &&
+            !this.state.error
+          }
+          toggle={this.handleModalClose}
+          plot={this.findPlot(this.props.location.hash)}
+        />
+        <Container
+          fluid
           className={css`
-            padding: 0;
+            flex-grow: 1;
+            min-height: 0;
             height: 100%;
           `}>
-          <Col
-            md={4}
-            xl={3}
-            className={`${fullHeight} d-none d-md-block bg-light p-3`}>
-            <Controls
-              query={this.props.match.params}
-              onShowAllChange={this.handleShowAllChange}
-              onSearchChange={this.handleSearchChange}
-              showAll={this.state.showAll}
-              search={this.state.search}
-              onHover={this.handleHover}
-            />
-            <Preview className="my-3" plot={this.state.hoveredPlot} />
-          </Col>
-          <Col md={8} xl={9} className={fullHeight}>
-            <ReportInfo
-              {...this.props.match.params}
-              timestamp={new Date().toUTCString()}
-            />
-            {body}
-          </Col>
-        </Row>
-      </Container>
+          <Row
+            className={css`
+              padding: 0;
+              height: 100%;
+            `}>
+            <Col
+              md={4}
+              xl={3}
+              className={`${fullHeight} d-none d-md-block bg-light p-3`}>
+              <Controls
+                query={this.props.match.params}
+                onShowAllChange={this.handleShowAllChange}
+                onSearchChange={this.handleSearchChange}
+                showAll={this.state.showAll}
+                search={this.state.search}
+                onHover={this.handleHover}
+              />
+              <Preview className="my-3" plot={this.state.hoveredPlot} />
+            </Col>
+            <Col md={8} xl={9} className={fullHeight}>
+              <ReportInfo
+                {...this.props.match.params}
+                timestamp={new Date().toUTCString()}
+              />
+              {body}
+            </Col>
+          </Row>
+        </Container>
+      </React.Fragment>
     );
   }
 }

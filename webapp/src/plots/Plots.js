@@ -17,6 +17,7 @@ export default class Plots extends Component {
           search={this.props.search}
           display={shouldDisplay(p, this.props.showAll, this.props.search)}
           onHover={() => this.props.onHover(p)}
+          onClick={() => this.props.onClick(p)}
         />
       );
     });
@@ -24,17 +25,25 @@ export default class Plots extends Component {
   }
 }
 
-const Plot = ({color, name, pngUri, pdfUri, search, display, onHover}) => {
+const Plot = ({
+  color,
+  name,
+  pngUri,
+  pdfUri,
+  search,
+  display,
+  onHover,
+  onClick,
+}) => {
   return (
     <Card
       outline
       color={color}
       className={cx(plotSty, display ? null : hidden)}
-      onMouseEnter={onHover}>
-      <a href={pdfUri} target="_blank">
-        <CardHeader>{hlSearch(name, search)}</CardHeader>
-        <CardImg src={pngUri} />
-      </a>
+      onMouseEnter={onHover}
+      onClick={onClick}>
+      <CardHeader>{hlSearch(name, search)}</CardHeader>
+      <CardImg src={pngUri} />
     </Card>
   );
 };
@@ -69,7 +78,8 @@ const plotSty = css`
   }
 
   :hover {
-    border-color: #6c757d;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    text-decoration: underline;
   }
 `;
 
