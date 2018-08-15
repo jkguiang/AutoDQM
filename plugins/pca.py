@@ -1,10 +1,12 @@
-import os,sys,json
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+import os
+import glob
 import cPickle as pickle
 import numpy as np
 from sklearn.decomposition import PCA
 import ROOT
-ROOT.gROOT.SetBatch(1)
-import utils
 
 from autodqm.plugin_results import PluginResults
 
@@ -21,8 +23,9 @@ def pca(histpair,
     data_hist = histpair.data_hist
 
     # Check for unique Pickle file
-    possible_pickles = glob.glob("pickle_jar/*_{}.pkl".format(data_name))
-    if len(possible_pickles) != 1: return None
+    possible_pickles = glob.glob("/var/www/cgi-bin/pickle_jar/*_{0}.pkl".format(data_name))
+    if len(possible_pickles) != 1:
+        return None
 
     # Load Pickle file
     pca_dict = pickle.load(open(possible_pickles[0], "rb"))
@@ -45,39 +48,41 @@ def pca(histpair,
     n_components = get_components(exp_var, pca_dict["pca"].explained_variance_ratio_)
     sse, reco_data = PCATest(np_data, pca_dict["pca"], n_components)
 
-    c, artifacts = draw_same(data_hist, reco_data, pca_dict["good_bins"], histpair.data_run)
-
     # Get SSE cut
     sse_cut = pca_dict["sses_{}comp".format(n_components)]["{}pct".format(sse_percentile)]
 
-    outlier = is_good and sse > sse_cut
+    is_outlier = is_good and bool(sse > sse_cut)
+    
+    c, artifacts = draw_same(data_hist, reco_data, pca_dict["good_bins"], histpair.data_run, is_outlier)
 
     info = {
         'Data_Entries': data_hist.GetEntries(),
-        'Sum of Squared Errors': sse,
+        'Sum of Squared Errors': round(sse, 3),
         'PCA Components': n_components
     }
 
     return PluginResults(
             c,
-            show=is_outlier,
+            show=bool(is_outlier),
             info=info,
             artifacts=artifacts)
 
 def PCATest(np_data, pca_obj, n_components):
 
     # Transform data in terms of principle component vectors
-    transform = pca.transform(np_data)
+    transf = pca_obj.transform(np_data.reshape(1,-1))
     # Zero out components beyond n_components cap
-    transform[n_components:] *= 0
+    transf[0,n_components:] *= 0
     # Reconstruct data using N components
-    reco_data = pca.inv_transform(transform)
+    reco_data = pca_obj.inverse_transform(transf)
+    reco_data = reco_data.flatten()
     # Get sum of squared errors
     sse = np.sqrt(np.sum((reco_data - np_data)**2))
 
     return sse, reco_data
 
 def get_components(exp_var, exp_var_ratios_, n_cap=3):
+    """Get PCA components that explain variance to some percentage (exp_var)"""
 
     sum_var = 0
     n_components = 0
@@ -90,13 +95,14 @@ def get_components(exp_var, exp_var_ratios_, n_cap=3):
     return n_components
 
 def get_np_data(data_hist):
+    """Turn TH1F bin content into a numpy array"""
     np_data = []
     for x in range(1, data_hist.GetNbinsX() +1):
         np_data.append(data_hist.GetBinContent(x))
 
     return np.array(np_data)
 
-def draw_same(data_hist, reco_data, reco_bins, data_run):
+def draw_same(data_hist, reco_data, reco_bins, data_run, is_outlier):
     # Set up canvas
     c = ROOT.TCanvas('c', 'c')
     data_hist = data_hist.Clone()
@@ -105,47 +111,48 @@ def draw_same(data_hist, reco_data, reco_bins, data_run):
     
     # Fill Reco hist
     for i in range(0, len(reco_bins)):
-        reco_hist.SetBinContent(reco_bins[i], reco_data[i])
+        reco_hist.SetBinContent(int(reco_bins[i])+1, float(reco_data[i]))
 
-    ROOT.gStyle.SetOptStat(1)
-    data_hist.SetStats(True)
-    reco_hist.SetStats(True)
+    ROOT.gStyle.SetOptStat(0)
+    data_hist.SetStats(False)
+    reco_hist.SetStats(False)
 
     # Set hist style
     data_hist.SetLineColor(ROOT.kBlue)
-    data_hist.SetLineWidth(1)
-    reco_hist.SetLineColor(ROOT.kGreen)
+    data_hist.SetFillColor(38)
+    data_hist.SetLineWidth(2)
+    if is_outlier:
+        reco_hist.SetLineColor(ROOT.kRed)
+        reco_hist.SetFillColorAlpha(ROOT.kRed, 0.25) 
+    else:
+        reco_hist.SetLineColor(ROOT.kGreen)
+        reco_hist.SetFillColorAlpha(ROOT.kGreen, 0.25) 
     reco_hist.SetLineStyle(7)
-    reco_hist.SetLineWidth(1)
+    reco_hist.SetLineWidth(2)
 
     # Name histograms
     data_hist.SetName("Data")
     reco_hist.SetName("Reconstructed")
 
     # Plot hist
-    data_hist.Draw()
-    reco_hist.Draw("same")
+    data_hist.Draw("hist")
+    reco_hist.Draw("hist same")
     c.Update()
-
-    # Modify stats boxes
-    d_stats = data_hist.FindObject("stats")
-    r_stats = reco_hist.FindObject("stats")
-
-    d_stats.SetY1NDC(0.15)
-    d_stats.SetY2NDC(0.30)
-    d_stats.SetTextColor(ROOT.kBlue)
-    d_stats.Draw()
-
-    r_stats.SetY1NDC(0.35)
-    r_stats.SetY2NDC(0.50)
-    r_stats.SetTextColor(ROOT.kGreen)
-    r_stats.Draw()
 
     # Text box
     data_text = ROOT.TLatex(.72, .91, "#scale[0.6]{Data: " + data_run + "}")
     data_text.SetNDC(ROOT.kTRUE)
-    data_text.Draw()
-
+    data_text.Draw("same")
     c.Update()
-    artifacts = [data_hist, reco_hist, data_text]
+
+    # Draw legend
+    legend = ROOT.TLegend(0.9,0.9,0.75,0.75)
+    legend.AddEntry(data_hist, "Data")
+    legend.AddEntry(reco_hist, "Reco")
+    legend.SetBorderSize(0)
+    legend.SetFillStyle(0)
+    legend.Draw("same")
+    c.Update()
+
+    artifacts = [data_hist, reco_hist, data_text, legend]
     return c, artifacts
