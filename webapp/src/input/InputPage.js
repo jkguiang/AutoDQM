@@ -30,7 +30,6 @@ export default class InputPage extends Component {
   }
 
   handleInputChange = c => {
-    console.log(c);
     this.setState(prevState => {
       let refEqualsData = prevState.refEqualsData;
       if ('refSeries' in c || 'refSample' in c || 'refRun' in c)
@@ -40,7 +39,6 @@ export default class InputPage extends Component {
       else if ('dataSample' in c) c = {...c, dataRun: null};
       if ('refSeries' in c) c = {...c, refSample: null, refRun: null};
       else if ('refSample' in c) c = {...c, refRun: null};
-      console.log(c);
 
       let query = {...prevState.query, ...c};
       if (refEqualsData) {
