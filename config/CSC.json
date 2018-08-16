@@ -22,6 +22,8 @@
     },
     {
       "always_show": true,
+      "comparators": ["pca", "ks_test"],
+      "jar_dir": "CSC",
       "path": "recHits/hRHnrechits"
     },
     {
