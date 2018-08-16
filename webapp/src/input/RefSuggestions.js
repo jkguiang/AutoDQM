@@ -51,7 +51,8 @@ export default class RefSuggestions extends Component {
       r.then(res => {
         this.setState({refReq: null, refCands: res.candidates});
       }).catch(err => {
-        this.setState({refReq: null, error: err, refCands: []});
+        if (!(err.type === 'cancel'))
+          this.setState({refReq: null, error: err, refCands: []});
       });
     }
   };

@@ -6,8 +6,16 @@ import RefSuggestions from './RefSuggestions.js';
 export default class InputPage extends Component {
   constructor(props) {
     super(props);
+    let rq = props.recentQuery;
+    /* eslint-disable eqeqeq */
+    let refEqualsData =
+      rq.dataSeries == rq.refSeries &&
+      rq.dataSample == rq.refSample &&
+      rq.dataRun == rq.refRun;
+    /* eslint-enable eqeqeq */
+    
     this.state = {
-      refEqualsData: true,
+      refEqualsData,
       query: {
         subsystem: null,
         refSeries: null,
@@ -21,17 +29,26 @@ export default class InputPage extends Component {
     };
   }
 
-  handleInputChange = change => {
+  handleInputChange = c => {
+    console.log(c);
     this.setState(prevState => {
       let refEqualsData = prevState.refEqualsData;
-      if (change.refSeries || change.refSample || change.refRun)
+      if ('refSeries' in c || 'refSample' in c || 'refRun' in c)
         refEqualsData = false;
 
-      let query = this.validatedQuery(
-        {...prevState.query, ...change},
-        refEqualsData,
-      );
-      return {query};
+      if ('dataSeries' in c) c = {...c, dataSample: null, dataRun: null};
+      else if ('dataSample' in c) c = {...c, dataRun: null};
+      if ('refSeries' in c) c = {...c, refSample: null, refRun: null};
+      else if ('refSample' in c) c = {...c, refRun: null};
+      console.log(c);
+
+      let query = {...prevState.query, ...c};
+      if (refEqualsData) {
+        query.refSeries = query.dataSeries;
+        query.refSample = query.dataSample;
+        query.refRun = query.dataRun;
+      }
+      return {query, refEqualsData};
     });
   };
 
@@ -45,23 +62,6 @@ export default class InputPage extends Component {
       };
       return {query, refEqualsData: false};
     });
-  };
-
-  validatedQuery = (rawQuery, syncRefData) => {
-    let q = {...rawQuery};
-    if (syncRefData) {
-      q.refSeries = q.dataSeries;
-      q.refSample = q.dataSample;
-      q.refRun = q.dataRun;
-    }
-
-    if (!rawQuery.dataSeries) q = {...q, dataSample: null, dataRun: null};
-    else if (!rawQuery.dataSample) q = {...q, dataRun: null};
-
-    if (!rawQuery.refSeries) q = {...q, refSample: null, refRun: null};
-    else if (!rawQuery.refSample) q = {...q, refRun: null};
-
-    return q;
   };
 
   render() {
