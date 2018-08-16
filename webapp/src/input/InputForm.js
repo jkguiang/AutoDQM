@@ -36,7 +36,17 @@ export default class InputForm extends Component {
       <React.Fragment>
         <Row className="mt-3">
           <Col>
-            <h3>Subsystem</h3>
+            <Row>
+              <Col>
+                <h3>Subsystem</h3>
+              </Col>
+              <Col/>
+              <Col xs="auto">
+                <Button onClick={this.props.onClearForm} color="link">
+                  clear form
+                </Button>
+              </Col>
+            </Row>
             <ApiSelect
               placeholder="Select subsystem..."
               type="get_subsystems"

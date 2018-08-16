@@ -13,7 +13,7 @@ export default class InputPage extends Component {
       rq.dataSample == rq.refSample &&
       rq.dataRun == rq.refRun;
     /* eslint-enable eqeqeq */
-    
+
     this.state = {
       refEqualsData,
       query: {
@@ -64,13 +64,32 @@ export default class InputPage extends Component {
     });
   };
 
+  handleClearForm = () => {
+    this.setState({
+      refEqualsData: true,
+      query: {
+        subsystem: null,
+        refSeries: null,
+        refSample: null,
+        refRun: null,
+        dataSeries: null,
+        dataSample: null,
+        dataRun: null,
+      },
+    });
+  };
+
   render() {
     let query = this.state.query;
     return (
       <Container fluid>
         <Row>
           <Col md="6">
-            <InputForm query={query} onChange={this.handleInputChange} />
+            <InputForm
+              query={query}
+              onChange={this.handleInputChange}
+              onClearForm={this.handleClearForm}
+            />
           </Col>
           <Col md="6">
             <RefSuggestions
