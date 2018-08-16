@@ -77,7 +77,9 @@ export default class RefSuggestions extends Component {
       body = (
         <CardBody>
           <Row style={{alignItems: 'center'}}>
-            <Col xs="auto" className="text-muted">Loading reference suggestions... </Col>
+            <Col xs="auto" className="text-muted">
+              Loading reference suggestions...{' '}
+            </Col>
             <Col>
               <Progress animated={true} color="info" value={100} />
             </Col>
@@ -113,6 +115,7 @@ function RefItem({run, best, run_age, lumi_ratio, onClick}) {
       tag="button"
       className="text-left"
       color={best ? 'success' : ''}
+      style={{cursor: 'pointer'}}
       onClick={onClick}>
       <div>Run: {run}</div>
       <div>
