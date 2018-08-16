@@ -21,9 +21,10 @@ def pca(histpair,
 
     data_name = histpair.data_name
     data_hist = histpair.data_hist
+    jar_dir = histpair.config["jar_dir"]
 
     # Check for unique Pickle file
-    possible_pickles = glob.glob("/var/www/cgi-bin/pickle_jar/*_{0}.pkl".format(data_name))
+    possible_pickles = glob.glob("/var/www/cgi-bin/pickle_jar/{0}/*_{1}.pkl".format(jar_dir, data_name))
     if len(possible_pickles) != 1:
         return None
 
