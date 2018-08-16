@@ -20,7 +20,7 @@ def pca(histpair,
         **kwargs):
 
     data_name = histpair.data_name
-    data_hist = histpair.data_hist
+    data_hist = histpair.data_hist.Clone()
     jar_dir = histpair.config["jar_dir"]
 
     # Check for unique Pickle file
@@ -106,7 +106,6 @@ def get_np_data(data_hist):
 def draw_same(data_hist, reco_data, reco_bins, data_run, is_outlier):
     # Set up canvas
     c = ROOT.TCanvas('c', 'c')
-    data_hist = data_hist.Clone()
     reco_hist = data_hist.Clone("reco_hist")
     reco_hist.Reset()
     

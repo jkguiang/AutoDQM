@@ -15,8 +15,8 @@ def pullvals(histpair,
              pull_cap=25, chi2_cut=500, pull_cut=20, min_entries=100000, norm_type='all',
              **kwargs):
     """Can handle poisson driven TH2s or generic TProfile2Ds"""
-    data_hist = histpair.data_hist
-    ref_hist = histpair.ref_hist
+    data_hist = histpair.data_hist.Clone()
+    ref_hist = histpair.ref_hist.Clone()
 
     # Check that the hists are histograms
     if not data_hist.InheritsFrom('TH1') or not ref_hist.InheritsFrom('TH1'):

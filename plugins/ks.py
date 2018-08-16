@@ -16,8 +16,8 @@ def ks(histpair, ks_cut=0.09, min_entries=100000, **kwargs):
     data_name = histpair.data_name
     ref_name = histpair.ref_name
 
-    data_hist = histpair.data_hist
-    ref_hist = histpair.ref_hist
+    data_hist = histpair.data_hist.Clone()
+    ref_hist = histpair.ref_hist.Clone()
 
     # Check that the hists are histograms
     if not data_hist.InheritsFrom('TH1') or not ref_hist.InheritsFrom('TH1'):
@@ -57,8 +57,6 @@ def ks(histpair, ks_cut=0.09, min_entries=100000, **kwargs):
 def draw_same(data_hist, data_run, ref_hist, ref_run):
     # Set up canvas
     c = ROOT.TCanvas('c', 'c')
-    data_hist = data_hist.Clone()
-    ref_hist = ref_hist.Clone()
 
     # Ensure plot accounts for maximum value
     ref_hist.SetMaximum(
