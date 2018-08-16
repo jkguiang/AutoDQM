@@ -6,66 +6,31 @@ import {Link} from 'react-router-dom';
 import * as api from '../api.js';
 
 export default class InputForm extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      subsystem: null,
-      refSeries: null,
-      refSample: null,
-      refRun: null,
-      dataSeries: null,
-      dataSample: null,
-      dataRun: null,
-      ...props.recentQuery
-    };
-  }
-
-  handleSubsystemChange = opt => {
-    this.setState({subsystem: opt.value});
-  };
-
-  handleDataChange = (type, opt) => {
-    if (type === 'series')
-      this.setState({dataSeries: opt.value, dataSample: null, dataRun: null});
-    else if (type === 'sample')
-      this.setState({dataSample: opt.value, dataRun: null});
-    else if (type === 'run') this.setState({dataRun: opt.value});
-
-    const s = this.state;
-    const data = {series: s.dataSeries, sample: s.dataSample, run: s.dataRun};
-    const ref = {series: s.refSeries, sample: s.refSample, run: s.refRun};
-
-    if (type === 'series' && !ref.series) {
-      this.handleRefChange('series', opt);
-    } else if (type === 'sample' && !ref.sample && ref.series === data.series) {
-      this.handleRefChange('sample', opt);
-    } else if (
-      type === 'run' &&
-      !ref.run &&
-      ref.sample === data.sample &&
-      ref.series === data.series
-    ) {
-      this.handleRefChange('run', opt);
-    }
-  };
-
-  handleRefChange = (type, opt) => {
-    if (type === 'series')
-      this.setState({refSeries: opt.value, refSample: null, refRun: null});
-    else if (type === 'sample')
-      this.setState({refSample: opt.value, refRun: null});
-    else if (type === 'run') this.setState({refRun: opt.value});
-  };
-
   queryUrl = () => {
-    const query = this.state;
+    const query = this.props.query;
     return api.queryUrl(query);
   };
 
+  handleSubsystemChange = change => {
+    this.props.onChange({subsystem: change.value});
+  };
+
+  handleDataChange = (type, change) => {
+    if (type === 'series') this.props.onChange({dataSeries: change.value});
+    else if (type === 'sample') this.props.onChange({dataSample: change.value});
+    else if (type === 'run') this.props.onChange({dataRun: change.value});
+  };
+
+  handleRefChange = (type, change) => {
+    if (type === 'series') this.props.onChange({refSeries: change.value});
+    else if (type === 'sample') this.props.onChange({refSample: change.value});
+    else if (type === 'run') this.props.onChange({refRun: change.value});
+  };
+
   render() {
-    const s = this.state;
-    const data = {series: s.dataSeries, sample: s.dataSample, run: s.dataRun};
-    const ref = {series: s.refSeries, sample: s.refSample, run: s.refRun};
+    const q = this.props.query;
+    const data = {series: q.dataSeries, sample: q.dataSample, run: q.dataRun};
+    const ref = {series: q.refSeries, sample: q.refSample, run: q.refRun};
 
     return (
       <React.Fragment>
@@ -75,7 +40,7 @@ export default class InputForm extends Component {
             <ApiSelect
               placeholder="Select subsystem..."
               type="get_subsystems"
-              value={option(this.state.subsystem)}
+              value={option(q.subsystem)}
               onChange={this.handleSubsystemChange}
             />
           </Col>
@@ -100,7 +65,7 @@ export default class InputForm extends Component {
                 margin-top: 10px;
               `}
               tag={Link}
-              to={this.queryUrl() || ""}>
+              to={this.queryUrl() || ''}>
               Submit
             </Button>
           </Col>

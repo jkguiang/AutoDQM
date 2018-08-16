@@ -9,7 +9,7 @@ export default class Plots extends Component {
     const plots = plotObjs.map(p => {
       return (
         <Plot
-          key={p.name}
+          key={p.id}
           name={p.name}
           pngUri={p.png_path}
           pdfUri={p.pdf_path}
