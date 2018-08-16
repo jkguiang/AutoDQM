@@ -13,7 +13,9 @@ def get_ref_cands(ref_data):
 
     ref_cands = [] 
 
+    # Index of best reference run
     best_ref_i = None
+    # Stores first order ref
     first_order = {}
 
     best_lumi_ratio = None
