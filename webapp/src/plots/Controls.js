@@ -94,6 +94,7 @@ class RunSwitch extends Component {
   };
 
   onRunsLoad = runOpts => {
+    runOpts.sort((a,b) => a.label.localeCompare(b.label));
     this.setState({runOpts});
   };
 

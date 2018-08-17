@@ -70,7 +70,9 @@ export default class ApiSelect extends Component {
           .filter(r => !seen.hasOwnProperty(r.name) && (seen[r.name] = true))
           .map(r => ({value: r.name, label: r.name}))
           .sort((a, b) => a.label.localeCompare(b.label));
-        onLoad && onLoad(opts);
+        onLoad && onLoad([...opts]);
+
+        if(type === 'get_runs') opts.reverse();
         this.setState({opts, req: null});
       })
       .catch(err => {
