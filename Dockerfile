@@ -37,6 +37,7 @@ RUN cp -r /webapp/build /var/www/public
 COPY httpd.conf /etc/httpd/conf/httpd.conf
 COPY index.py /var/www/cgi-bin/index.py
 COPY autodqm /var/www/cgi-bin/autodqm
+COPY autoref /var/www/cgi-bin/autoref
 COPY plugins /var/www/cgi-bin/plugins
 COPY config /var/www/public/config
 

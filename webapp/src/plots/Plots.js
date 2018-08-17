@@ -10,7 +10,7 @@ export default class Plots extends Component {
       return (
         <Plot
           color={p.anomalous ? 'warning' : p.always_show ? 'info' : null}
-          key={p.name}
+          key={p.id}
           name={p.name}
           pngUri={p.paths.png}
           pdfUri={p.paths.pdf}

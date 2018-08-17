@@ -18,6 +18,10 @@ export function getRuns(series, sample) {
   return cancellableQuery(API, {type: 'get_runs', series, sample});
 }
 
+export function getReferences(subsystem, series, sample, run) {
+  return cancellableQuery(API, {type: 'get_ref', subsystem, series, sample, run});
+}
+
 export function loadRun(series, sample, run) {
   return cancellableQuery(API, {type: 'fetch_run', series, sample, run});
 }

@@ -8,6 +8,7 @@ import os
 import traceback
 from autodqm import compare_hists
 from autodqm.dqm import DQMSession
+from autoref import sql
 
 VARS = {}
 
@@ -34,6 +35,11 @@ def handle_request(req):
             data = get_samples(req['series'])
         elif req['type'] == "get_runs":
             data = get_runs(req['series'], req['sample'])
+        elif req['type'] == "get_ref":
+            data = get_ref(req['subsystem'],
+                           req['run'],
+                           req['series'],
+                           req['sample'])
         else:
             raise error
     except Exception as e:
@@ -110,6 +116,16 @@ def get_runs(series, sample):
     with make_dqm() as dqm:
         rows = dqm.fetch_run_list(series, sample)
     return {'items': [r._asdict() for r in rows]}
+
+def get_ref(subsystem, data_run, series, sample):
+    config_dir = VARS['CONFIG']
+    with make_dqm() as dqm:
+        rows = dqm.fetch_run_list(series, sample)
+    ref_runs = []
+    for row in [r._asdict() for r in rows]:
+        ref_runs.append(row['name'])
+    refs = sql.fetch_refs(autodqm.cfg.get_subsystem(config_dir, subsystem), data_run, ref_runs)
+    return {'items': refs['ref_data'], 'candidates':refs['ref_cands']}
 
 
 def load_vars():
