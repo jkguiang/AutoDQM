@@ -7,7 +7,7 @@ import ref
 
 def fetch_refs(config, data_run, ref_runs):
     # Handle non-configured subsystems
-    if "run_reg" not in config: return {"ref_data":{}, "run_cands":{}}
+    if "run_reg" not in config: raise error("Ref suggestions not available for this subsystem")
 
     folder = "runreg_{}".format(config["run_reg"])
     # Get "runback"
@@ -133,5 +133,5 @@ def _get_run_col(col_name):
                 return True
     return False
 
-if __name__ == "__main__":
+class error(Exception):
     pass

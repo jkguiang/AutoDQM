@@ -14,16 +14,14 @@ def get_ref_cands(ref_data):
     ref_cands = [] 
 
     best_ref_i = None
-    first_order = None
+    first_order = {}
 
     best_lumi_ratio = None
     most_recent = None
     for ref_run in ref_data:
         # Recency
         this_age = ref_run["run_age"]["total"]
-        if not most_recent:
-            most_recent = this_age
-        elif this_age < most_recent:
+        if not most_recent or this_age < most_recent:
             most_recent = this_age
             first_order = ref_run
         # Statistics

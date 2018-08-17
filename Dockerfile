@@ -4,6 +4,7 @@ EXPOSE 80
 RUN yum update -y && yum install -y \
       ImageMagick \
       httpd \
+      npm \
       php \
       python2-pip \
       root-python
@@ -25,8 +26,15 @@ ENV ADQM_PUBLIC /var/www/
 ENV ADQM_CONFIG /var/www/public/config/
 ENV ADQM_PLUGINS /var/www/cgi-bin/plugins/
 
+WORKDIR /webapp
+COPY webapp/package.json /webapp/package.json
+RUN npm install
+
+COPY webapp /webapp
+RUN npm run build
+RUN cp -r /webapp/build /var/www/public
+
 COPY httpd.conf /etc/httpd/conf/httpd.conf
-COPY public /var/www/public
 COPY index.py /var/www/cgi-bin/index.py
 COPY autodqm /var/www/cgi-bin/autodqm
 COPY autoref /var/www/cgi-bin/autoref
