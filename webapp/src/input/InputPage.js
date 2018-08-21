@@ -9,9 +9,10 @@ export default class InputPage extends Component {
     let rq = props.recentQuery;
     /* eslint-disable eqeqeq */
     let refEqualsData =
-      rq.dataSeries == rq.refSeries &&
-      rq.dataSample == rq.refSample &&
-      rq.dataRun == rq.refRun;
+      !rq ||
+      (rq.dataSeries == rq.refSeries &&
+        rq.dataSample == rq.refSample &&
+        rq.dataRun == rq.refRun);
     /* eslint-enable eqeqeq */
 
     this.state = {
