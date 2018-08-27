@@ -1,10 +1,12 @@
 FROM cern/cc7-base
-EXPOSE 80
+EXPOSE 443
 
 RUN yum update -y && yum install -y \
       ImageMagick \
       httpd \
+      mod_ssl \
       npm \
+      openssl \
       php \
       python2-pip \
       root-python

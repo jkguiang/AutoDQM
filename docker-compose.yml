@@ -5,6 +5,7 @@ services:
     image: autodqm:latest
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - adqm-db:/db
       - .:/code
