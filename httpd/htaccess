@@ -1,0 +1,12 @@
+# Shibboleth Configuration
+SSLRequireSSL
+AuthType shibboleth
+ShibRequireSession On
+ShibExportAssertion Off
+
+# Require that the user is a valid CERN user and a member of cms-members
+<RequireAll>
+    Require valid-user
+    Require shib-attr ADFS_GROUP "cms-members"
+</RequireAll>
+
